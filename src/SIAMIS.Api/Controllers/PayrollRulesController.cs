@@ -10,7 +10,7 @@ namespace SIAMIS.Api.Controllers;
 [Produces("application/json")]
 public sealed class PayrollRulesController(IPayrollRuleService service) : ControllerBase
 {
-    /// <summary>Lists rules with filters and pagination. Active rules are returned by default.</summary>
+    /// <summary>Lists rules with filters and pagination. Active rules are returned by default, ordered by Priority, Name, then PayrollRuleId. This presentation order does not change payroll calculation behavior.</summary>
     [HttpGet]
     [ProducesResponseType(typeof(PagedResult<PayrollRuleDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
@@ -30,7 +30,7 @@ public sealed class PayrollRulesController(IPayrollRuleService service) : Contro
         return rule is null ? NotFoundProblem() : Ok(rule);
     }
 
-    /// <summary>Creates a payroll rule configuration. This does not execute the rule during payroll calculation.</summary>
+    /// <summary>Creates a payroll rule configuration. Priority is required, non-negative, and does not affect calculation order yet. This does not execute the rule during payroll calculation.</summary>
     [HttpPost]
     [ProducesResponseType(typeof(PayrollRuleDto), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
@@ -42,7 +42,7 @@ public sealed class PayrollRulesController(IPayrollRuleService service) : Contro
         return CreatedAtAction(nameof(GetPayrollRule), new { id = result.Value!.PayrollRuleId }, result.Value);
     }
 
-    /// <summary>Updates a payroll rule configuration without changing its primary key.</summary>
+    /// <summary>Updates a payroll rule configuration without changing its primary key. Priority is required, non-negative, and does not affect calculation order yet.</summary>
     [HttpPut("{id:guid}")]
     [ProducesResponseType(typeof(PayrollRuleDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]

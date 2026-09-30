@@ -19,6 +19,7 @@ public sealed class PayrollRuleRequest
 {
     [StringLength(50)] public string? Code { get; set; }
     [StringLength(150)] public string? Name { get; set; }
+    [Required, Range(0, int.MaxValue)] public int? Priority { get; set; }
     [StringLength(1000)] public string? Description { get; set; }
     [StringLength(30)] public string? RuleType { get; set; }
     [StringLength(30)] public string? CalculationMethod { get; set; }
@@ -42,6 +43,7 @@ public sealed record PayrollRuleDto(
     Guid PayrollRuleId,
     string Code,
     string Name,
+    int Priority,
     string? Description,
     string RuleType,
     string CalculationMethod,

@@ -18,6 +18,7 @@ internal sealed class PayrollRuleConfiguration : IEntityTypeConfiguration<Payrol
         builder.HasKey(item => item.PayrollRuleId);
         builder.Property(item => item.Code).HasMaxLength(50).IsRequired();
         builder.Property(item => item.Name).HasMaxLength(150).IsRequired();
+        builder.Property(item => item.Priority).HasDefaultValue(0).IsRequired();
         builder.Property(item => item.Description).HasMaxLength(1000);
         builder.Property(item => item.RuleType).HasMaxLength(30).IsRequired();
         builder.Property(item => item.CalculationMethod).HasMaxLength(30).IsRequired();

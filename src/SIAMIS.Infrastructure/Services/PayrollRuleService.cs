@@ -43,7 +43,7 @@ public sealed class PayrollRuleService(SIAMISDbContext db) : IPayrollRuleService
         }
 
         var totalCount = await rules.CountAsync(cancellationToken);
-        var items = await rules.OrderBy(item => item.Name).ThenBy(item => item.PayrollRuleId)
+        var items = await rules.OrderBy(item => item.Priority).ThenBy(item => item.Name).ThenBy(item => item.PayrollRuleId)
             .Skip((query.Page - 1) * query.PageSize).Take(query.PageSize)
             .Select(item => ToDto(item)).ToListAsync(cancellationToken);
         return ServiceResult<PagedResult<PayrollRuleDto>>.Success(new(items, query.Page, query.PageSize, totalCount));
@@ -102,7 +102,7 @@ public sealed class PayrollRuleService(SIAMISDbContext db) : IPayrollRuleService
         return ServiceResult<bool>.Success(true);
     }
 
-    private static (string? Code, string? Name, string? Description, string? RuleType, string? CalculationMethod,
+    private static (string? Code, string? Name, int? Priority, string? Description, string? RuleType, string? CalculationMethod,
         decimal? Rate, decimal? FixedAmount, decimal? MinimumBase, decimal? MaximumBase, string? BaseType,
         string? AppliesTo, DateOnly? EffectiveFrom, DateOnly? EffectiveTo, ApiFailure? Failure) NormalizeRequest(PayrollRuleRequest request)
     {
@@ -115,6 +115,7 @@ public sealed class PayrollRuleService(SIAMISDbContext db) : IPayrollRuleService
 
         if (string.IsNullOrWhiteSpace(code)) return InvalidValues("Code is required.");
         if (string.IsNullOrWhiteSpace(name)) return InvalidValues("Name is required.");
+        if (!request.Priority.HasValue || request.Priority.Value < 0) return InvalidValues("Priority is required and must be greater than or equal to zero.");
         if (ruleType is null) return InvalidValues("RuleType must be Statutory, EmployerBenefit, EmployeeBenefit, Deduction, or Other.");
         if (method is null) return InvalidValues("CalculationMethod must be Percentage, FixedAmount, or Manual.");
         if (request.BaseType is not null && baseType is null) return InvalidValues("BaseType must be BasicSalary, GrossEarnings, GrossPay, TaxableIncome, or Custom.");
@@ -133,18 +134,19 @@ public sealed class PayrollRuleService(SIAMISDbContext db) : IPayrollRuleService
         if (method == "Manual" && (request.Rate.HasValue || request.FixedAmount.HasValue || baseType is not null))
             return InvalidValues("Manual rules cannot specify Rate, FixedAmount, or BaseType.");
 
-        return (code, name, string.IsNullOrWhiteSpace(request.Description) ? null : request.Description.Trim(), ruleType, method,
+        return (code, name, request.Priority, string.IsNullOrWhiteSpace(request.Description) ? null : request.Description.Trim(), ruleType, method,
             request.Rate, request.FixedAmount, request.MinimumBase, request.MaximumBase, baseType, appliesTo,
             request.EffectiveFrom, request.EffectiveTo, null);
     }
 
     private static void Apply(PayrollRule rule,
-        (string? Code, string? Name, string? Description, string? RuleType, string? CalculationMethod, decimal? Rate,
+        (string? Code, string? Name, int? Priority, string? Description, string? RuleType, string? CalculationMethod, decimal? Rate,
             decimal? FixedAmount, decimal? MinimumBase, decimal? MaximumBase, string? BaseType, string? AppliesTo,
             DateOnly? EffectiveFrom, DateOnly? EffectiveTo, ApiFailure? Failure) values, bool isActive)
     {
         rule.Code = values.Code!;
         rule.Name = values.Name!;
+        rule.Priority = values.Priority!.Value;
         rule.Description = values.Description;
         rule.RuleType = values.RuleType!;
         rule.CalculationMethod = values.CalculationMethod!;
@@ -163,14 +165,14 @@ public sealed class PayrollRuleService(SIAMISDbContext db) : IPayrollRuleService
         => allowed.FirstOrDefault(item => item.Equals(value?.Trim(), StringComparison.OrdinalIgnoreCase));
 
     private static PayrollRuleDto ToDto(PayrollRule item)
-        => new(item.PayrollRuleId, item.Code, item.Name, item.Description, item.RuleType, item.CalculationMethod,
+        => new(item.PayrollRuleId, item.Code, item.Name, item.Priority, item.Description, item.RuleType, item.CalculationMethod,
             item.Rate, item.FixedAmount, item.MinimumBase, item.MaximumBase, item.BaseType, item.AppliesTo,
             item.EffectiveFrom, item.EffectiveTo, item.IsActive, item.CreatedAt, item.UpdatedAt);
 
-    private static (string? Code, string? Name, string? Description, string? RuleType, string? CalculationMethod,
+    private static (string? Code, string? Name, int? Priority, string? Description, string? RuleType, string? CalculationMethod,
         decimal? Rate, decimal? FixedAmount, decimal? MinimumBase, decimal? MaximumBase, string? BaseType,
         string? AppliesTo, DateOnly? EffectiveFrom, DateOnly? EffectiveTo, ApiFailure? Failure) InvalidValues(string message)
-        => (null, null, null, null, null, null, null, null, null, null, null, null, null, new("validation", message));
+        => (null, null, null, null, null, null, null, null, null, null, null, null, null, null, new("validation", message));
 
     private static ServiceResult<T> Failure<T>(ApiFailure failure) => ServiceResult<T>.Fail(failure.Code, failure.Message);
     private static ServiceResult<T> Invalid<T>(string message) => ServiceResult<T>.Fail("validation", message);
