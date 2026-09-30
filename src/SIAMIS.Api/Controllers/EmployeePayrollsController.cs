@@ -4,7 +4,7 @@ using SIAMIS.Application.Payroll;
 
 namespace SIAMIS.Api.Controllers;
 
-/// <summary>Manages stored payroll snapshots. Line mutations maintain server-managed TaxableEarnings from stored snapshots.</summary>
+/// <summary>Manages stored payroll snapshots. Line mutations reconcile derived header totals from stored snapshots while preserving BasicSalary.</summary>
 [ApiController]
 [Route("api/employee-payrolls")]
 [Produces("application/json")]
@@ -97,7 +97,7 @@ public sealed class EmployeePayrollsController(IEmployeePayrollService service) 
         return result.IsSuccess ? Ok(result.Value) : Failure<EmployeePayrollLineDto>(result.Failure!);
     }
 
-    /// <summary>Adds a Manual line with current component classification snapshots and atomically updates TaxableEarnings. Other header totals remain unchanged.</summary>
+    /// <summary>Adds a Manual line with current component classification snapshots and atomically reconciles GrossPay, TaxableEarnings, TotalDeductions and NetPay. BasicSalary remains unchanged.</summary>
     [HttpPost("{payrollId:guid}/lines")]
     [ProducesResponseType(typeof(EmployeePayrollLineDto), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
@@ -110,7 +110,7 @@ public sealed class EmployeePayrollsController(IEmployeePayrollService service) 
         return CreatedAtAction(nameof(GetLine), new { payrollId, lineId = result.Value!.EmployeePayrollLineId }, result.Value);
     }
 
-    /// <summary>Updates a line and TaxableEarnings atomically. Classification snapshots are preserved for the same component and refreshed when the component changes.</summary>
+    /// <summary>Updates a line and reconciles derived header totals atomically. Classification snapshots are preserved for the same component and refreshed when the component changes.</summary>
     [HttpPut("{payrollId:guid}/lines/{lineId:guid}")]
     [ProducesResponseType(typeof(EmployeePayrollLineDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
@@ -122,9 +122,10 @@ public sealed class EmployeePayrollsController(IEmployeePayrollService service) 
         return result.IsSuccess ? Ok(result.Value) : Failure<EmployeePayrollLineDto>(result.Failure!);
     }
 
-    /// <summary>Deletes a line and atomically updates TaxableEarnings unless its payroll is Paid. Other header totals remain unchanged.</summary>
+    /// <summary>Deletes a line and atomically reconciles derived header totals unless its payroll is Paid. BasicSalary remains unchanged.</summary>
     [HttpDelete("{payrollId:guid}/lines/{lineId:guid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
     public async Task<IActionResult> DeleteLine(Guid payrollId, Guid lineId, CancellationToken ct)

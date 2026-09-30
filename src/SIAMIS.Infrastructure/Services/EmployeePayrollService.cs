@@ -194,8 +194,8 @@ public sealed class EmployeePayrollService(SIAMISDbContext db) : IEmployeePayrol
         ApplyLine(line, request, component);
         db.EmployeePayrollLines.Add(line);
         await db.SaveChangesAsync(ct);
-        if (!await UpdateTaxableEarningsAsync(payroll, ct))
-            return Invalid<EmployeePayrollLineDto>("TaxableEarnings exceeds the supported decimal(19,4) range.");
+        var reconciliationError = await ReconcileTotalsAsync(payroll, ct);
+        if (reconciliationError is not null) return Invalid<EmployeePayrollLineDto>(reconciliationError);
         await transaction.CommitAsync(ct);
         return ServiceResult<EmployeePayrollLineDto>.Success(ToDto(line));
     }
@@ -217,8 +217,8 @@ public sealed class EmployeePayrollService(SIAMISDbContext db) : IEmployeePayrol
         if (component.Code is null) return Invalid<EmployeePayrollLineDto>("Payroll component must have a code before it can be added to payroll.");
         ApplyLine(line, request, component);
         await db.SaveChangesAsync(ct);
-        if (!await UpdateTaxableEarningsAsync(payroll, ct))
-            return Invalid<EmployeePayrollLineDto>("TaxableEarnings exceeds the supported decimal(19,4) range.");
+        var reconciliationError = await ReconcileTotalsAsync(payroll, ct);
+        if (reconciliationError is not null) return Invalid<EmployeePayrollLineDto>(reconciliationError);
         await transaction.CommitAsync(ct);
         return ServiceResult<EmployeePayrollLineDto>.Success(ToDto(line));
     }
@@ -234,23 +234,38 @@ public sealed class EmployeePayrollService(SIAMISDbContext db) : IEmployeePayrol
         if (payroll.Status == "Paid") return Conflict<bool>("Paid payroll lines cannot be deleted.");
         db.EmployeePayrollLines.Remove(line);
         await db.SaveChangesAsync(ct);
-        if (!await UpdateTaxableEarningsAsync(payroll, ct))
-            return Invalid<bool>("TaxableEarnings exceeds the supported decimal(19,4) range.");
+        var reconciliationError = await ReconcileTotalsAsync(payroll, ct);
+        if (reconciliationError is not null) return Invalid<bool>(reconciliationError);
         await transaction.CommitAsync(ct);
         return ServiceResult<bool>.Success(true);
     }
 
-    private async Task<bool> UpdateTaxableEarningsAsync(EmployeePayroll payroll, CancellationToken ct)
+    private async Task<string?> ReconcileTotalsAsync(EmployeePayroll payroll, CancellationToken ct)
     {
-        // The line mutation has been saved inside the same transaction; stored snapshots are authoritative.
-        var taxableEarnings = await db.EmployeePayrollLines
-            .Where(line => line.EmployeePayrollId == payroll.EmployeePayrollId
-                && line.ComponentType == "Earning" && line.IsTaxableSnapshot)
-            .SumAsync(line => (decimal?)line.Amount, ct) ?? 0m;
-        if (!ValidAmount(taxableEarnings)) return false;
+        // The saved mutation and reconciliation share a transaction; only stored line snapshots determine totals.
+        var totals = await db.EmployeePayrollLines.AsNoTracking()
+            .Where(line => line.EmployeePayrollId == payroll.EmployeePayrollId)
+            .GroupBy(line => line.EmployeePayrollId)
+            .Select(lines => new
+            {
+                GrossPay = lines.Sum(line => line.ComponentType == "Earning" ? line.Amount : 0m),
+                TaxableEarnings = lines.Sum(line => line.ComponentType == "Earning" && line.IsTaxableSnapshot ? line.Amount : 0m),
+                TotalDeductions = lines.Sum(line => line.ComponentType == "Deduction" ? line.Amount : 0m)
+            }).SingleOrDefaultAsync(ct);
+        var grossPay = totals?.GrossPay ?? 0m;
+        var taxableEarnings = totals?.TaxableEarnings ?? 0m;
+        var totalDeductions = totals?.TotalDeductions ?? 0m;
+        if (!ValidAmount(grossPay) || !ValidAmount(taxableEarnings) || !ValidAmount(totalDeductions))
+            return "Payroll totals exceed the supported decimal(19,4) range.";
+        if (totalDeductions > grossPay)
+            return "Total deductions exceed GrossPay; payroll line mutation was not saved.";
+
+        payroll.GrossPay = grossPay;
         payroll.TaxableEarnings = taxableEarnings;
+        payroll.TotalDeductions = totalDeductions;
+        payroll.NetPay = grossPay - totalDeductions;
         await db.SaveChangesAsync(ct);
-        return true;
+        return null;
     }
 
     private static string? ValidateLine(EmployeePayrollLineRequest request)
