@@ -9,7 +9,8 @@ using SIAMIS.Infrastructure.Data;
 namespace SIAMIS.Infrastructure.Services;
 
 /// <summary>Builds immutable payroll snapshots, committing each employee independently.</summary>
-public sealed class PayrollGenerationService(SIAMISDbContext db, IPayrollCalculationService calculator) : IPayrollGenerationService
+public sealed class PayrollGenerationService(SIAMISDbContext db, IPayrollCalculationService calculator,
+    IPayrollRuleEvaluator ruleEvaluator) : IPayrollGenerationService
 {
     public async Task<ServiceResult<PayrollGenerationSummary>> GenerateAsync(
         Guid payrollPeriodId, PayrollGenerationRequest request, CancellationToken cancellationToken)
@@ -97,7 +98,11 @@ public sealed class PayrollGenerationService(SIAMISDbContext db, IPayrollCalcula
             if (assignments.Any(item => item.PayrollComponentId == basicSalaryComponent.Id))
                 return Failed(candidate, WithExistingPayroll("Basic Salary is generated from EmployeeCompensation and must not also have an employee component assignment.", existing), existing);
 
-            var calculated = calculator.Calculate(ToCalculationEmployee(employee), compensation.BasicSalary, assignments, basicSalaryComponent);
+            var evaluation = await ruleEvaluator.EvaluateApplicableRulesAsync(period.PayrollPeriodId, employee.EmployeeId, cancellationToken);
+            if (evaluation.Failure is not null)
+                return Failed(candidate, WithExistingPayroll($"Payroll rule evaluation failed: {evaluation.Failure.Message}", existing), existing);
+            var calculated = calculator.Calculate(ToCalculationEmployee(employee), compensation.BasicSalary, assignments,
+                basicSalaryComponent, evaluation.Value!.ApplicableRules);
             if (calculated.Status != "Calculated") return Failed(candidate, WithExistingPayroll(calculated.Message, existing), existing);
 
             if (existing is not null)

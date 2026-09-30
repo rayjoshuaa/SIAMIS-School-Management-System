@@ -13,7 +13,15 @@ public sealed record PayrollCalculatedLine(
     decimal? Quantity,
     decimal? Rate,
     decimal Amount,
-    string? Remarks);
+    string? Remarks,
+    Guid? PayrollRuleId = null,
+    string? RuleCode = null,
+    string? RuleName = null,
+    string? ApplicationMode = null,
+    string? BaseType = null,
+    decimal? BaseAmount = null,
+    decimal? MinimumBase = null,
+    decimal? MaximumBase = null);
 
 public sealed record PayrollCalculationEmployee(Guid EmployeeId, string EmployeeNumber, string EmployeeName);
 
@@ -26,10 +34,12 @@ public sealed record PayrollCalculationResult(
     decimal TotalDeductions,
     decimal NetPay,
     IReadOnlyList<PayrollCalculatedLine> Lines,
-    string? Failure);
+    string? Failure,
+    IReadOnlyList<string>? SkippedRuleExplanations = null);
 
 public interface IPayrollCalculationService
 {
     PayrollCalculationResult Calculate(PayrollCalculationEmployee employee, decimal basicSalary,
-        IReadOnlyList<EmployeePayrollComponentAssignment> assignments, PayrollComponent basicSalaryComponent);
+        IReadOnlyList<EmployeePayrollComponentAssignment> assignments, PayrollComponent basicSalaryComponent,
+        IReadOnlyList<ApplicablePayrollRuleDto> applicableRules);
 }

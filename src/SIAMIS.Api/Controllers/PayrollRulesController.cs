@@ -4,13 +4,13 @@ using SIAMIS.Application.Payroll;
 
 namespace SIAMIS.Api.Controllers;
 
-/// <summary>Manages generic effective-dated payroll rule configuration; rules are not executed by payroll calculation.</summary>
+/// <summary>Manages effective-dated payroll rule configuration. Applicable Earning rules are executed by payroll preview and generation.</summary>
 [ApiController]
 [Route("api/payroll-rules")]
 [Produces("application/json")]
 public sealed class PayrollRulesController(IPayrollRuleService service) : ControllerBase
 {
-    /// <summary>Lists rules with filters and pagination. Active rules are returned by default, ordered by Priority, Name, then PayrollRuleId. This endpoint returns configuration only and does not execute rules.</summary>
+    /// <summary>Lists rules with filters and pagination. Active rules are returned by default, ordered by Priority, Name, then PayrollRuleId.</summary>
     /// <param name="query">Optional filters include componentId and applicationMode (Supplement or ReplaceAssignment).</param>
     [HttpGet]
     [ProducesResponseType(typeof(PagedResult<PayrollRuleDto>), StatusCodes.Status200OK)]
@@ -31,7 +31,7 @@ public sealed class PayrollRulesController(IPayrollRuleService service) : Contro
         return rule is null ? NotFoundProblem() : Ok(rule);
     }
 
-    /// <summary>Creates a rule linked to one active, stage-compatible payroll component. ApplicationMode defaults to Supplement. Rule configuration is not executed by payroll calculation yet.</summary>
+    /// <summary>Creates a rule linked to one active, stage-compatible payroll component. ApplicationMode defaults to Supplement. MinimumBase and MaximumBase are inclusive calculation-base eligibility thresholds for Percentage rules only.</summary>
     [HttpPost]
     [ProducesResponseType(typeof(PayrollRuleDto), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]

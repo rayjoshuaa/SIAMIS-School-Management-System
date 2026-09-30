@@ -4,7 +4,7 @@ using SIAMIS.Application.Payroll;
 
 namespace SIAMIS.Api.Controllers;
 
-/// <summary>Configures employee, department, designation, employment type, and location targets for payroll rules. Targets are configuration only and are not yet evaluated by payroll calculation.</summary>
+/// <summary>Configures employee, department, designation, employment type, and location targets for payroll rules.</summary>
 [ApiController]
 [Route("api/payroll-rules/{payrollRuleId:guid}/targets")]
 [Produces("application/json")]

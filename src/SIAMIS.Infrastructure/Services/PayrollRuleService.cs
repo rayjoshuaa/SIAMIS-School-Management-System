@@ -153,6 +153,8 @@ public sealed class PayrollRuleService(SIAMISDbContext db) : IPayrollRuleService
         }
         if (request.MinimumBase.HasValue && request.MaximumBase.HasValue && request.MaximumBase.Value < request.MinimumBase.Value)
             return InvalidValues("MaximumBase cannot be less than MinimumBase.");
+        if (method != "Percentage" && (request.MinimumBase.HasValue || request.MaximumBase.HasValue))
+            return InvalidValues("MinimumBase and MaximumBase are allowed only when CalculationMethod is Percentage.");
         if (method == "FixedAmount" && baseType is not null) return InvalidValues("BaseType must be null when CalculationMethod is FixedAmount.");
         if (method == "Manual" && (request.Rate.HasValue || request.FixedAmount.HasValue || baseType is not null))
             return InvalidValues("Manual rules cannot specify Rate, FixedAmount, or BaseType.");

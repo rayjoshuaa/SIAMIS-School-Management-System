@@ -7,7 +7,8 @@ using SIAMIS.Infrastructure.Data;
 namespace SIAMIS.Infrastructure.Services;
 
 /// <summary>Calculates payroll previews from current inputs without changing persisted data.</summary>
-public sealed class PayrollPreviewService(SIAMISDbContext db, IPayrollCalculationService calculator) : IPayrollPreviewService
+public sealed class PayrollPreviewService(SIAMISDbContext db, IPayrollCalculationService calculator,
+    IPayrollRuleEvaluator ruleEvaluator) : IPayrollPreviewService
 {
     public async Task<ServiceResult<PayrollPreviewSummary>> PreviewAsync(
         Guid payrollPeriodId, PayrollPreviewRequest request, CancellationToken cancellationToken)
@@ -88,8 +89,14 @@ public sealed class PayrollPreviewService(SIAMISDbContext db, IPayrollCalculatio
                 continue;
             }
 
+            var evaluation = await ruleEvaluator.EvaluateApplicableRulesAsync(payrollPeriodId, employee.EmployeeId, cancellationToken);
+            if (evaluation.Failure is not null)
+            {
+                results.Add(Result(employee, name, "Failed", $"Payroll rule evaluation failed: {evaluation.Failure.Message}"));
+                continue;
+            }
             var calculation = calculator.Calculate(new PayrollCalculationEmployee(employee.EmployeeId, employee.EmployeeNumber, name),
-                compensation.BasicSalary, assignments, basicSalaryComponent);
+                compensation.BasicSalary, assignments, basicSalaryComponent, evaluation.Value!.ApplicableRules);
             if (calculation.Status != "Calculated")
             {
                 results.Add(Result(employee, name, "Failed", calculation.Message));
@@ -97,10 +104,15 @@ public sealed class PayrollPreviewService(SIAMISDbContext db, IPayrollCalculatio
             }
 
             results.Add(new PayrollPreviewEmployeeResult(employee.EmployeeId, employee.EmployeeNumber, name, "Calculated",
-                calculation.BasicSalary, calculation.GrossPay, calculation.TotalDeductions, calculation.NetPay, "Payroll preview calculated.",
+                calculation.BasicSalary, calculation.GrossPay, calculation.TotalDeductions, calculation.NetPay,
+                calculation.SkippedRuleExplanations is { Count: > 0 }
+                    ? $"Payroll preview calculated. {string.Join(" ", calculation.SkippedRuleExplanations)}"
+                    : "Payroll preview calculated.",
                 calculation.Lines.Select(line => new PayrollPreviewLineDto(line.PayrollComponentId, line.ComponentCode,
                     line.ComponentName, line.ComponentType, line.CalculationMethod, line.PercentageBase,
-                    line.Quantity, line.Rate, line.Amount, line.Remarks)).ToArray()));
+                    line.Quantity, line.Rate, line.Amount, line.Remarks, line.PayrollRuleId, line.RuleCode,
+                    line.RuleName, line.ApplicationMode, line.BaseType, line.BaseAmount,
+                    line.MinimumBase, line.MaximumBase)).ToArray()));
         }
 
         return ServiceResult<PayrollPreviewSummary>.Success(new PayrollPreviewSummary(payrollPeriodId, results.Count,

@@ -18,7 +18,15 @@ public sealed record PayrollPreviewLineDto(
     decimal? Quantity,
     decimal? Rate,
     decimal Amount,
-    string? Remarks);
+    string? Remarks,
+    Guid? PayrollRuleId = null,
+    string? RuleCode = null,
+    string? RuleName = null,
+    string? ApplicationMode = null,
+    string? BaseType = null,
+    decimal? BaseAmount = null,
+    decimal? MinimumBase = null,
+    decimal? MaximumBase = null);
 
 public sealed record PayrollPreviewEmployeeResult(
     Guid EmployeeId,
