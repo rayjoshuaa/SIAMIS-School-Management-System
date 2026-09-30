@@ -21,7 +21,9 @@ public sealed record PayrollCalculatedLine(
     string? BaseType = null,
     decimal? BaseAmount = null,
     decimal? MinimumBase = null,
-    decimal? MaximumBase = null);
+    decimal? MaximumBase = null,
+    string SourceType = "Manual",
+    Guid? SourceId = null);
 
 public sealed record PayrollCalculationEmployee(Guid EmployeeId, string EmployeeNumber, string EmployeeName);
 

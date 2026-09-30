@@ -124,12 +124,23 @@ public sealed class PayrollGenerationService(SIAMISDbContext db, IPayrollCalcula
                 Lines = calculated.Lines.Select(line => new EmployeePayrollLine
                 {
                     PayrollComponentId = line.PayrollComponentId,
+                    SourceType = line.SourceType,
+                    SourceId = line.SourceId,
                     ComponentCode = line.ComponentCode,
                     ComponentName = line.ComponentName,
                     ComponentType = line.ComponentType,
                     Amount = line.Amount,
                     Quantity = line.Quantity,
                     Rate = line.Rate,
+                    CalculationMethodSnapshot = line.CalculationMethod,
+                    RuleCode = line.RuleCode,
+                    RuleName = line.RuleName,
+                    ApplicationMode = line.ApplicationMode,
+                    BaseType = line.BaseType,
+                    BaseAmount = line.BaseAmount,
+                    MinimumBase = line.MinimumBase,
+                    MaximumBase = line.MaximumBase,
+                    CalculationRate = line.PayrollRuleId.HasValue ? line.Rate : null,
                     Remarks = line.Remarks
                 }).ToList()
             };

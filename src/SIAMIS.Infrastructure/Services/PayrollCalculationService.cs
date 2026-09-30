@@ -23,7 +23,8 @@ public sealed class PayrollCalculationService : IPayrollCalculationService
             var lines = new List<PayrollCalculatedLine>
             {
                 new(basicSalaryComponent.Id, basicSalaryComponent.Code!, basicSalaryComponent.Name, "Earning",
-                    "Compensation", null, null, null, roundedBasicSalary, "Basic Salary from applicable EmployeeCompensation.")
+                    "Compensation", null, null, null, roundedBasicSalary, "Basic Salary from applicable EmployeeCompensation.",
+                    SourceType: "BasicSalary")
             };
             var grossEarnings = roundedBasicSalary;
             var earningRules = applicableRules.Where(rule => rule.CalculationStage == "Earning").ToArray();
@@ -144,7 +145,7 @@ public sealed class PayrollCalculationService : IPayrollCalculationService
         var line = new PayrollCalculatedLine(rule.PayrollComponentId, rule.PayrollComponentCode!, rule.PayrollComponentName,
             rule.CalculationStage, rule.CalculationMethod, rule.BaseType, null, rule.Rate, amount, remarks,
             rule.PayrollRuleId, rule.Code, rule.Name, rule.ApplicationMode, rule.BaseType, baseAmount,
-            rule.MinimumBase, rule.MaximumBase);
+            rule.MinimumBase, rule.MaximumBase, "PayrollRule", rule.PayrollRuleId);
         return (line, null, null);
     }
 
@@ -195,7 +196,8 @@ public sealed class PayrollCalculationService : IPayrollCalculationService
     private static PayrollCalculatedLine ToLine(EmployeePayrollComponentAssignment assignment, decimal amount)
         => new(assignment.PayrollComponentId, assignment.PayrollComponent.Code!, assignment.PayrollComponent.Name,
             assignment.PayrollComponent.Category, assignment.PayrollComponent.CalculationMethod,
-            assignment.PayrollComponent.PercentageBase, assignment.Quantity, assignment.Rate, amount, assignment.Remarks);
+            assignment.PayrollComponent.PercentageBase, assignment.Quantity, assignment.Rate, amount, assignment.Remarks,
+            SourceType: "Assignment", SourceId: assignment.EmployeePayrollComponentAssignmentId);
 
     private static string? NormalizePercentageBase(string? value) => value?.Trim() switch
     {

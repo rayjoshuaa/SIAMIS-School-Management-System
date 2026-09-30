@@ -49,7 +49,9 @@ public sealed class EmployeePayrollService(SIAMISDbContext db) : IEmployeePayrol
         var lines = await db.EmployeePayrollLines.AsNoTracking().Where(item => item.EmployeePayrollId == id)
             .OrderBy(item => item.ComponentName).ThenBy(item => item.EmployeePayrollLineId)
             .Select(item => new EmployeePayrollLineDto(item.EmployeePayrollLineId, item.EmployeePayrollId, item.PayrollComponentId,
-                item.ComponentCode, item.ComponentName, item.ComponentType, item.Amount, item.Quantity, item.Rate, item.Remarks))
+                item.ComponentCode, item.ComponentName, item.ComponentType, item.Amount, item.Quantity, item.Rate, item.Remarks,
+                item.SourceType, item.SourceId, item.CalculationMethodSnapshot, item.RuleCode, item.RuleName,
+                item.ApplicationMode, item.BaseType, item.BaseAmount, item.MinimumBase, item.MaximumBase, item.CalculationRate))
             .ToListAsync(ct);
         var employee = payroll.Employee;
         var period = payroll.PayrollPeriod;
@@ -149,7 +151,9 @@ public sealed class EmployeePayrollService(SIAMISDbContext db) : IEmployeePayrol
         var lines = await db.EmployeePayrollLines.AsNoTracking().Where(item => item.EmployeePayrollId == payrollId)
             .OrderBy(item => item.ComponentName).ThenBy(item => item.EmployeePayrollLineId)
             .Select(item => new EmployeePayrollLineDto(item.EmployeePayrollLineId, item.EmployeePayrollId, item.PayrollComponentId,
-                item.ComponentCode, item.ComponentName, item.ComponentType, item.Amount, item.Quantity, item.Rate, item.Remarks))
+                item.ComponentCode, item.ComponentName, item.ComponentType, item.Amount, item.Quantity, item.Rate, item.Remarks,
+                item.SourceType, item.SourceId, item.CalculationMethodSnapshot, item.RuleCode, item.RuleName,
+                item.ApplicationMode, item.BaseType, item.BaseAmount, item.MinimumBase, item.MaximumBase, item.CalculationRate))
             .ToListAsync(ct);
         return ServiceResult<IReadOnlyList<EmployeePayrollLineDto>>.Success(lines);
     }
@@ -161,7 +165,9 @@ public sealed class EmployeePayrollService(SIAMISDbContext db) : IEmployeePayrol
         var line = await db.EmployeePayrollLines.AsNoTracking().Where(item => item.EmployeePayrollId == payrollId
             && item.EmployeePayrollLineId == lineId)
             .Select(item => new EmployeePayrollLineDto(item.EmployeePayrollLineId, item.EmployeePayrollId, item.PayrollComponentId,
-                item.ComponentCode, item.ComponentName, item.ComponentType, item.Amount, item.Quantity, item.Rate, item.Remarks))
+                item.ComponentCode, item.ComponentName, item.ComponentType, item.Amount, item.Quantity, item.Rate, item.Remarks,
+                item.SourceType, item.SourceId, item.CalculationMethodSnapshot, item.RuleCode, item.RuleName,
+                item.ApplicationMode, item.BaseType, item.BaseAmount, item.MinimumBase, item.MaximumBase, item.CalculationRate))
             .SingleOrDefaultAsync(ct);
         return line is null ? NotFound<EmployeePayrollLineDto>("Payroll line was not found for this payroll.")
             : ServiceResult<EmployeePayrollLineDto>.Success(line);
@@ -179,7 +185,7 @@ public sealed class EmployeePayrollService(SIAMISDbContext db) : IEmployeePayrol
         if (!component.IsActive) return Invalid<EmployeePayrollLineDto>("Payroll component must be active.");
         if (component.Code is null) return Invalid<EmployeePayrollLineDto>("Payroll component must have a code before it can be added to payroll.");
 
-        var line = new EmployeePayrollLine { EmployeePayrollId = payrollId };
+        var line = new EmployeePayrollLine { EmployeePayrollId = payrollId, SourceType = "Manual", SourceId = null };
         ApplyLine(line, request, component);
         db.EmployeePayrollLines.Add(line);
         await db.SaveChangesAsync(ct);
@@ -221,6 +227,7 @@ public sealed class EmployeePayrollService(SIAMISDbContext db) : IEmployeePayrol
     private static string? ValidateLine(EmployeePayrollLineRequest request)
     {
         if (!request.PayrollComponentId.HasValue) return "PayrollComponentId is required.";
+        if (string.IsNullOrWhiteSpace(request.Remarks)) return "Remarks are required for manual payroll lines.";
         if (!request.Amount.HasValue || request.Amount.Value <= 0 || request.Amount.Value > MaximumAmount || !HasScaleFour(request.Amount.Value))
             return "Amount must be greater than zero and fit decimal(19,4).";
         if (request.Quantity.HasValue && (request.Quantity.Value < 0 || request.Quantity.Value > MaximumAmount || !HasScaleFour(request.Quantity.Value)))
@@ -281,7 +288,9 @@ public sealed class EmployeePayrollService(SIAMISDbContext db) : IEmployeePayrol
         item.BasicSalary, item.GrossPay, item.TotalDeductions, item.NetPay, item.Status, item.Remarks, item.CreatedAt, item.UpdatedAt);
 
     private static EmployeePayrollLineDto ToDto(EmployeePayrollLine item) => new(item.EmployeePayrollLineId, item.EmployeePayrollId,
-        item.PayrollComponentId, item.ComponentCode, item.ComponentName, item.ComponentType, item.Amount, item.Quantity, item.Rate, item.Remarks);
+        item.PayrollComponentId, item.ComponentCode, item.ComponentName, item.ComponentType, item.Amount, item.Quantity, item.Rate,
+        item.Remarks, item.SourceType, item.SourceId, item.CalculationMethodSnapshot, item.RuleCode, item.RuleName,
+        item.ApplicationMode, item.BaseType, item.BaseAmount, item.MinimumBase, item.MaximumBase, item.CalculationRate);
 
     private static bool IsUniqueViolation(DbUpdateException ex) => ex.InnerException is SqlException { Number: 2601 or 2627 };
     private static ServiceResult<T> Invalid<T>(string message) => ServiceResult<T>.Fail("validation", message);

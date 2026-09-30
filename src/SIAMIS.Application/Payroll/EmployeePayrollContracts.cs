@@ -76,7 +76,18 @@ public sealed record EmployeePayrollLineDto(
     decimal Amount,
     decimal? Quantity,
     decimal? Rate,
-    string? Remarks);
+    string? Remarks,
+    string SourceType,
+    Guid? SourceId,
+    string? CalculationMethodSnapshot,
+    string? RuleCode,
+    string? RuleName,
+    string? ApplicationMode,
+    string? BaseType,
+    decimal? BaseAmount,
+    decimal? MinimumBase,
+    decimal? MaximumBase,
+    decimal? CalculationRate);
 
 public sealed class EmployeePayrollLineRequest
 {
@@ -84,7 +95,7 @@ public sealed class EmployeePayrollLineRequest
     [Required, Range(typeof(decimal), "0.0001", "999999999999999.9999")] public decimal? Amount { get; set; }
     [Range(typeof(decimal), "0", "999999999999999.9999")] public decimal? Quantity { get; set; }
     [Range(typeof(decimal), "0", "999999999999999.9999")] public decimal? Rate { get; set; }
-    [StringLength(1000)] public string? Remarks { get; set; }
+    [Required, StringLength(1000)] public string? Remarks { get; set; }
 }
 
 public interface IEmployeePayrollService

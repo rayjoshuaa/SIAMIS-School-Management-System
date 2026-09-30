@@ -46,14 +46,26 @@ internal sealed class EmployeePayrollLineConfiguration : IEntityTypeConfiguratio
             table.HasCheckConstraint("CK_EmployeePayrollLines_QuantityNonNegative", "[Quantity] IS NULL OR [Quantity] >= 0");
             table.HasCheckConstraint("CK_EmployeePayrollLines_RateNonNegative", "[Rate] IS NULL OR [Rate] >= 0");
             table.HasCheckConstraint("CK_EmployeePayrollLines_ComponentType", "[ComponentType] IN ('Earning', 'Deduction')");
+            table.HasCheckConstraint("CK_EmployeePayrollLines_SourceTypeAndId",
+                "([SourceType] = 'BasicSalary' AND [SourceId] IS NULL) OR ([SourceType] = 'Manual' AND [SourceId] IS NULL) OR ([SourceType] IN ('Assignment', 'PayrollRule') AND [SourceId] IS NOT NULL)");
         });
         builder.HasKey(item => item.EmployeePayrollLineId);
         builder.Property(item => item.ComponentCode).HasMaxLength(50).IsRequired();
         builder.Property(item => item.ComponentName).HasMaxLength(150).IsRequired();
         builder.Property(item => item.ComponentType).HasMaxLength(20).IsRequired();
+        builder.Property(item => item.SourceType).HasMaxLength(20).IsRequired();
         builder.Property(item => item.Amount).HasColumnType("decimal(19,4)").IsRequired();
         builder.Property(item => item.Quantity).HasColumnType("decimal(19,4)");
         builder.Property(item => item.Rate).HasColumnType("decimal(19,4)");
+        builder.Property(item => item.CalculationMethodSnapshot).HasMaxLength(30);
+        builder.Property(item => item.RuleCode).HasMaxLength(50);
+        builder.Property(item => item.RuleName).HasMaxLength(150);
+        builder.Property(item => item.ApplicationMode).HasMaxLength(30);
+        builder.Property(item => item.BaseType).HasMaxLength(30);
+        builder.Property(item => item.BaseAmount).HasColumnType("decimal(19,4)");
+        builder.Property(item => item.MinimumBase).HasColumnType("decimal(19,4)");
+        builder.Property(item => item.MaximumBase).HasColumnType("decimal(19,4)");
+        builder.Property(item => item.CalculationRate).HasColumnType("decimal(19,4)");
         builder.Property(item => item.Remarks).HasMaxLength(1000);
         builder.HasIndex(item => item.EmployeePayrollId).HasDatabaseName("IX_EmployeePayrollLines_EmployeePayrollId");
         builder.HasIndex(item => item.PayrollComponentId).HasDatabaseName("IX_EmployeePayrollLines_PayrollComponentId");

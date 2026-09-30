@@ -112,7 +112,7 @@ public sealed class PayrollPreviewService(SIAMISDbContext db, IPayrollCalculatio
                     line.ComponentName, line.ComponentType, line.CalculationMethod, line.PercentageBase,
                     line.Quantity, line.Rate, line.Amount, line.Remarks, line.PayrollRuleId, line.RuleCode,
                     line.RuleName, line.ApplicationMode, line.BaseType, line.BaseAmount,
-                    line.MinimumBase, line.MaximumBase)).ToArray()));
+                    line.MinimumBase, line.MaximumBase, line.SourceType, line.SourceId)).ToArray()));
         }
 
         return ServiceResult<PayrollPreviewSummary>.Success(new PayrollPreviewSummary(payrollPeriodId, results.Count,
