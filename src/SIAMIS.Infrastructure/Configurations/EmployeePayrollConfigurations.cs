@@ -24,6 +24,10 @@ internal sealed class EmployeePayrollConfiguration : IEntityTypeConfiguration<Em
         builder.Property(item => item.TaxableEarnings).HasColumnType("decimal(19,4)").HasDefaultValue(0m).IsRequired();
         builder.Property(item => item.Status).HasMaxLength(30).IsRequired();
         builder.Property(item => item.Remarks).HasMaxLength(2000);
+        builder.Property(item => item.ApprovedAt).HasColumnType("datetime2");
+        builder.Property(item => item.PaidAt).HasColumnType("datetime2");
+        builder.Property(item => item.CancelledAt).HasColumnType("datetime2");
+        builder.Property(item => item.CancellationReason).HasMaxLength(1000);
         builder.Property(item => item.CreatedAt).HasColumnType("datetime2").IsRequired();
         builder.Property(item => item.UpdatedAt).HasColumnType("datetime2").IsRequired();
         builder.HasIndex(item => new { item.PayrollPeriodId, item.EmployeeId })

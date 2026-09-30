@@ -32,7 +32,8 @@ public sealed class EmployeePayrollService(SIAMISDbContext db) : IEmployeePayrol
             .Skip((query.Page - 1) * query.PageSize).Take(query.PageSize)
             .Select(item => new EmployeePayrollListItemDto(
                 new EmployeePayrollDto(item.EmployeePayrollId, item.PayrollPeriodId, item.EmployeeId, item.BasicSalary,
-                    item.GrossPay, item.TotalDeductions, item.NetPay, item.TaxableEarnings, item.Status, item.Remarks, item.CreatedAt, item.UpdatedAt),
+                    item.GrossPay, item.TotalDeductions, item.NetPay, item.TaxableEarnings, item.Status, item.Remarks, item.CreatedAt, item.UpdatedAt,
+                    item.ApprovedAt, item.PaidAt, item.CancelledAt, item.CancellationReason),
                 item.Employee.EmployeeNumber,
                 (item.Employee.PreferredName ?? item.Employee.FirstName) + " " + item.Employee.LastName,
                 item.PayrollPeriod.Code,
@@ -102,12 +103,15 @@ public sealed class EmployeePayrollService(SIAMISDbContext db) : IEmployeePayrol
 
     public async Task<ServiceResult<EmployeePayrollDetailDto>> UpdatePayrollAsync(Guid id, EmployeePayrollUpdateRequest request, CancellationToken ct)
     {
-        var payroll = await db.EmployeePayrolls.SingleOrDefaultAsync(item => item.EmployeePayrollId == id, ct);
+        await using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct);
+        var payroll = await GetPayrollForMutationAsync(id, ct);
         if (payroll is null) return NotFound<EmployeePayrollDetailDto>("Employee payroll was not found.");
+        if (!IsEditable(payroll.Status)) return Conflict<EmployeePayrollDetailDto>($"{payroll.Status} payroll is finalized and cannot be updated.");
         var validation = ValidateHeader(request.PayrollPeriodId, request.EmployeeId, request.Remarks);
         if (validation is not null) return Invalid<EmployeePayrollDetailDto>(validation);
-        var status = request.Status is null ? payroll.Status : NormalizeStatus(request.Status);
-        if (status is null) return Invalid<EmployeePayrollDetailDto>("Status must be Draft, Calculated, Approved, Paid, or Cancelled.");
+        var identityChanged = payroll.EmployeeId != request.EmployeeId || payroll.PayrollPeriodId != request.PayrollPeriodId;
+        if (identityChanged && (payroll.Status != "Draft" || await db.EmployeePayrollLines.AnyAsync(item => item.EmployeePayrollId == id, ct)))
+            return Conflict<EmployeePayrollDetailDto>("EmployeeId and PayrollPeriodId can only change on a Draft payroll with no lines.");
         if (!await db.Employees.AsNoTracking().AnyAsync(item => item.EmployeeId == request.EmployeeId!.Value, ct))
             return NotFound<EmployeePayrollDetailDto>("Employee was not found.");
         var period = await db.PayrollPeriods.AsNoTracking().SingleOrDefaultAsync(item => item.PayrollPeriodId == request.PayrollPeriodId!.Value, ct);
@@ -121,11 +125,11 @@ public sealed class EmployeePayrollService(SIAMISDbContext db) : IEmployeePayrol
 
         payroll.EmployeeId = request.EmployeeId!.Value;
         payroll.PayrollPeriodId = request.PayrollPeriodId!.Value;
-        payroll.Status = status;
         payroll.Remarks = Clean(request.Remarks);
         try
         {
             await db.SaveChangesAsync(ct);
+            await transaction.CommitAsync(ct);
         }
         catch (DbUpdateException ex) when (IsUniqueViolation(ex))
         {
@@ -134,26 +138,72 @@ public sealed class EmployeePayrollService(SIAMISDbContext db) : IEmployeePayrol
         return await GetPayrollAsync(id, ct);
     }
 
-    public async Task<ServiceResult<bool>> SetPayrollStatusAsync(Guid id, string status, CancellationToken ct)
+    // Authorization and authenticated actor attribution must be added when SIAMIS authentication exists.
+    public async Task<ServiceResult<bool>> ApprovePayrollAsync(Guid id, CancellationToken ct)
     {
-        var canonical = NormalizeStatus(status);
-        if (canonical is null) return Invalid<bool>("Status must be Draft, Calculated, Approved, Paid, or Cancelled.");
-        var payroll = await db.EmployeePayrolls.SingleOrDefaultAsync(item => item.EmployeePayrollId == id, ct);
+        await using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct);
+        var payroll = await GetPayrollForMutationAsync(id, ct);
         if (payroll is null) return NotFound<bool>("Employee payroll was not found.");
-        payroll.Status = canonical;
+        if (payroll.Status != "Calculated") return Conflict<bool>($"Only Calculated payroll can be approved. Current status: {payroll.Status}.");
+        var integrityError = await ValidateStoredSnapshotAsync(payroll, ct);
+        if (integrityError is not null) return Conflict<bool>(integrityError);
+        payroll.Status = "Approved";
+        payroll.ApprovedAt = DateTime.UtcNow;
+        payroll.PaidAt = null;
+        payroll.CancelledAt = null;
+        payroll.CancellationReason = null;
         await db.SaveChangesAsync(ct);
+        await transaction.CommitAsync(ct);
+        return ServiceResult<bool>.Success(true);
+    }
+
+    public async Task<ServiceResult<bool>> MarkPayrollPaidAsync(Guid id, CancellationToken ct)
+    {
+        await using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct);
+        var payroll = await GetPayrollForMutationAsync(id, ct);
+        if (payroll is null) return NotFound<bool>("Employee payroll was not found.");
+        if (payroll.Status != "Approved") return Conflict<bool>($"Only Approved payroll can be marked paid. Current status: {payroll.Status}.");
+        if (!payroll.ApprovedAt.HasValue) return Conflict<bool>("ApprovedAt is missing. Historical approval must be reviewed before this payroll can be marked paid.");
+        var integrityError = await ValidateStoredSnapshotAsync(payroll, ct);
+        if (integrityError is not null) return Conflict<bool>(integrityError);
+        payroll.Status = "Paid";
+        payroll.PaidAt = DateTime.UtcNow;
+        payroll.CancelledAt = null;
+        payroll.CancellationReason = null;
+        await db.SaveChangesAsync(ct);
+        await transaction.CommitAsync(ct);
+        return ServiceResult<bool>.Success(true);
+    }
+
+    public async Task<ServiceResult<bool>> CancelPayrollAsync(Guid id, EmployeePayrollCancelRequest request, CancellationToken ct)
+    {
+        await using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct);
+        var payroll = await GetPayrollForMutationAsync(id, ct);
+        if (payroll is null) return NotFound<bool>("Employee payroll was not found.");
+        if (!IsEditable(payroll.Status)) return Conflict<bool>($"Only Draft or Calculated payroll can be cancelled. Current status: {payroll.Status}.");
+        if (string.IsNullOrWhiteSpace(request.Reason) || request.Reason.Length > 1000)
+            return Invalid<bool>("Cancellation reason is required and cannot exceed 1000 characters.");
+        payroll.Status = "Cancelled";
+        payroll.CancelledAt = DateTime.UtcNow;
+        payroll.CancellationReason = request.Reason.Trim();
+        payroll.ApprovedAt = null;
+        payroll.PaidAt = null;
+        await db.SaveChangesAsync(ct);
+        await transaction.CommitAsync(ct);
         return ServiceResult<bool>.Success(true);
     }
 
     public async Task<ServiceResult<bool>> DeletePayrollAsync(Guid id, CancellationToken ct)
     {
-        var payroll = await db.EmployeePayrolls.SingleOrDefaultAsync(item => item.EmployeePayrollId == id, ct);
+        await using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct);
+        var payroll = await GetPayrollForMutationAsync(id, ct);
         if (payroll is null) return NotFound<bool>("Employee payroll was not found.");
-        if (payroll.Status == "Paid") return Conflict<bool>("Paid payroll cannot be deleted.");
+        if (payroll.Status != "Draft") return Conflict<bool>("Only an empty Draft payroll can be deleted.");
         if (await db.EmployeePayrollLines.AnyAsync(item => item.EmployeePayrollId == id, ct))
             return Conflict<bool>("Employee payroll cannot be deleted while payroll lines exist.");
         db.EmployeePayrolls.Remove(payroll);
         await db.SaveChangesAsync(ct);
+        await transaction.CommitAsync(ct);
         return ServiceResult<bool>.Success(true);
     }
 
@@ -191,9 +241,9 @@ public sealed class EmployeePayrollService(SIAMISDbContext db) : IEmployeePayrol
     public async Task<ServiceResult<EmployeePayrollLineDto>> CreateLineAsync(Guid payrollId, EmployeePayrollLineRequest request, CancellationToken ct)
     {
         await using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct);
-        var payroll = await db.EmployeePayrolls.SingleOrDefaultAsync(item => item.EmployeePayrollId == payrollId, ct);
+        var payroll = await GetPayrollForMutationAsync(payrollId, ct);
         if (payroll is null) return NotFound<EmployeePayrollLineDto>("Employee payroll was not found.");
-        if (payroll.Status == "Paid") return Conflict<EmployeePayrollLineDto>("Paid payroll cannot have lines added.");
+        if (!IsEditable(payroll.Status)) return Conflict<EmployeePayrollLineDto>($"{payroll.Status} payroll cannot have lines added.");
         var validation = ValidateLine(request);
         if (validation is not null) return Invalid<EmployeePayrollLineDto>(validation);
         var component = await db.PayrollComponents.AsNoTracking().SingleOrDefaultAsync(item => item.Id == request.PayrollComponentId!.Value, ct);
@@ -214,12 +264,12 @@ public sealed class EmployeePayrollService(SIAMISDbContext db) : IEmployeePayrol
     public async Task<ServiceResult<EmployeePayrollLineDto>> UpdateLineAsync(Guid payrollId, Guid lineId, EmployeePayrollLineRequest request, CancellationToken ct)
     {
         await using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct);
-        var payroll = await db.EmployeePayrolls.SingleOrDefaultAsync(item => item.EmployeePayrollId == payrollId, ct);
+        var payroll = await GetPayrollForMutationAsync(payrollId, ct);
         if (payroll is null) return NotFound<EmployeePayrollLineDto>("Employee payroll was not found.");
         var line = await db.EmployeePayrollLines.SingleOrDefaultAsync(item => item.EmployeePayrollId == payrollId
             && item.EmployeePayrollLineId == lineId, ct);
         if (line is null) return NotFound<EmployeePayrollLineDto>("Payroll line was not found for this payroll.");
-        if (payroll.Status == "Paid") return Conflict<EmployeePayrollLineDto>("Paid payroll lines cannot be updated.");
+        if (!IsEditable(payroll.Status)) return Conflict<EmployeePayrollLineDto>($"{payroll.Status} payroll lines cannot be updated.");
         if (line.SourceType != "Manual")
             return Conflict<EmployeePayrollLineDto>("Generated payroll lines cannot be manually updated. Use a separate Manual adjustment or payroll regeneration.");
         var validation = ValidateLine(request);
@@ -239,12 +289,12 @@ public sealed class EmployeePayrollService(SIAMISDbContext db) : IEmployeePayrol
     public async Task<ServiceResult<bool>> DeleteLineAsync(Guid payrollId, Guid lineId, CancellationToken ct)
     {
         await using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct);
-        var payroll = await db.EmployeePayrolls.SingleOrDefaultAsync(item => item.EmployeePayrollId == payrollId, ct);
+        var payroll = await GetPayrollForMutationAsync(payrollId, ct);
         if (payroll is null) return NotFound<bool>("Employee payroll was not found.");
         var line = await db.EmployeePayrollLines.SingleOrDefaultAsync(item => item.EmployeePayrollId == payrollId
             && item.EmployeePayrollLineId == lineId, ct);
         if (line is null) return NotFound<bool>("Payroll line was not found for this payroll.");
-        if (payroll.Status == "Paid") return Conflict<bool>("Paid payroll lines cannot be deleted.");
+        if (!IsEditable(payroll.Status)) return Conflict<bool>($"{payroll.Status} payroll lines cannot be deleted.");
         if (line.SourceType != "Manual")
             return Conflict<bool>("Generated payroll lines cannot be manually deleted. Use a separate Manual adjustment or payroll regeneration.");
         db.EmployeePayrollLines.Remove(line);
@@ -258,15 +308,7 @@ public sealed class EmployeePayrollService(SIAMISDbContext db) : IEmployeePayrol
     private async Task<string?> ReconcileTotalsAsync(EmployeePayroll payroll, CancellationToken ct)
     {
         // The saved mutation and reconciliation share a transaction; only stored line snapshots determine totals.
-        var totals = await db.EmployeePayrollLines.AsNoTracking()
-            .Where(line => line.EmployeePayrollId == payroll.EmployeePayrollId)
-            .GroupBy(line => line.EmployeePayrollId)
-            .Select(lines => new
-            {
-                GrossPay = lines.Sum(line => line.ComponentType == "Earning" ? line.Amount : 0m),
-                TaxableEarnings = lines.Sum(line => line.ComponentType == "Earning" && line.IsTaxableSnapshot ? line.Amount : 0m),
-                TotalDeductions = lines.Sum(line => line.ComponentType == "Deduction" ? line.Amount : 0m)
-            }).SingleOrDefaultAsync(ct);
+        var totals = await GetStoredTotalsAsync(payroll.EmployeePayrollId, ct);
         var grossPay = totals?.GrossPay ?? 0m;
         var taxableEarnings = totals?.TaxableEarnings ?? 0m;
         var totalDeductions = totals?.TotalDeductions ?? 0m;
@@ -282,6 +324,36 @@ public sealed class EmployeePayrollService(SIAMISDbContext db) : IEmployeePayrol
         await db.SaveChangesAsync(ct);
         return null;
     }
+
+    private Task<EmployeePayroll?> GetPayrollForMutationAsync(Guid id, CancellationToken ct)
+        // UPDLOCK serializes competing transitions before they read status; callers hold a transaction.
+        => db.EmployeePayrolls.FromSqlInterpolated($"SELECT * FROM [EmployeePayrolls] WITH (UPDLOCK) WHERE [EmployeePayrollId] = {id}")
+            .SingleOrDefaultAsync(ct);
+
+    private Task<StoredTotals?> GetStoredTotalsAsync(Guid id, CancellationToken ct)
+        => db.EmployeePayrollLines.AsNoTracking().Where(line => line.EmployeePayrollId == id)
+            .GroupBy(line => line.EmployeePayrollId)
+            .Select(lines => new StoredTotals(
+                lines.Sum(line => line.ComponentType == "Earning" ? line.Amount : 0m),
+                lines.Sum(line => line.ComponentType == "Earning" && line.IsTaxableSnapshot ? line.Amount : 0m),
+                lines.Sum(line => line.ComponentType == "Deduction" ? line.Amount : 0m)))
+            .SingleOrDefaultAsync(ct);
+
+    private async Task<string?> ValidateStoredSnapshotAsync(EmployeePayroll payroll, CancellationToken ct)
+    {
+        var totals = await GetStoredTotalsAsync(payroll.EmployeePayrollId, ct);
+        if (totals is null) return "Stored payroll integrity failed: payroll has no lines.";
+        if (!ValidAmount(totals.GrossPay) || !ValidAmount(totals.TaxableEarnings) || !ValidAmount(totals.TotalDeductions))
+            return "Stored payroll integrity failed: line totals exceed the supported monetary range.";
+        if (payroll.GrossPay != totals.GrossPay || payroll.TaxableEarnings != totals.TaxableEarnings
+            || payroll.TotalDeductions != totals.TotalDeductions || payroll.NetPay != totals.GrossPay - totals.TotalDeductions
+            || totals.TotalDeductions > totals.GrossPay || payroll.NetPay < 0)
+            return "Stored payroll integrity failed: header totals do not match stored lines or deductions exceed GrossPay. No values were changed.";
+        return null;
+    }
+
+    private sealed record StoredTotals(decimal GrossPay, decimal TaxableEarnings, decimal TotalDeductions);
+    private static bool IsEditable(string status) => status is "Draft" or "Calculated";
 
     private static string? ValidateLine(EmployeePayrollLineRequest request)
     {
@@ -331,7 +403,8 @@ public sealed class EmployeePayrollService(SIAMISDbContext db) : IEmployeePayrol
     private static string? Clean(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 
     private static EmployeePayrollDto ToDto(EmployeePayroll item) => new(item.EmployeePayrollId, item.PayrollPeriodId, item.EmployeeId,
-        item.BasicSalary, item.GrossPay, item.TotalDeductions, item.NetPay, item.TaxableEarnings, item.Status, item.Remarks, item.CreatedAt, item.UpdatedAt);
+        item.BasicSalary, item.GrossPay, item.TotalDeductions, item.NetPay, item.TaxableEarnings, item.Status, item.Remarks, item.CreatedAt, item.UpdatedAt,
+        item.ApprovedAt, item.PaidAt, item.CancelledAt, item.CancellationReason);
 
     private static EmployeePayrollLineDto ToDto(EmployeePayrollLine item) => new(item.EmployeePayrollLineId, item.EmployeePayrollId,
         item.PayrollComponentId, item.ComponentCode, item.ComponentName, item.ComponentType, item.Amount, item.Quantity, item.Rate,

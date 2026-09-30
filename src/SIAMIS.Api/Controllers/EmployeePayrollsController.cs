@@ -43,7 +43,7 @@ public sealed class EmployeePayrollsController(IEmployeePayrollService service) 
         return CreatedAtAction(nameof(GetPayroll), new { id = result.Value!.Payroll.EmployeePayrollId }, result.Value);
     }
 
-    /// <summary>Updates employee, period, status and remarks while preserving all server-managed financial totals.</summary>
+    /// <summary>Updates Draft/Calculated remarks. Employee and period may change only on an empty Draft. Financial and lifecycle values are server-managed.</summary>
     [HttpPut("{id:guid}")]
     [ProducesResponseType(typeof(EmployeePayrollDetailDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
@@ -55,18 +55,44 @@ public sealed class EmployeePayrollsController(IEmployeePayrollService service) 
         return result.IsSuccess ? Ok(result.Value) : Failure<EmployeePayrollDetailDto>(result.Failure!);
     }
 
-    /// <summary>Changes only the payroll status.</summary>
-    [HttpPatch("{id:guid}/status")]
+    /// <summary>Approves a Calculated payroll after validating stored financial integrity.</summary>
+    /// <remarks>Authorization and authenticated actor attribution must be added when SIAMIS authentication is implemented.</remarks>
+    [HttpPost("{id:guid}/approve")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> SetStatus(Guid id, [FromBody] EmployeePayrollStatusRequest request, CancellationToken ct)
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> Approve(Guid id, CancellationToken ct)
     {
-        var result = await service.SetPayrollStatusAsync(id, request.Status, ct);
+        var result = await service.ApprovePayrollAsync(id, ct);
         return result.IsSuccess ? NoContent() : Failure<bool>(result.Failure!).Result!;
     }
 
-    /// <summary>Deletes a payroll record only when it is not Paid and has no lines.</summary>
+    /// <summary>Marks an Approved payroll Paid after validating its approval timestamp and stored financial integrity.</summary>
+    /// <remarks>Authorization and authenticated actor attribution must be added when SIAMIS authentication is implemented.</remarks>
+    [HttpPost("{id:guid}/mark-paid")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> MarkPaid(Guid id, CancellationToken ct)
+    {
+        var result = await service.MarkPayrollPaidAsync(id, ct);
+        return result.IsSuccess ? NoContent() : Failure<bool>(result.Failure!).Result!;
+    }
+
+    /// <summary>Cancels a Draft/Calculated payroll with a required reason, preserving financial totals and lines.</summary>
+    /// <remarks>Authorization and authenticated actor attribution must be added when SIAMIS authentication is implemented.</remarks>
+    [HttpPost("{id:guid}/cancel")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> Cancel(Guid id, [FromBody] EmployeePayrollCancelRequest request, CancellationToken ct)
+    {
+        var result = await service.CancelPayrollAsync(id, request, ct);
+        return result.IsSuccess ? NoContent() : Failure<bool>(result.Failure!).Result!;
+    }
+
+    /// <summary>Deletes only an empty Draft payroll.</summary>
     [HttpDelete("{id:guid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
@@ -97,7 +123,7 @@ public sealed class EmployeePayrollsController(IEmployeePayrollService service) 
         return result.IsSuccess ? Ok(result.Value) : Failure<EmployeePayrollLineDto>(result.Failure!);
     }
 
-    /// <summary>Adds a Manual line with current component classification snapshots and atomically reconciles GrossPay, TaxableEarnings, TotalDeductions and NetPay. BasicSalary remains unchanged.</summary>
+    /// <summary>Adds a Manual line to Draft/Calculated payroll and atomically reconciles derived totals from stored snapshots, preserving BasicSalary.</summary>
     [HttpPost("{payrollId:guid}/lines")]
     [ProducesResponseType(typeof(EmployeePayrollLineDto), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
@@ -110,7 +136,7 @@ public sealed class EmployeePayrollsController(IEmployeePayrollService service) 
         return CreatedAtAction(nameof(GetLine), new { payrollId, lineId = result.Value!.EmployeePayrollLineId }, result.Value);
     }
 
-    /// <summary>Updates only a Manual line and reconciles derived header totals atomically. Generated lines are protected. Classification snapshots are preserved for the same component and refreshed when the component changes.</summary>
+    /// <summary>Updates only a Manual line in Draft/Calculated payroll and reconciles derived totals. Same-component classification is preserved; a changed component refreshes classification.</summary>
     [HttpPut("{payrollId:guid}/lines/{lineId:guid}")]
     [ProducesResponseType(typeof(EmployeePayrollLineDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
@@ -122,7 +148,7 @@ public sealed class EmployeePayrollsController(IEmployeePayrollService service) 
         return result.IsSuccess ? Ok(result.Value) : Failure<EmployeePayrollLineDto>(result.Failure!);
     }
 
-    /// <summary>Deletes only a Manual line and atomically reconciles derived header totals unless its payroll is Paid. Generated lines are protected. BasicSalary remains unchanged.</summary>
+    /// <summary>Deletes only a Manual line in Draft/Calculated payroll and atomically reconciles derived totals, preserving BasicSalary.</summary>
     [HttpDelete("{payrollId:guid}/lines/{lineId:guid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]

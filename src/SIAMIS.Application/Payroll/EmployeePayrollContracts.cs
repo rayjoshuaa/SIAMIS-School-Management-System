@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 using SIAMIS.Application.Employees;
 
 namespace SIAMIS.Application.Payroll;
@@ -24,7 +25,11 @@ public sealed record EmployeePayrollDto(
     string Status,
     string? Remarks,
     DateTime CreatedAt,
-    DateTime UpdatedAt);
+    DateTime UpdatedAt,
+    DateTime? ApprovedAt,
+    DateTime? PaidAt,
+    DateTime? CancelledAt,
+    string? CancellationReason);
 
 public sealed record EmployeePayrollListItemDto(
     EmployeePayrollDto Payroll,
@@ -50,6 +55,7 @@ public sealed record EmployeePayrollDetailDto(
     EmployeePayrollPeriodSummaryDto PayrollPeriod,
     IReadOnlyList<EmployeePayrollLineDto> Lines);
 
+[JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
 public sealed class EmployeePayrollCreateRequest
 {
     [Required] public Guid? PayrollPeriodId { get; set; }
@@ -57,17 +63,18 @@ public sealed class EmployeePayrollCreateRequest
     [StringLength(2000)] public string? Remarks { get; set; }
 }
 
+[JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
 public sealed class EmployeePayrollUpdateRequest
 {
     [Required] public Guid? PayrollPeriodId { get; set; }
     [Required] public Guid? EmployeeId { get; set; }
-    [StringLength(30)] public string? Status { get; set; }
     [StringLength(2000)] public string? Remarks { get; set; }
 }
 
-public sealed class EmployeePayrollStatusRequest
+[JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
+public sealed class EmployeePayrollCancelRequest
 {
-    [Required, StringLength(30)] public string Status { get; set; } = string.Empty;
+    [Required, StringLength(1000)] public string Reason { get; set; } = string.Empty;
 }
 
 public sealed record EmployeePayrollLineDto(
@@ -111,7 +118,9 @@ public interface IEmployeePayrollService
     Task<ServiceResult<EmployeePayrollDetailDto>> GetPayrollAsync(Guid id, CancellationToken ct);
     Task<ServiceResult<EmployeePayrollDetailDto>> CreatePayrollAsync(EmployeePayrollCreateRequest request, CancellationToken ct);
     Task<ServiceResult<EmployeePayrollDetailDto>> UpdatePayrollAsync(Guid id, EmployeePayrollUpdateRequest request, CancellationToken ct);
-    Task<ServiceResult<bool>> SetPayrollStatusAsync(Guid id, string status, CancellationToken ct);
+    Task<ServiceResult<bool>> ApprovePayrollAsync(Guid id, CancellationToken ct);
+    Task<ServiceResult<bool>> MarkPayrollPaidAsync(Guid id, CancellationToken ct);
+    Task<ServiceResult<bool>> CancelPayrollAsync(Guid id, EmployeePayrollCancelRequest request, CancellationToken ct);
     Task<ServiceResult<bool>> DeletePayrollAsync(Guid id, CancellationToken ct);
 
     Task<ServiceResult<IReadOnlyList<EmployeePayrollLineDto>>> GetLinesAsync(Guid payrollId, CancellationToken ct);

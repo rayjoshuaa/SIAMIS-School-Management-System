@@ -15,6 +15,10 @@ public sealed class EmployeePayroll : IHasTimestamps
     public decimal TaxableEarnings { get; set; }
     public string Status { get; set; } = "Draft";
     public string? Remarks { get; set; }
+    public DateTime? ApprovedAt { get; set; }
+    public DateTime? PaidAt { get; set; }
+    public DateTime? CancelledAt { get; set; }
+    public string? CancellationReason { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 

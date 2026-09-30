@@ -75,9 +75,9 @@ public sealed class PayrollGenerationService(SIAMISDbContext db, IPayrollCalcula
             var existing = existingPayroll;
             if (existing is not null)
             {
-                if (existing.Status is "Approved" or "Paid") return Skipped(candidate, $"Existing {existing.Status} payroll is protected and cannot be regenerated.", existing);
-                if (!forceRegenerate && existing.Status != "Cancelled") return Skipped(candidate, $"Existing {existing.Status} payroll was skipped because forceRegenerate is false.", existing);
-                if (existing.Status is not ("Draft" or "Calculated" or "Cancelled"))
+                if (existing.Status is "Approved" or "Paid" or "Cancelled") return Skipped(candidate, $"Existing {existing.Status} payroll is protected and cannot be regenerated.", existing);
+                if (!forceRegenerate && existing.Status == "Calculated") return Skipped(candidate, $"Existing {existing.Status} payroll was skipped because forceRegenerate is false.", existing);
+                if (existing.Status is not ("Draft" or "Calculated"))
                     return Failed(candidate, $"Existing payroll status '{existing.Status}' cannot be regenerated.", existing);
             }
 
@@ -122,6 +122,10 @@ public sealed class PayrollGenerationService(SIAMISDbContext db, IPayrollCalcula
                 NetPay = calculated.NetPay,
                 TaxableEarnings = calculated.TaxableEarnings,
                 Status = "Calculated",
+                ApprovedAt = null,
+                PaidAt = null,
+                CancelledAt = null,
+                CancellationReason = null,
                 Lines = calculated.Lines.Select(line => new EmployeePayrollLine
                 {
                     PayrollComponentId = line.PayrollComponentId,
