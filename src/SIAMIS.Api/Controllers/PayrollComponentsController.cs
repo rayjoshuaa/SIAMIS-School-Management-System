@@ -10,17 +10,22 @@ namespace SIAMIS.Api.Controllers;
 [Produces("application/json")]
 public sealed class PayrollComponentsController(IPayrollComponentService service) : ControllerBase
 {
-    /// <summary>Lists payroll components with optional type, inactive and text filters.</summary>
+    /// <summary>Lists payroll components with optional type, inactive, text and classification filters.</summary>
     /// <param name="componentType">Optional component type: Earning or Deduction.</param>
     /// <param name="includeInactive">When true, includes inactive components.</param>
     /// <param name="search">Optional search term matched against code, name or description.</param>
+    /// <param name="isTaxable">Optional taxable classification filter.</param>
+    /// <param name="isStatutory">Optional statutory classification filter.</param>
+    /// <param name="contributionSide">Optional contribution-side filter: Employee, Employer or Both.</param>
     [HttpGet]
     [ProducesResponseType(typeof(IReadOnlyList<PayrollComponentDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<IReadOnlyList<PayrollComponentDto>>> GetPayrollComponents(
-        [FromQuery] string? componentType, [FromQuery] bool includeInactive = false, [FromQuery] string? search = null, CancellationToken ct = default)
+        [FromQuery] string? componentType, [FromQuery] bool includeInactive = false, [FromQuery] string? search = null,
+        [FromQuery] bool? isTaxable = null, [FromQuery] bool? isStatutory = null,
+        [FromQuery] string? contributionSide = null, CancellationToken ct = default)
     {
-        var result = await service.GetPayrollComponentsAsync(componentType, includeInactive, search, ct);
+        var result = await service.GetPayrollComponentsAsync(componentType, includeInactive, search, isTaxable, isStatutory, contributionSide, ct);
         return result.IsSuccess ? Ok(result.Value) : Failure<IReadOnlyList<PayrollComponentDto>>(result.Failure!);
     }
 
@@ -34,7 +39,7 @@ public sealed class PayrollComponentsController(IPayrollComponentService service
         return item is null ? NotFoundProblem() : Ok(item);
     }
 
-    /// <summary>Creates a payroll component. Percentage components require a PercentageBase (BasicSalary, GrossEarnings or GrossPay); other methods require it to be null.</summary>
+    /// <summary>Creates a payroll component. Percentage components require a PercentageBase; classification metadata does not affect calculations.</summary>
     [HttpPost]
     [ProducesResponseType(typeof(PayrollComponentDto), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
@@ -46,7 +51,7 @@ public sealed class PayrollComponentsController(IPayrollComponentService service
         return CreatedAtAction(nameof(GetPayrollComponent), new { id = result.Value!.PayrollComponentId }, result.Value);
     }
 
-    /// <summary>Updates code, name, type, description, calculation method and percentage base without changing active status. PercentageBase is configuration only and does not calculate an amount.</summary>
+    /// <summary>Updates component configuration and classifications without changing active status or calculation behavior.</summary>
     [HttpPut("{id:guid}")]
     [ProducesResponseType(typeof(PayrollComponentDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]

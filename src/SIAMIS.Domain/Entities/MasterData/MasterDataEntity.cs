@@ -41,6 +41,9 @@ public sealed class PayrollComponent : MasterDataEntity
 {
     public string Category { get; set; } = string.Empty;
     public string CalculationMethod { get; set; } = "FixedAmount";
+    public bool IsTaxable { get; set; }
+    public bool IsStatutory { get; set; }
+    public string? ContributionSide { get; set; }
     /// <summary>For Percentage only: BasicSalary means the applicable salary snapshot, GrossEarnings means earnings before deductions, and GrossPay means the future engine's gross payroll amount. This is configuration only; no calculation occurs here.</summary>
     public string? PercentageBase { get; set; }
     public ICollection<SIAMIS.Domain.Entities.Payroll.EmployeePayrollLine> PayrollLines { get; set; } = new List<SIAMIS.Domain.Entities.Payroll.EmployeePayrollLine>();

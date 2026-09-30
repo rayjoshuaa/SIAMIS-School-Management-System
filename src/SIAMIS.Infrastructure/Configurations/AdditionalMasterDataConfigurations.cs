@@ -26,8 +26,14 @@ internal sealed class PayrollComponentConfiguration : IEntityTypeConfiguration<P
 {
     public void Configure(EntityTypeBuilder<PayrollComponent> builder)
     {
+        builder.ToTable("PayrollComponents", table =>
+            table.HasCheckConstraint("CK_PayrollComponents_ContributionSide",
+                "[ContributionSide] IS NULL OR [ContributionSide] IN ('Employee', 'Employer', 'Both')"));
         builder.Property(item => item.Category).HasMaxLength(30).IsRequired();
         builder.Property(item => item.CalculationMethod).HasMaxLength(30).HasDefaultValue("FixedAmount").IsRequired();
         builder.Property(item => item.PercentageBase).HasMaxLength(30).IsRequired(false);
+        builder.Property(item => item.IsTaxable).HasDefaultValue(false).IsRequired();
+        builder.Property(item => item.IsStatutory).HasDefaultValue(false).IsRequired();
+        builder.Property(item => item.ContributionSide).HasMaxLength(20).IsRequired(false);
     }
 }

@@ -3,7 +3,8 @@ using SIAMIS.Application.Employees;
 
 namespace SIAMIS.Application.Payroll;
 
-public sealed record PayrollComponentAssignmentComponentDto(Guid Id, string? Code, string Name, string ComponentType, string CalculationMethod, string? PercentageBase, bool IsActive);
+public sealed record PayrollComponentAssignmentComponentDto(Guid Id, string? Code, string Name, string ComponentType,
+    string CalculationMethod, string? PercentageBase, bool IsActive, bool IsTaxable, bool IsStatutory, string? ContributionSide);
 
 public sealed record EmployeePayrollComponentAssignmentDto(
     Guid EmployeePayrollComponentAssignmentId,
@@ -31,6 +32,9 @@ public sealed record EmployeePayrollComponentAssignmentListItemDto(
     string ComponentType,
     string CalculationMethod,
     string? PercentageBase,
+    bool IsTaxable,
+    bool IsStatutory,
+    string? ContributionSide,
     decimal Amount,
     decimal? Quantity,
     decimal? Rate,

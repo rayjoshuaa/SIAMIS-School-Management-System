@@ -11,7 +11,10 @@ public sealed record PayrollComponentDto(
     string? Description,
     string CalculationMethod,
     string? PercentageBase,
-    bool IsActive);
+    bool IsActive,
+    bool IsTaxable,
+    bool IsStatutory,
+    string? ContributionSide);
 
 public sealed class PayrollComponentRequest
 {
@@ -21,6 +24,9 @@ public sealed class PayrollComponentRequest
     [Required, StringLength(30, MinimumLength = 1)] public string? CalculationMethod { get; set; }
     [StringLength(30)] public string? PercentageBase { get; set; }
     [StringLength(1000)] public string? Description { get; set; }
+    public bool IsTaxable { get; set; }
+    public bool IsStatutory { get; set; }
+    [StringLength(20)] public string? ContributionSide { get; set; }
 }
 
 public sealed class PayrollComponentStatusRequest
@@ -30,7 +36,8 @@ public sealed class PayrollComponentStatusRequest
 
 public interface IPayrollComponentService
 {
-    Task<ServiceResult<IReadOnlyList<PayrollComponentDto>>> GetPayrollComponentsAsync(string? componentType, bool includeInactive, string? search, CancellationToken cancellationToken);
+    Task<ServiceResult<IReadOnlyList<PayrollComponentDto>>> GetPayrollComponentsAsync(string? componentType, bool includeInactive, string? search,
+        bool? isTaxable, bool? isStatutory, string? contributionSide, CancellationToken cancellationToken);
     Task<PayrollComponentDto?> GetPayrollComponentAsync(Guid id, CancellationToken cancellationToken);
     Task<ServiceResult<PayrollComponentDto>> CreatePayrollComponentAsync(PayrollComponentRequest request, CancellationToken cancellationToken);
     Task<ServiceResult<PayrollComponentDto>> UpdatePayrollComponentAsync(Guid id, PayrollComponentRequest request, CancellationToken cancellationToken);

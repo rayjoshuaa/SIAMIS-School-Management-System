@@ -10,17 +10,27 @@ namespace SIAMIS.Infrastructure.Services;
 public sealed class PayrollComponentService(SIAMISDbContext db) : IPayrollComponentService
 {
     public async Task<ServiceResult<IReadOnlyList<PayrollComponentDto>>> GetPayrollComponentsAsync(
-        string? componentType, bool includeInactive, string? search, CancellationToken cancellationToken)
+        string? componentType, bool includeInactive, string? search, bool? isTaxable, bool? isStatutory,
+        string? contributionSide, CancellationToken cancellationToken)
     {
         var canonicalType = NormalizeType(componentType);
         if (componentType is not null && canonicalType is null)
             return Validation<IReadOnlyList<PayrollComponentDto>>("ComponentType must be Earning or Deduction.");
+        var canonicalContributionSide = NormalizeContributionSide(contributionSide);
+        if (!string.IsNullOrWhiteSpace(contributionSide) && canonicalContributionSide is null)
+            return Validation<IReadOnlyList<PayrollComponentDto>>("ContributionSide must be Employee, Employer, or Both.");
 
         IQueryable<PayrollComponent> query = db.PayrollComponents.AsNoTracking();
         if (!includeInactive)
             query = query.Where(item => item.IsActive);
         if (canonicalType is not null)
             query = query.Where(item => item.Category == canonicalType);
+        if (isTaxable.HasValue)
+            query = query.Where(item => item.IsTaxable == isTaxable.Value);
+        if (isStatutory.HasValue)
+            query = query.Where(item => item.IsStatutory == isStatutory.Value);
+        if (canonicalContributionSide is not null)
+            query = query.Where(item => item.ContributionSide == canonicalContributionSide);
         if (!string.IsNullOrWhiteSpace(search))
         {
             var term = search.Trim();
@@ -31,7 +41,8 @@ public sealed class PayrollComponentService(SIAMISDbContext db) : IPayrollCompon
 
         IReadOnlyList<PayrollComponentDto> items = await query
             .OrderBy(item => item.Name).ThenBy(item => item.Id)
-            .Select(item => new PayrollComponentDto(item.Id, item.Code!, item.Name, item.Category, item.Description, item.CalculationMethod, item.PercentageBase, item.IsActive))
+            .Select(item => new PayrollComponentDto(item.Id, item.Code!, item.Name, item.Category, item.Description, item.CalculationMethod,
+                item.PercentageBase, item.IsActive, item.IsTaxable, item.IsStatutory, item.ContributionSide))
             .ToListAsync(cancellationToken);
         return ServiceResult<IReadOnlyList<PayrollComponentDto>>.Success(items);
     }
@@ -39,7 +50,8 @@ public sealed class PayrollComponentService(SIAMISDbContext db) : IPayrollCompon
     public async Task<PayrollComponentDto?> GetPayrollComponentAsync(Guid id, CancellationToken cancellationToken)
         => await db.PayrollComponents.AsNoTracking()
             .Where(item => item.Id == id)
-            .Select(item => new PayrollComponentDto(item.Id, item.Code!, item.Name, item.Category, item.Description, item.CalculationMethod, item.PercentageBase, item.IsActive))
+            .Select(item => new PayrollComponentDto(item.Id, item.Code!, item.Name, item.Category, item.Description, item.CalculationMethod,
+                item.PercentageBase, item.IsActive, item.IsTaxable, item.IsStatutory, item.ContributionSide))
             .SingleOrDefaultAsync(cancellationToken);
 
     public async Task<ServiceResult<PayrollComponentDto>> CreatePayrollComponentAsync(PayrollComponentRequest request, CancellationToken cancellationToken)
@@ -57,6 +69,9 @@ public sealed class PayrollComponentService(SIAMISDbContext db) : IPayrollCompon
             CalculationMethod = values.CalculationMethod!,
             PercentageBase = values.PercentageBase,
             Description = values.Description,
+            IsTaxable = request.IsTaxable,
+            IsStatutory = request.IsStatutory,
+            ContributionSide = values.ContributionSide,
             IsActive = true
         };
         db.PayrollComponents.Add(component);
@@ -86,6 +101,9 @@ public sealed class PayrollComponentService(SIAMISDbContext db) : IPayrollCompon
         component.CalculationMethod = values.CalculationMethod!;
         component.PercentageBase = values.PercentageBase;
         component.Description = values.Description;
+        component.IsTaxable = request.IsTaxable;
+        component.IsStatutory = request.IsStatutory;
+        component.ContributionSide = values.ContributionSide;
         try
         {
             await db.SaveChangesAsync(cancellationToken);
@@ -115,22 +133,27 @@ public sealed class PayrollComponentService(SIAMISDbContext db) : IPayrollCompon
         return ServiceResult<bool>.Success(true);
     }
 
-    private static (string? Code, string? Name, string? Type, string? CalculationMethod, string? PercentageBase, string? Description, ApiFailure? Failure) Normalize(PayrollComponentRequest request)
+    private static (string? Code, string? Name, string? Type, string? CalculationMethod, string? PercentageBase,
+        string? Description, string? ContributionSide, ApiFailure? Failure) Normalize(PayrollComponentRequest request)
     {
         var code = request.Code?.Trim();
         var name = request.Name?.Trim();
         var type = NormalizeType(request.ComponentType);
         var calculationMethod = NormalizeCalculationMethod(request.CalculationMethod);
         var percentageBase = NormalizePercentageBase(request.PercentageBase);
-        if (string.IsNullOrWhiteSpace(code)) return (null, null, null, null, null, null, new("validation", "Code is required."));
-        if (string.IsNullOrWhiteSpace(name)) return (null, null, null, null, null, null, new("validation", "Name is required."));
-        if (type is null) return (null, null, null, null, null, null, new("validation", "ComponentType must be Earning or Deduction."));
-        if (calculationMethod is null) return (null, null, null, null, null, null, new("validation", "CalculationMethod must be FixedAmount, QuantityRate, Percentage, or Manual."));
+        var contributionSide = NormalizeContributionSide(request.ContributionSide);
+        if (string.IsNullOrWhiteSpace(code)) return (null, null, null, null, null, null, null, new("validation", "Code is required."));
+        if (string.IsNullOrWhiteSpace(name)) return (null, null, null, null, null, null, null, new("validation", "Name is required."));
+        if (type is null) return (null, null, null, null, null, null, null, new("validation", "ComponentType must be Earning or Deduction."));
+        if (calculationMethod is null) return (null, null, null, null, null, null, null, new("validation", "CalculationMethod must be FixedAmount, QuantityRate, Percentage, or Manual."));
+        if (!string.IsNullOrWhiteSpace(request.ContributionSide) && contributionSide is null)
+            return (null, null, null, null, null, null, null, new("validation", "ContributionSide must be Employee, Employer, or Both."));
         if (calculationMethod == "Percentage" && percentageBase is null)
-            return (null, null, null, null, null, null, new("validation", "PercentageBase is required when CalculationMethod is Percentage and must be BasicSalary, GrossEarnings, or GrossPay."));
+            return (null, null, null, null, null, null, null, new("validation", "PercentageBase is required when CalculationMethod is Percentage and must be BasicSalary, GrossEarnings, or GrossPay."));
         if (calculationMethod != "Percentage" && request.PercentageBase is not null)
-            return (null, null, null, null, null, null, new("validation", "PercentageBase must be null unless CalculationMethod is Percentage."));
-        return (code, name, type, calculationMethod, percentageBase, string.IsNullOrWhiteSpace(request.Description) ? null : request.Description.Trim(), null);
+            return (null, null, null, null, null, null, null, new("validation", "PercentageBase must be null unless CalculationMethod is Percentage."));
+        return (code, name, type, calculationMethod, percentageBase,
+            string.IsNullOrWhiteSpace(request.Description) ? null : request.Description.Trim(), contributionSide, null);
     }
 
     private static string? NormalizeCalculationMethod(string? value)
@@ -157,8 +180,18 @@ public sealed class PayrollComponentService(SIAMISDbContext db) : IPayrollCompon
             : value?.Trim().Equals("Deduction", StringComparison.OrdinalIgnoreCase) == true ? "Deduction"
             : null;
 
+    private static string? NormalizeContributionSide(string? value)
+        => value?.Trim() switch
+        {
+            { } side when side.Equals("Employee", StringComparison.OrdinalIgnoreCase) => "Employee",
+            { } side when side.Equals("Employer", StringComparison.OrdinalIgnoreCase) => "Employer",
+            { } side when side.Equals("Both", StringComparison.OrdinalIgnoreCase) => "Both",
+            _ => null
+        };
+
     private static PayrollComponentDto Map(PayrollComponent item)
-        => new(item.Id, item.Code!, item.Name, item.Category, item.Description, item.CalculationMethod, item.PercentageBase, item.IsActive);
+        => new(item.Id, item.Code!, item.Name, item.Category, item.Description, item.CalculationMethod, item.PercentageBase,
+            item.IsActive, item.IsTaxable, item.IsStatutory, item.ContributionSide);
 
     private static bool IsUniqueConstraintViolation(DbUpdateException exception)
         => exception.InnerException is SqlException { Number: 2601 or 2627 };

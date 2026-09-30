@@ -208,7 +208,8 @@ public sealed class PayrollRuleService(SIAMISDbContext db) : IPayrollRuleService
 
     private static PayrollRuleDto ToDto(PayrollRule item)
         => new(item.PayrollRuleId, item.Code, item.Name, item.PayrollComponentId, item.PayrollComponent.Code,
-            item.PayrollComponent.Name, item.PayrollComponent.Category, item.ApplicationMode,
+            item.PayrollComponent.Name, item.PayrollComponent.Category, item.PayrollComponent.IsTaxable,
+            item.PayrollComponent.IsStatutory, item.PayrollComponent.ContributionSide, item.ApplicationMode,
             item.Priority, item.Description, item.RuleType, item.CalculationMethod, item.CalculationStage,
             item.Rate, item.FixedAmount, item.MinimumBase, item.MaximumBase, item.BaseType, item.AppliesTo,
             item.EffectiveFrom, item.EffectiveTo, item.IsActive, item.CreatedAt, item.UpdatedAt);
