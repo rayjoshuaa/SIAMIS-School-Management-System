@@ -1,0 +1,24 @@
+using SIAMIS.Domain.Common;
+
+namespace SIAMIS.Domain.Entities.Payroll;
+
+public sealed class PayrollRule : IHasTimestamps
+{
+    public Guid PayrollRuleId { get; set; } = Guid.NewGuid();
+    public string Code { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
+    public string? Description { get; set; }
+    public string RuleType { get; set; } = string.Empty;
+    public string CalculationMethod { get; set; } = string.Empty;
+    public decimal? Rate { get; set; }
+    public decimal? FixedAmount { get; set; }
+    public decimal? MinimumBase { get; set; }
+    public decimal? MaximumBase { get; set; }
+    public string? BaseType { get; set; }
+    public string AppliesTo { get; set; } = string.Empty;
+    public DateOnly EffectiveFrom { get; set; }
+    public DateOnly? EffectiveTo { get; set; }
+    public bool IsActive { get; set; } = true;
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+}

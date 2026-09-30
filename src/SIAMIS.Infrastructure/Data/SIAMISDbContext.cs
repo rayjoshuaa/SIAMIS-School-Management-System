@@ -27,6 +27,7 @@ public sealed class SIAMISDbContext(DbContextOptions<SIAMISDbContext> options) :
     public DbSet<PayType> PayTypes => Set<PayType>();
     public DbSet<PayrollComponent> PayrollComponents => Set<PayrollComponent>();
     public DbSet<PayrollPeriod> PayrollPeriods => Set<PayrollPeriod>();
+    public DbSet<PayrollRule> PayrollRules => Set<PayrollRule>();
     public DbSet<EmployeePayroll> EmployeePayrolls => Set<EmployeePayroll>();
     public DbSet<EmployeePayrollLine> EmployeePayrollLines => Set<EmployeePayrollLine>();
     public DbSet<EmployeePayrollComponentAssignment> EmployeePayrollComponentAssignments => Set<EmployeePayrollComponentAssignment>();

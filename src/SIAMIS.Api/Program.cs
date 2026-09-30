@@ -31,6 +31,7 @@ builder.Services.AddScoped<IEmployeePerformanceService, EmployeePerformanceServi
 builder.Services.AddScoped<IMasterDataService, MasterDataService>();
 builder.Services.AddScoped<IPayrollComponentService, PayrollComponentService>();
 builder.Services.AddScoped<IPayrollPeriodService, PayrollPeriodService>();
+builder.Services.AddScoped<IPayrollRuleService, PayrollRuleService>();
 builder.Services.AddScoped<IPayrollGenerationService, PayrollGenerationService>();
 builder.Services.AddScoped<IPayrollCalculationService, PayrollCalculationService>();
 builder.Services.AddScoped<IPayrollPreviewService, PayrollPreviewService>();
