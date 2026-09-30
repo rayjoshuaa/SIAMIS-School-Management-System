@@ -30,26 +30,26 @@ public sealed class EmployeePayrollsController(IEmployeePayrollService service) 
         return result.IsSuccess ? Ok(result.Value) : Failure<EmployeePayrollDetailDto>(result.Failure!);
     }
 
-    /// <summary>Creates a payroll snapshot using explicitly supplied existing totals. TaxableEarnings starts at zero and is server-managed. Status defaults to Draft.</summary>
+    /// <summary>Creates an empty Draft payroll header. All financial totals are server-managed and start at zero.</summary>
     [HttpPost]
     [ProducesResponseType(typeof(EmployeePayrollDetailDto), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
-    public async Task<ActionResult<EmployeePayrollDetailDto>> CreatePayroll([FromBody] EmployeePayrollRequest request, CancellationToken ct)
+    public async Task<ActionResult<EmployeePayrollDetailDto>> CreatePayroll([FromBody] EmployeePayrollCreateRequest request, CancellationToken ct)
     {
         var result = await service.CreatePayrollAsync(request, ct);
         if (!result.IsSuccess) return Failure<EmployeePayrollDetailDto>(result.Failure!);
         return CreatedAtAction(nameof(GetPayroll), new { id = result.Value!.Payroll.EmployeePayrollId }, result.Value);
     }
 
-    /// <summary>Updates explicitly supplied payroll values while preserving server-managed TaxableEarnings.</summary>
+    /// <summary>Updates employee, period, status and remarks while preserving all server-managed financial totals.</summary>
     [HttpPut("{id:guid}")]
     [ProducesResponseType(typeof(EmployeePayrollDetailDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
-    public async Task<ActionResult<EmployeePayrollDetailDto>> UpdatePayroll(Guid id, [FromBody] EmployeePayrollRequest request, CancellationToken ct)
+    public async Task<ActionResult<EmployeePayrollDetailDto>> UpdatePayroll(Guid id, [FromBody] EmployeePayrollUpdateRequest request, CancellationToken ct)
     {
         var result = await service.UpdatePayrollAsync(id, request, ct);
         return result.IsSuccess ? Ok(result.Value) : Failure<EmployeePayrollDetailDto>(result.Failure!);
@@ -110,7 +110,7 @@ public sealed class EmployeePayrollsController(IEmployeePayrollService service) 
         return CreatedAtAction(nameof(GetLine), new { payrollId, lineId = result.Value!.EmployeePayrollLineId }, result.Value);
     }
 
-    /// <summary>Updates a line and reconciles derived header totals atomically. Classification snapshots are preserved for the same component and refreshed when the component changes.</summary>
+    /// <summary>Updates only a Manual line and reconciles derived header totals atomically. Generated lines are protected. Classification snapshots are preserved for the same component and refreshed when the component changes.</summary>
     [HttpPut("{payrollId:guid}/lines/{lineId:guid}")]
     [ProducesResponseType(typeof(EmployeePayrollLineDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
@@ -122,7 +122,7 @@ public sealed class EmployeePayrollsController(IEmployeePayrollService service) 
         return result.IsSuccess ? Ok(result.Value) : Failure<EmployeePayrollLineDto>(result.Failure!);
     }
 
-    /// <summary>Deletes a line and atomically reconciles derived header totals unless its payroll is Paid. BasicSalary remains unchanged.</summary>
+    /// <summary>Deletes only a Manual line and atomically reconciles derived header totals unless its payroll is Paid. Generated lines are protected. BasicSalary remains unchanged.</summary>
     [HttpDelete("{payrollId:guid}/lines/{lineId:guid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]

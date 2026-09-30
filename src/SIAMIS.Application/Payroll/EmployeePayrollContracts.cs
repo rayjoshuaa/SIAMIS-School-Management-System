@@ -50,14 +50,17 @@ public sealed record EmployeePayrollDetailDto(
     EmployeePayrollPeriodSummaryDto PayrollPeriod,
     IReadOnlyList<EmployeePayrollLineDto> Lines);
 
-public sealed class EmployeePayrollRequest
+public sealed class EmployeePayrollCreateRequest
 {
     [Required] public Guid? PayrollPeriodId { get; set; }
     [Required] public Guid? EmployeeId { get; set; }
-    [Required, Range(typeof(decimal), "0", "999999999999999.9999")] public decimal? BasicSalary { get; set; }
-    [Required, Range(typeof(decimal), "0", "999999999999999.9999")] public decimal? GrossPay { get; set; }
-    [Required, Range(typeof(decimal), "0", "999999999999999.9999")] public decimal? TotalDeductions { get; set; }
-    [Required, Range(typeof(decimal), "0", "999999999999999.9999")] public decimal? NetPay { get; set; }
+    [StringLength(2000)] public string? Remarks { get; set; }
+}
+
+public sealed class EmployeePayrollUpdateRequest
+{
+    [Required] public Guid? PayrollPeriodId { get; set; }
+    [Required] public Guid? EmployeeId { get; set; }
     [StringLength(30)] public string? Status { get; set; }
     [StringLength(2000)] public string? Remarks { get; set; }
 }
@@ -106,8 +109,8 @@ public interface IEmployeePayrollService
 {
     Task<ServiceResult<PagedResult<EmployeePayrollListItemDto>>> GetPayrollsAsync(EmployeePayrollListQuery query, CancellationToken ct);
     Task<ServiceResult<EmployeePayrollDetailDto>> GetPayrollAsync(Guid id, CancellationToken ct);
-    Task<ServiceResult<EmployeePayrollDetailDto>> CreatePayrollAsync(EmployeePayrollRequest request, CancellationToken ct);
-    Task<ServiceResult<EmployeePayrollDetailDto>> UpdatePayrollAsync(Guid id, EmployeePayrollRequest request, CancellationToken ct);
+    Task<ServiceResult<EmployeePayrollDetailDto>> CreatePayrollAsync(EmployeePayrollCreateRequest request, CancellationToken ct);
+    Task<ServiceResult<EmployeePayrollDetailDto>> UpdatePayrollAsync(Guid id, EmployeePayrollUpdateRequest request, CancellationToken ct);
     Task<ServiceResult<bool>> SetPayrollStatusAsync(Guid id, string status, CancellationToken ct);
     Task<ServiceResult<bool>> DeletePayrollAsync(Guid id, CancellationToken ct);
 

@@ -64,10 +64,10 @@ public sealed class EmployeePayrollService(SIAMISDbContext db) : IEmployeePayrol
             lines));
     }
 
-    public async Task<ServiceResult<EmployeePayrollDetailDto>> CreatePayrollAsync(EmployeePayrollRequest request, CancellationToken ct)
+    public async Task<ServiceResult<EmployeePayrollDetailDto>> CreatePayrollAsync(EmployeePayrollCreateRequest request, CancellationToken ct)
     {
-        var validation = ValidateHeader(request, "Draft");
-        if (validation.Failure is not null) return ServiceResult<EmployeePayrollDetailDto>.Fail("validation", validation.Failure);
+        var validation = ValidateHeader(request.PayrollPeriodId, request.EmployeeId, request.Remarks);
+        if (validation is not null) return Invalid<EmployeePayrollDetailDto>(validation);
         if (!await db.Employees.AsNoTracking().AnyAsync(item => item.EmployeeId == request.EmployeeId!.Value, ct))
             return NotFound<EmployeePayrollDetailDto>("Employee was not found.");
         var period = await db.PayrollPeriods.AsNoTracking().SingleOrDefaultAsync(item => item.PayrollPeriodId == request.PayrollPeriodId!.Value, ct);
@@ -76,8 +76,18 @@ public sealed class EmployeePayrollService(SIAMISDbContext db) : IEmployeePayrol
         if (await db.EmployeePayrolls.AnyAsync(item => item.EmployeeId == request.EmployeeId && item.PayrollPeriodId == request.PayrollPeriodId, ct))
             return Conflict<EmployeePayrollDetailDto>("An employee payroll already exists for this employee and payroll period.");
 
-        var payroll = new EmployeePayroll { PayrollPeriodId = period.PayrollPeriodId, EmployeeId = request.EmployeeId!.Value };
-        ApplyHeader(payroll, request, validation.Status!);
+        var payroll = new EmployeePayroll
+        {
+            PayrollPeriodId = period.PayrollPeriodId,
+            EmployeeId = request.EmployeeId!.Value,
+            BasicSalary = 0m,
+            GrossPay = 0m,
+            TaxableEarnings = 0m,
+            TotalDeductions = 0m,
+            NetPay = 0m,
+            Status = "Draft",
+            Remarks = Clean(request.Remarks)
+        };
         db.EmployeePayrolls.Add(payroll);
         try
         {
@@ -90,14 +100,14 @@ public sealed class EmployeePayrollService(SIAMISDbContext db) : IEmployeePayrol
         return await GetPayrollAsync(payroll.EmployeePayrollId, ct);
     }
 
-    public async Task<ServiceResult<EmployeePayrollDetailDto>> UpdatePayrollAsync(Guid id, EmployeePayrollRequest request, CancellationToken ct)
+    public async Task<ServiceResult<EmployeePayrollDetailDto>> UpdatePayrollAsync(Guid id, EmployeePayrollUpdateRequest request, CancellationToken ct)
     {
         var payroll = await db.EmployeePayrolls.SingleOrDefaultAsync(item => item.EmployeePayrollId == id, ct);
         if (payroll is null) return NotFound<EmployeePayrollDetailDto>("Employee payroll was not found.");
-        var validation = ValidateHeader(request, payroll.Status);
-        if (validation.Failure is not null) return ServiceResult<EmployeePayrollDetailDto>.Fail("validation", validation.Failure);
-        if (payroll.Status == "Paid" && HasChangedTotals(payroll, request))
-            return Conflict<EmployeePayrollDetailDto>("Paid payroll monetary values cannot be modified.");
+        var validation = ValidateHeader(request.PayrollPeriodId, request.EmployeeId, request.Remarks);
+        if (validation is not null) return Invalid<EmployeePayrollDetailDto>(validation);
+        var status = request.Status is null ? payroll.Status : NormalizeStatus(request.Status);
+        if (status is null) return Invalid<EmployeePayrollDetailDto>("Status must be Draft, Calculated, Approved, Paid, or Cancelled.");
         if (!await db.Employees.AsNoTracking().AnyAsync(item => item.EmployeeId == request.EmployeeId!.Value, ct))
             return NotFound<EmployeePayrollDetailDto>("Employee was not found.");
         var period = await db.PayrollPeriods.AsNoTracking().SingleOrDefaultAsync(item => item.PayrollPeriodId == request.PayrollPeriodId!.Value, ct);
@@ -111,7 +121,8 @@ public sealed class EmployeePayrollService(SIAMISDbContext db) : IEmployeePayrol
 
         payroll.EmployeeId = request.EmployeeId!.Value;
         payroll.PayrollPeriodId = request.PayrollPeriodId!.Value;
-        ApplyHeader(payroll, request, validation.Status!);
+        payroll.Status = status;
+        payroll.Remarks = Clean(request.Remarks);
         try
         {
             await db.SaveChangesAsync(ct);
@@ -209,6 +220,8 @@ public sealed class EmployeePayrollService(SIAMISDbContext db) : IEmployeePayrol
             && item.EmployeePayrollLineId == lineId, ct);
         if (line is null) return NotFound<EmployeePayrollLineDto>("Payroll line was not found for this payroll.");
         if (payroll.Status == "Paid") return Conflict<EmployeePayrollLineDto>("Paid payroll lines cannot be updated.");
+        if (line.SourceType != "Manual")
+            return Conflict<EmployeePayrollLineDto>("Generated payroll lines cannot be manually updated. Use a separate Manual adjustment or payroll regeneration.");
         var validation = ValidateLine(request);
         if (validation is not null) return Invalid<EmployeePayrollLineDto>(validation);
         var component = await db.PayrollComponents.AsNoTracking().SingleOrDefaultAsync(item => item.Id == request.PayrollComponentId!.Value, ct);
@@ -232,6 +245,8 @@ public sealed class EmployeePayrollService(SIAMISDbContext db) : IEmployeePayrol
             && item.EmployeePayrollLineId == lineId, ct);
         if (line is null) return NotFound<bool>("Payroll line was not found for this payroll.");
         if (payroll.Status == "Paid") return Conflict<bool>("Paid payroll lines cannot be deleted.");
+        if (line.SourceType != "Manual")
+            return Conflict<bool>("Generated payroll lines cannot be manually deleted. Use a separate Manual adjustment or payroll regeneration.");
         db.EmployeePayrollLines.Remove(line);
         await db.SaveChangesAsync(ct);
         var reconciliationError = await ReconcileTotalsAsync(payroll, ct);
@@ -282,27 +297,12 @@ public sealed class EmployeePayrollService(SIAMISDbContext db) : IEmployeePayrol
         return null;
     }
 
-    private static (string? Status, string? Failure) ValidateHeader(EmployeePayrollRequest request, string fallbackStatus)
+    private static string? ValidateHeader(Guid? payrollPeriodId, Guid? employeeId, string? remarks)
     {
-        if (!request.PayrollPeriodId.HasValue) return (null, "PayrollPeriodId is required.");
-        if (!request.EmployeeId.HasValue) return (null, "EmployeeId is required.");
-        if (!request.BasicSalary.HasValue || !ValidAmount(request.BasicSalary.Value)) return (null, "BasicSalary must be non-negative and fit decimal(19,4).");
-        if (!request.GrossPay.HasValue || !ValidAmount(request.GrossPay.Value)) return (null, "GrossPay must be non-negative and fit decimal(19,4).");
-        if (!request.TotalDeductions.HasValue || !ValidAmount(request.TotalDeductions.Value)) return (null, "TotalDeductions must be non-negative and fit decimal(19,4).");
-        if (!request.NetPay.HasValue || !ValidAmount(request.NetPay.Value)) return (null, "NetPay must be non-negative and fit decimal(19,4).");
-        if (request.Remarks?.Length > 2000) return (null, "Remarks cannot exceed 2000 characters.");
-        var status = request.Status is null ? fallbackStatus : NormalizeStatus(request.Status);
-        return status is null ? (null, "Status must be Draft, Calculated, Approved, Paid, or Cancelled.") : (status, null);
-    }
-
-    private static void ApplyHeader(EmployeePayroll item, EmployeePayrollRequest request, string status)
-    {
-        item.BasicSalary = request.BasicSalary!.Value;
-        item.GrossPay = request.GrossPay!.Value;
-        item.TotalDeductions = request.TotalDeductions!.Value;
-        item.NetPay = request.NetPay!.Value;
-        item.Status = status;
-        item.Remarks = Clean(request.Remarks);
+        if (!payrollPeriodId.HasValue) return "PayrollPeriodId is required.";
+        if (!employeeId.HasValue) return "EmployeeId is required.";
+        if (remarks?.Length > 2000) return "Remarks cannot exceed 2000 characters.";
+        return null;
     }
 
     private static void ApplyLine(EmployeePayrollLine line, EmployeePayrollLineRequest request, Domain.Entities.MasterData.PayrollComponent component)
@@ -322,10 +322,6 @@ public sealed class EmployeePayrollService(SIAMISDbContext db) : IEmployeePayrol
         line.Rate = request.Rate;
         line.Remarks = Clean(request.Remarks);
     }
-
-    private static bool HasChangedTotals(EmployeePayroll existing, EmployeePayrollRequest request)
-        => existing.BasicSalary != request.BasicSalary || existing.GrossPay != request.GrossPay
-            || existing.TotalDeductions != request.TotalDeductions || existing.NetPay != request.NetPay;
 
     private static bool ValidAmount(decimal value) => value >= 0 && value <= MaximumAmount && HasScaleFour(value);
     private static bool HasScaleFour(decimal value) => decimal.Round(value, 4) == value;
