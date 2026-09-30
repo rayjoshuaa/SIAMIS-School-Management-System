@@ -229,5 +229,5 @@ public interface IEmployeeService
     Task<EmployeeDetailDto?> GetEmployeeAsync(Guid employeeId, CancellationToken cancellationToken);
     Task<ServiceResult<EmployeeDetailDto>> CreateEmployeeAsync(CreateEmployeeRequest request, CancellationToken cancellationToken);
     Task<ServiceResult<EmployeeDetailDto>> UpdateEmployeeAsync(Guid employeeId, UpdateEmployeeRequest request, CancellationToken cancellationToken);
-    Task<bool> SetEmployeeStatusAsync(Guid employeeId, bool isActive, CancellationToken cancellationToken);
+    Task<ServiceResult<bool>> SetEmployeeStatusAsync(Guid employeeId, bool isActive, CancellationToken cancellationToken);
 }

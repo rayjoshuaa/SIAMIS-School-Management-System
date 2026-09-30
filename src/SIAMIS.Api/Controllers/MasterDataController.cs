@@ -33,8 +33,8 @@ public sealed class MasterDataController(IMasterDataService masterData) : Contro
     /// <summary>Returns employment statuses ordered by name.</summary>
     /// <param name="includeInactive">When true, includes inactive employment statuses; otherwise only active values are returned.</param>
     [HttpGet("employment-statuses")]
-    [ProducesResponseType(typeof(IReadOnlyList<MasterDataItemDto>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<IReadOnlyList<MasterDataItemDto>>> GetEmploymentStatuses([FromQuery] bool includeInactive = false, CancellationToken cancellationToken = default)
+    [ProducesResponseType(typeof(IReadOnlyList<EmploymentStatusDto>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<IReadOnlyList<EmploymentStatusDto>>> GetEmploymentStatuses([FromQuery] bool includeInactive = false, CancellationToken cancellationToken = default)
         => Ok(await masterData.GetEmploymentStatusesAsync(includeInactive, cancellationToken));
 
     /// <summary>Returns locations ordered by name.</summary>

@@ -16,8 +16,11 @@ public sealed class MasterDataService(SIAMISDbContext db) : IMasterDataService
     public Task<IReadOnlyList<MasterDataItemDto>> GetEmploymentTypesAsync(bool includeInactive, CancellationToken cancellationToken)
         => GetAsync<EmploymentType>(includeInactive, cancellationToken);
 
-    public Task<IReadOnlyList<MasterDataItemDto>> GetEmploymentStatusesAsync(bool includeInactive, CancellationToken cancellationToken)
-        => GetAsync<EmploymentStatus>(includeInactive, cancellationToken);
+    public async Task<IReadOnlyList<EmploymentStatusDto>> GetEmploymentStatusesAsync(bool includeInactive, CancellationToken cancellationToken)
+        => await db.EmploymentStatuses.AsNoTracking().Where(x => includeInactive || x.IsActive)
+            .OrderBy(x => x.Name).ThenBy(x => x.Id)
+            .Select(x => new EmploymentStatusDto(x.Id, x.Code, x.Name, x.Description, x.IsActive, x.IsTerminal))
+            .ToListAsync(cancellationToken);
 
     public Task<IReadOnlyList<MasterDataItemDto>> GetLocationsAsync(bool includeInactive, CancellationToken cancellationToken)
         => GetAsync<Location>(includeInactive, cancellationToken);

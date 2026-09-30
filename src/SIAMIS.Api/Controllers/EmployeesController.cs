@@ -38,7 +38,7 @@ public sealed class EmployeesController(IEmployeeService employees) : Controller
         return CreatedAtAction(nameof(GetEmployee), new { id = result.Value!.EmployeeId }, result.Value);
     }
 
-    /// <summary>Updates employee and current employment data. Supplied child collections replace their matching collection; omitted collections remain unchanged.</summary>
+    /// <summary>Corrects employee/profile and current employment data; use lifecycle endpoints for effective context changes or ending/rehiring employment. Supplied child collections replace their matching collection; omitted collections remain unchanged.</summary>
     [HttpPut("{id:guid}")]
     [ProducesResponseType(typeof(EmployeeDetailDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
@@ -50,14 +50,17 @@ public sealed class EmployeesController(IEmployeeService employees) : Controller
         return result.IsSuccess ? Ok(result.Value) : Failure(result.Failure!);
     }
 
-    /// <summary>Changes only the employee active status.</summary>
+    /// <summary>Accepts only a consistent no-op status request. Use end-employment or rehire to change lifecycle state.</summary>
     [HttpPatch("{id:guid}/status")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> SetStatus(Guid id, [FromBody] EmployeeStatusRequest request, CancellationToken cancellationToken)
-        => await employees.SetEmployeeStatusAsync(id, request.IsActive!.Value, cancellationToken)
-            ? NoContent()
-            : NotFoundProblem("Employee was not found.");
+    {
+        var result = await employees.SetEmployeeStatusAsync(id, request.IsActive!.Value, cancellationToken);
+        return result.IsSuccess ? NoContent() : Problem(statusCode: result.Failure!.Code == "not_found" ? 404 : 409,
+            title: "Employment lifecycle", detail: result.Failure.Message);
+    }
 
     private ActionResult<EmployeeDetailDto> Failure(ApiFailure failure) => failure.Code switch
     {

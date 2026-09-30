@@ -14,7 +14,7 @@ public interface IMasterDataService
     Task<IReadOnlyList<MasterDataItemDto>> GetDepartmentsAsync(bool includeInactive, CancellationToken cancellationToken);
     Task<IReadOnlyList<MasterDataItemDto>> GetDesignationsAsync(bool includeInactive, CancellationToken cancellationToken);
     Task<IReadOnlyList<MasterDataItemDto>> GetEmploymentTypesAsync(bool includeInactive, CancellationToken cancellationToken);
-    Task<IReadOnlyList<MasterDataItemDto>> GetEmploymentStatusesAsync(bool includeInactive, CancellationToken cancellationToken);
+    Task<IReadOnlyList<EmploymentStatusDto>> GetEmploymentStatusesAsync(bool includeInactive, CancellationToken cancellationToken);
     Task<IReadOnlyList<MasterDataItemDto>> GetLocationsAsync(bool includeInactive, CancellationToken cancellationToken);
     Task<IReadOnlyList<MasterDataItemDto>> GetHiringSourcesAsync(bool includeInactive, CancellationToken cancellationToken);
     Task<IReadOnlyList<MasterDataItemDto>> GetGendersAsync(bool includeInactive, CancellationToken cancellationToken);

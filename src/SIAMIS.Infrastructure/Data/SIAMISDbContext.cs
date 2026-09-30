@@ -59,6 +59,7 @@ public sealed class SIAMISDbContext(DbContextOptions<SIAMISDbContext> options) :
         modelBuilder.ApplyConfiguration(new MasterDataConfiguration<Designation>("Designations"));
         modelBuilder.ApplyConfiguration(new MasterDataConfiguration<EmploymentType>("EmploymentTypes"));
         modelBuilder.ApplyConfiguration(new MasterDataConfiguration<EmploymentStatus>("EmploymentStatuses"));
+        modelBuilder.Entity<EmploymentStatus>().Property(x => x.IsTerminal).IsRequired().HasDefaultValue(false);
         modelBuilder.ApplyConfiguration(new MasterDataConfiguration<ContractType>("ContractTypes"));
         modelBuilder.ApplyConfiguration(new MasterDataConfiguration<Location>("Locations"));
         modelBuilder.ApplyConfiguration(new MasterDataConfiguration<AddressType>("AddressTypes"));

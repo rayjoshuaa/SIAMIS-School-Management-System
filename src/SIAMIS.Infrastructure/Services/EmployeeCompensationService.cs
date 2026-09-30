@@ -137,8 +137,8 @@ public sealed class EmployeeCompensationService(SIAMISDbContext db) : IEmployeeC
 
     private static string? ValidateCurrentReplacement(EmployeeCompensation current, DateOnly newEffectiveFrom)
     {
-        if (newEffectiveFrom < current.EffectiveFrom)
-            return "A new current compensation cannot start before the existing current compensation.";
+        if (newEffectiveFrom <= current.EffectiveFrom)
+            return "A new current compensation must start after the existing current compensation.";
         if (current.EffectiveTo.HasValue && current.EffectiveTo.Value >= newEffectiveFrom)
             return "The new current compensation would overlap the existing compensation period.";
         if (!current.EffectiveTo.HasValue && newEffectiveFrom == DateOnly.MinValue)

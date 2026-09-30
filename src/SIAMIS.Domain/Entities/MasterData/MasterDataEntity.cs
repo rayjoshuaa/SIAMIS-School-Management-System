@@ -16,7 +16,10 @@ public abstract class MasterDataEntity : IHasTimestamps
 public sealed class Department : MasterDataEntity { }
 public sealed class Designation : MasterDataEntity { }
 public sealed class EmploymentType : MasterDataEntity { }
-public sealed class EmploymentStatus : MasterDataEntity { }
+public sealed class EmploymentStatus : MasterDataEntity
+{
+    public bool IsTerminal { get; set; }
+}
 public sealed class ContractType : MasterDataEntity { }
 public sealed class Location : MasterDataEntity { }
 public sealed class AddressType : MasterDataEntity { }

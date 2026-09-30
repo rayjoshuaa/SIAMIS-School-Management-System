@@ -22,7 +22,8 @@ internal static class MasterDataSeeds
             "Managing Director", "Marketing Executive", "Marketing Manager", "Math & Science"
         });
         Seed<EmploymentType>(modelBuilder, "30000000", "ET", new[] { "Full Time", "Part Time", "Contract", "Temporary", "Intern", "Probationary" });
-        Seed<EmploymentStatus>(modelBuilder, "40000000", "ES", new[] { "Active", "Probation", "On Leave", "Suspended", "Resigned", "Terminated", "Retired", "End of Contract", "Inactive" });
+        Seed<EmploymentStatus>(modelBuilder, "40000000", "ES", new[] { "Active", "Probation", "On Leave", "Suspended", "Resigned", "Terminated", "Retired", "End of Contract", "Inactive" },
+            (item, _) => item.IsTerminal = item.Code is "ES-005" or "ES-006" or "ES-007" or "ES-008");
         Seed<ContractType>(modelBuilder, "50000000", "CT", new[] { "Permanent", "Fixed Term", "Probationary", "Temporary", "Part Time", "Consultancy", "Internship" });
         Seed<Location>(modelBuilder, "60000000", "LOC", new[] { "Main Campus", "Secondary Campus", "Primary Campus", "Administration Office", "Other" });
         Seed<AddressType>(modelBuilder, "11000000", "ADDR", new[] { "Current", "Permanent", "Other" });

@@ -1,3 +1,4 @@
+using System.Data;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
@@ -60,7 +61,11 @@ public sealed class EmployeeService(SIAMISDbContext db) : IEmployeeService
 
     public async Task<ServiceResult<EmployeeDetailDto>> CreateEmployeeAsync(CreateEmployeeRequest request, CancellationToken cancellationToken)
     {
+        await using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken);
         var validation = await ValidateWriteRequest(request, null, cancellationToken);
+        if (validation is null && request.EndDate.HasValue) return Invalid("New employment must be open-ended; use end-employment after creation.");
+        if (validation is null && !await db.EmploymentStatuses.AnyAsync(x => x.Id == request.EmploymentStatusId && !x.IsTerminal, cancellationToken))
+            return Invalid("New employment requires a non-terminal status.");
         if (validation is not null) return validation;
         var employeeNumber = request.EmployeeNumber.Trim();
         if (await db.Employees.AnyAsync(item => item.EmployeeNumber == employeeNumber, cancellationToken))
@@ -85,11 +90,15 @@ public sealed class EmployeeService(SIAMISDbContext db) : IEmployeeService
         {
             return ServiceResult<EmployeeDetailDto>.Fail("conflict", "EmployeeNumber is already in use.");
         }
+        await transaction.CommitAsync(cancellationToken);
         return ServiceResult<EmployeeDetailDto>.Success(Map(await EmployeeGraph().SingleAsync(item => item.EmployeeId == employee.EmployeeId, cancellationToken)));
     }
 
     public async Task<ServiceResult<EmployeeDetailDto>> UpdateEmployeeAsync(Guid employeeId, UpdateEmployeeRequest request, CancellationToken cancellationToken)
     {
+        await using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken);
+        if (await EmploymentIntegrity.LockAsync(db, employeeId, cancellationToken) is null)
+            return ServiceResult<EmployeeDetailDto>.Fail("not_found", "Employee was not found.");
         var employee = await EmployeeGraph().SingleOrDefaultAsync(item => item.EmployeeId == employeeId, cancellationToken);
         if (employee is null) return ServiceResult<EmployeeDetailDto>.Fail("not_found", "Employee was not found.");
         var validation = await ValidateWriteRequest(request, employeeId, cancellationToken);
@@ -97,6 +106,31 @@ public sealed class EmployeeService(SIAMISDbContext db) : IEmployeeService
         var employeeNumber = request.EmployeeNumber.Trim();
         if (await db.Employees.AnyAsync(item => item.EmployeeId != employeeId && item.EmployeeNumber == employeeNumber, cancellationToken))
             return ServiceResult<EmployeeDetailDto>.Fail("conflict", "EmployeeNumber is already in use.");
+
+        var history = await db.EmploymentRecords.Where(x => x.EmployeeId == employeeId).ToListAsync(cancellationToken);
+        var current = history.SingleOrDefault(x => x.IsCurrent);
+        if (current is null)
+        {
+            if (employee.IsActive) return ServiceResult<EmployeeDetailDto>.Fail("conflict", "Active employee has no current employment; review legacy state.");
+            var last = history.OrderByDescending(x => x.StartDate ?? x.HireDate).FirstOrDefault();
+            if (last is null || request.HireDate != last.HireDate || request.StartDate != last.StartDate || request.EndDate != last.EndDate
+                || request.DepartmentId != last.DepartmentId || request.DesignationId != last.DesignationId || request.LocationId != last.LocationId
+                || request.EmploymentTypeId != last.EmploymentTypeId || request.EmploymentStatusId != last.EmploymentStatusId
+                || request.HiringSourceId != last.HiringSourceId
+                || request.ReportingToEmployeeId.HasValue && request.ReportingToEmployeeId != last.ReportingToEmployeeId)
+                return ServiceResult<EmployeeDetailDto>.Fail("conflict", "Employee PUT cannot create or rewrite ended employment. Retain the last employment values for profile corrections; use rehire for new employment.");
+        }
+        else
+        {
+            if (!employee.IsActive || current.EndDate.HasValue) return ServiceResult<EmployeeDetailDto>.Fail("conflict", "Current employment and active state are inconsistent; use lifecycle workflows or review legacy state.");
+            if (request.EndDate.HasValue) return Invalid("Use end-employment to set EndDate.");
+            var candidate = CreateEmployment(request); candidate.EmployeeId = employeeId;
+            candidate.ReportingToEmployeeId = request.ReportingToEmployeeId ?? current.ReportingToEmployeeId;
+            var error = EmploymentIntegrity.Dates(candidate) ?? await EmploymentIntegrity.ContextAsync(db, candidate, cancellationToken);
+            if (error is not null) return Invalid(error);
+            if (history.Any(x => x.EmploymentRecordId != current.EmploymentRecordId && EmploymentIntegrity.Overlaps(x, candidate)))
+                return Invalid("The corrected employment range overlaps historical employment.");
+        }
 
         employee.EmployeeNumber = employeeNumber;
         employee.FirstName = request.FirstName.Trim();
@@ -109,9 +143,7 @@ public sealed class EmployeeService(SIAMISDbContext db) : IEmployeeService
         employee.NationalityId = request.NationalityId;
         employee.ProfilePhoto = Clean(request.ProfilePhoto);
 
-        var current = employee.EmploymentRecords.SingleOrDefault(record => record.IsCurrent);
-        if (current is null) employee.EmploymentRecords.Add(CreateEmployment(request));
-        else UpdateEmployment(current, request);
+        if (current is not null) UpdateEmployment(current, request);
 
         // A supplied collection replaces that collection; an omitted collection is left intact.
         if (request.Contacts is not null)
@@ -143,16 +175,20 @@ public sealed class EmployeeService(SIAMISDbContext db) : IEmployeeService
         {
             return ServiceResult<EmployeeDetailDto>.Fail("conflict", "EmployeeNumber is already in use.");
         }
+        await transaction.CommitAsync(cancellationToken);
         return ServiceResult<EmployeeDetailDto>.Success(Map(await EmployeeGraph().AsNoTracking().SingleAsync(item => item.EmployeeId == employeeId, cancellationToken)));
     }
 
-    public async Task<bool> SetEmployeeStatusAsync(Guid employeeId, bool isActive, CancellationToken cancellationToken)
+    public async Task<ServiceResult<bool>> SetEmployeeStatusAsync(Guid employeeId, bool isActive, CancellationToken cancellationToken)
     {
-        var employee = await db.Employees.SingleOrDefaultAsync(item => item.EmployeeId == employeeId, cancellationToken);
-        if (employee is null) return false;
-        employee.IsActive = isActive;
-        await db.SaveChangesAsync(cancellationToken);
-        return true;
+        await using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken);
+        var employee = await EmploymentIntegrity.LockAsync(db, employeeId, cancellationToken);
+        if (employee is null) return ServiceResult<bool>.Fail("not_found", "Employee was not found.");
+        var hasOpen = await db.EmploymentRecords.AnyAsync(x => x.EmployeeId == employeeId && x.IsCurrent && x.EndDate == null, cancellationToken);
+        if (employee.IsActive != isActive || isActive != hasOpen)
+            return ServiceResult<bool>.Fail("conflict", "Use end-employment or rehire; a status toggle cannot change employment lifecycle or repair legacy state.");
+        await transaction.CommitAsync(cancellationToken);
+        return ServiceResult<bool>.Success(true);
     }
 
     private IQueryable<Employee> EmployeeGraph() => db.Employees.AsSplitQuery()
@@ -244,6 +280,7 @@ public sealed class EmployeeService(SIAMISDbContext db) : IEmployeeService
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
         if (request.DateOfBirth > today) return Invalid("DateOfBirth cannot be in the future.");
         if (request.HireDate > today.AddYears(1)) return Invalid("HireDate is outside the supported date range.");
+        if (request.StartDate < request.HireDate) return Invalid("StartDate cannot be before HireDate.");
         if (request.EndDate.HasValue && request.StartDate.HasValue && request.EndDate < request.StartDate)
             return Invalid("EndDate cannot be earlier than StartDate.");
         if (request.EndDate.HasValue && request.EndDate < request.HireDate)

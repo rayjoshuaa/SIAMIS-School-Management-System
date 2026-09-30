@@ -88,7 +88,12 @@ internal sealed class EmploymentRecordConfiguration : IEntityTypeConfiguration<E
 {
     public void Configure(EntityTypeBuilder<EmploymentRecord> builder)
     {
-        builder.ToTable("EmploymentRecords");
+        builder.ToTable("EmploymentRecords", table =>
+        {
+            table.HasCheckConstraint("CK_EmploymentRecords_StartDate", "[StartDate] IS NULL OR [StartDate] >= [HireDate]");
+            table.HasCheckConstraint("CK_EmploymentRecords_EndDate", "[EndDate] IS NULL OR [EndDate] >= COALESCE([StartDate], [HireDate])");
+            table.HasCheckConstraint("CK_EmploymentRecords_CurrentOpen", "[IsCurrent] = 0 OR [EndDate] IS NULL");
+        });
         builder.HasKey(item => item.EmploymentRecordId);
         builder.Property(item => item.HireDate).HasColumnType("date");
         builder.Property(item => item.StartDate).HasColumnType("date");
