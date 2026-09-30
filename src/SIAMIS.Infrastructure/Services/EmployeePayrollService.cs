@@ -1,3 +1,4 @@
+using System.Data;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using SIAMIS.Application.Employees;
@@ -31,7 +32,7 @@ public sealed class EmployeePayrollService(SIAMISDbContext db) : IEmployeePayrol
             .Skip((query.Page - 1) * query.PageSize).Take(query.PageSize)
             .Select(item => new EmployeePayrollListItemDto(
                 new EmployeePayrollDto(item.EmployeePayrollId, item.PayrollPeriodId, item.EmployeeId, item.BasicSalary,
-                    item.GrossPay, item.TotalDeductions, item.NetPay, item.Status, item.Remarks, item.CreatedAt, item.UpdatedAt),
+                    item.GrossPay, item.TotalDeductions, item.NetPay, item.TaxableEarnings, item.Status, item.Remarks, item.CreatedAt, item.UpdatedAt),
                 item.Employee.EmployeeNumber,
                 (item.Employee.PreferredName ?? item.Employee.FirstName) + " " + item.Employee.LastName,
                 item.PayrollPeriod.Code,
@@ -51,7 +52,8 @@ public sealed class EmployeePayrollService(SIAMISDbContext db) : IEmployeePayrol
             .Select(item => new EmployeePayrollLineDto(item.EmployeePayrollLineId, item.EmployeePayrollId, item.PayrollComponentId,
                 item.ComponentCode, item.ComponentName, item.ComponentType, item.Amount, item.Quantity, item.Rate, item.Remarks,
                 item.SourceType, item.SourceId, item.CalculationMethodSnapshot, item.RuleCode, item.RuleName,
-                item.ApplicationMode, item.BaseType, item.BaseAmount, item.MinimumBase, item.MaximumBase, item.CalculationRate))
+                item.ApplicationMode, item.BaseType, item.BaseAmount, item.MinimumBase, item.MaximumBase, item.CalculationRate,
+                item.IsTaxableSnapshot, item.IsStatutorySnapshot, item.ContributionSideSnapshot))
             .ToListAsync(ct);
         var employee = payroll.Employee;
         var period = payroll.PayrollPeriod;
@@ -153,7 +155,8 @@ public sealed class EmployeePayrollService(SIAMISDbContext db) : IEmployeePayrol
             .Select(item => new EmployeePayrollLineDto(item.EmployeePayrollLineId, item.EmployeePayrollId, item.PayrollComponentId,
                 item.ComponentCode, item.ComponentName, item.ComponentType, item.Amount, item.Quantity, item.Rate, item.Remarks,
                 item.SourceType, item.SourceId, item.CalculationMethodSnapshot, item.RuleCode, item.RuleName,
-                item.ApplicationMode, item.BaseType, item.BaseAmount, item.MinimumBase, item.MaximumBase, item.CalculationRate))
+                item.ApplicationMode, item.BaseType, item.BaseAmount, item.MinimumBase, item.MaximumBase, item.CalculationRate,
+                item.IsTaxableSnapshot, item.IsStatutorySnapshot, item.ContributionSideSnapshot))
             .ToListAsync(ct);
         return ServiceResult<IReadOnlyList<EmployeePayrollLineDto>>.Success(lines);
     }
@@ -167,7 +170,8 @@ public sealed class EmployeePayrollService(SIAMISDbContext db) : IEmployeePayrol
             .Select(item => new EmployeePayrollLineDto(item.EmployeePayrollLineId, item.EmployeePayrollId, item.PayrollComponentId,
                 item.ComponentCode, item.ComponentName, item.ComponentType, item.Amount, item.Quantity, item.Rate, item.Remarks,
                 item.SourceType, item.SourceId, item.CalculationMethodSnapshot, item.RuleCode, item.RuleName,
-                item.ApplicationMode, item.BaseType, item.BaseAmount, item.MinimumBase, item.MaximumBase, item.CalculationRate))
+                item.ApplicationMode, item.BaseType, item.BaseAmount, item.MinimumBase, item.MaximumBase, item.CalculationRate,
+                item.IsTaxableSnapshot, item.IsStatutorySnapshot, item.ContributionSideSnapshot))
             .SingleOrDefaultAsync(ct);
         return line is null ? NotFound<EmployeePayrollLineDto>("Payroll line was not found for this payroll.")
             : ServiceResult<EmployeePayrollLineDto>.Success(line);
@@ -175,6 +179,7 @@ public sealed class EmployeePayrollService(SIAMISDbContext db) : IEmployeePayrol
 
     public async Task<ServiceResult<EmployeePayrollLineDto>> CreateLineAsync(Guid payrollId, EmployeePayrollLineRequest request, CancellationToken ct)
     {
+        await using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct);
         var payroll = await db.EmployeePayrolls.SingleOrDefaultAsync(item => item.EmployeePayrollId == payrollId, ct);
         if (payroll is null) return NotFound<EmployeePayrollLineDto>("Employee payroll was not found.");
         if (payroll.Status == "Paid") return Conflict<EmployeePayrollLineDto>("Paid payroll cannot have lines added.");
@@ -189,11 +194,15 @@ public sealed class EmployeePayrollService(SIAMISDbContext db) : IEmployeePayrol
         ApplyLine(line, request, component);
         db.EmployeePayrollLines.Add(line);
         await db.SaveChangesAsync(ct);
+        if (!await UpdateTaxableEarningsAsync(payroll, ct))
+            return Invalid<EmployeePayrollLineDto>("TaxableEarnings exceeds the supported decimal(19,4) range.");
+        await transaction.CommitAsync(ct);
         return ServiceResult<EmployeePayrollLineDto>.Success(ToDto(line));
     }
 
     public async Task<ServiceResult<EmployeePayrollLineDto>> UpdateLineAsync(Guid payrollId, Guid lineId, EmployeePayrollLineRequest request, CancellationToken ct)
     {
+        await using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct);
         var payroll = await db.EmployeePayrolls.SingleOrDefaultAsync(item => item.EmployeePayrollId == payrollId, ct);
         if (payroll is null) return NotFound<EmployeePayrollLineDto>("Employee payroll was not found.");
         var line = await db.EmployeePayrollLines.SingleOrDefaultAsync(item => item.EmployeePayrollId == payrollId
@@ -208,11 +217,15 @@ public sealed class EmployeePayrollService(SIAMISDbContext db) : IEmployeePayrol
         if (component.Code is null) return Invalid<EmployeePayrollLineDto>("Payroll component must have a code before it can be added to payroll.");
         ApplyLine(line, request, component);
         await db.SaveChangesAsync(ct);
+        if (!await UpdateTaxableEarningsAsync(payroll, ct))
+            return Invalid<EmployeePayrollLineDto>("TaxableEarnings exceeds the supported decimal(19,4) range.");
+        await transaction.CommitAsync(ct);
         return ServiceResult<EmployeePayrollLineDto>.Success(ToDto(line));
     }
 
     public async Task<ServiceResult<bool>> DeleteLineAsync(Guid payrollId, Guid lineId, CancellationToken ct)
     {
+        await using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct);
         var payroll = await db.EmployeePayrolls.SingleOrDefaultAsync(item => item.EmployeePayrollId == payrollId, ct);
         if (payroll is null) return NotFound<bool>("Employee payroll was not found.");
         var line = await db.EmployeePayrollLines.SingleOrDefaultAsync(item => item.EmployeePayrollId == payrollId
@@ -221,7 +234,23 @@ public sealed class EmployeePayrollService(SIAMISDbContext db) : IEmployeePayrol
         if (payroll.Status == "Paid") return Conflict<bool>("Paid payroll lines cannot be deleted.");
         db.EmployeePayrollLines.Remove(line);
         await db.SaveChangesAsync(ct);
+        if (!await UpdateTaxableEarningsAsync(payroll, ct))
+            return Invalid<bool>("TaxableEarnings exceeds the supported decimal(19,4) range.");
+        await transaction.CommitAsync(ct);
         return ServiceResult<bool>.Success(true);
+    }
+
+    private async Task<bool> UpdateTaxableEarningsAsync(EmployeePayroll payroll, CancellationToken ct)
+    {
+        // The line mutation has been saved inside the same transaction; stored snapshots are authoritative.
+        var taxableEarnings = await db.EmployeePayrollLines
+            .Where(line => line.EmployeePayrollId == payroll.EmployeePayrollId
+                && line.ComponentType == "Earning" && line.IsTaxableSnapshot)
+            .SumAsync(line => (decimal?)line.Amount, ct) ?? 0m;
+        if (!ValidAmount(taxableEarnings)) return false;
+        payroll.TaxableEarnings = taxableEarnings;
+        await db.SaveChangesAsync(ct);
+        return true;
     }
 
     private static string? ValidateLine(EmployeePayrollLineRequest request)
@@ -263,6 +292,12 @@ public sealed class EmployeePayrollService(SIAMISDbContext db) : IEmployeePayrol
 
     private static void ApplyLine(EmployeePayrollLine line, EmployeePayrollLineRequest request, Domain.Entities.MasterData.PayrollComponent component)
     {
+        if (line.PayrollComponentId != component.Id)
+        {
+            line.IsTaxableSnapshot = component.IsTaxable;
+            line.IsStatutorySnapshot = component.IsStatutory;
+            line.ContributionSideSnapshot = component.ContributionSide;
+        }
         line.PayrollComponentId = component.Id;
         line.ComponentCode = component.Code!;
         line.ComponentName = component.Name;
@@ -285,12 +320,13 @@ public sealed class EmployeePayrollService(SIAMISDbContext db) : IEmployeePayrol
     private static string? Clean(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 
     private static EmployeePayrollDto ToDto(EmployeePayroll item) => new(item.EmployeePayrollId, item.PayrollPeriodId, item.EmployeeId,
-        item.BasicSalary, item.GrossPay, item.TotalDeductions, item.NetPay, item.Status, item.Remarks, item.CreatedAt, item.UpdatedAt);
+        item.BasicSalary, item.GrossPay, item.TotalDeductions, item.NetPay, item.TaxableEarnings, item.Status, item.Remarks, item.CreatedAt, item.UpdatedAt);
 
     private static EmployeePayrollLineDto ToDto(EmployeePayrollLine item) => new(item.EmployeePayrollLineId, item.EmployeePayrollId,
         item.PayrollComponentId, item.ComponentCode, item.ComponentName, item.ComponentType, item.Amount, item.Quantity, item.Rate,
         item.Remarks, item.SourceType, item.SourceId, item.CalculationMethodSnapshot, item.RuleCode, item.RuleName,
-        item.ApplicationMode, item.BaseType, item.BaseAmount, item.MinimumBase, item.MaximumBase, item.CalculationRate);
+        item.ApplicationMode, item.BaseType, item.BaseAmount, item.MinimumBase, item.MaximumBase, item.CalculationRate,
+        item.IsTaxableSnapshot, item.IsStatutorySnapshot, item.ContributionSideSnapshot);
 
     private static bool IsUniqueViolation(DbUpdateException ex) => ex.InnerException is SqlException { Number: 2601 or 2627 };
     private static ServiceResult<T> Invalid<T>(string message) => ServiceResult<T>.Fail("validation", message);

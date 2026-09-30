@@ -4,7 +4,7 @@ using SIAMIS.Application.Payroll;
 
 namespace SIAMIS.Api.Controllers;
 
-/// <summary>Manages stored employee payroll snapshots and their payroll lines; no payroll amounts are calculated here.</summary>
+/// <summary>Manages stored payroll snapshots. Line mutations maintain server-managed TaxableEarnings from stored snapshots.</summary>
 [ApiController]
 [Route("api/employee-payrolls")]
 [Produces("application/json")]
@@ -30,7 +30,7 @@ public sealed class EmployeePayrollsController(IEmployeePayrollService service) 
         return result.IsSuccess ? Ok(result.Value) : Failure<EmployeePayrollDetailDto>(result.Failure!);
     }
 
-    /// <summary>Creates a payroll snapshot using explicitly supplied totals. Status defaults to Draft; no amounts are calculated.</summary>
+    /// <summary>Creates a payroll snapshot using explicitly supplied existing totals. TaxableEarnings starts at zero and is server-managed. Status defaults to Draft.</summary>
     [HttpPost]
     [ProducesResponseType(typeof(EmployeePayrollDetailDto), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
@@ -43,7 +43,7 @@ public sealed class EmployeePayrollsController(IEmployeePayrollService service) 
         return CreatedAtAction(nameof(GetPayroll), new { id = result.Value!.Payroll.EmployeePayrollId }, result.Value);
     }
 
-    /// <summary>Updates stored payroll snapshot values without recalculating them.</summary>
+    /// <summary>Updates explicitly supplied payroll values while preserving server-managed TaxableEarnings.</summary>
     [HttpPut("{id:guid}")]
     [ProducesResponseType(typeof(EmployeePayrollDetailDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
@@ -97,7 +97,7 @@ public sealed class EmployeePayrollsController(IEmployeePayrollService service) 
         return result.IsSuccess ? Ok(result.Value) : Failure<EmployeePayrollLineDto>(result.Failure!);
     }
 
-    /// <summary>Adds a payroll line and copies code, name and type snapshots from an active payroll component.</summary>
+    /// <summary>Adds a Manual line with current component classification snapshots and atomically updates TaxableEarnings. Other header totals remain unchanged.</summary>
     [HttpPost("{payrollId:guid}/lines")]
     [ProducesResponseType(typeof(EmployeePayrollLineDto), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
@@ -110,7 +110,7 @@ public sealed class EmployeePayrollsController(IEmployeePayrollService service) 
         return CreatedAtAction(nameof(GetLine), new { payrollId, lineId = result.Value!.EmployeePayrollLineId }, result.Value);
     }
 
-    /// <summary>Updates a payroll line and refreshes its component snapshot from the selected active component.</summary>
+    /// <summary>Updates a line and TaxableEarnings atomically. Classification snapshots are preserved for the same component and refreshed when the component changes.</summary>
     [HttpPut("{payrollId:guid}/lines/{lineId:guid}")]
     [ProducesResponseType(typeof(EmployeePayrollLineDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
@@ -122,7 +122,7 @@ public sealed class EmployeePayrollsController(IEmployeePayrollService service) 
         return result.IsSuccess ? Ok(result.Value) : Failure<EmployeePayrollLineDto>(result.Failure!);
     }
 
-    /// <summary>Deletes a payroll line unless its payroll is Paid.</summary>
+    /// <summary>Deletes a line and atomically updates TaxableEarnings unless its payroll is Paid. Other header totals remain unchanged.</summary>
     [HttpDelete("{payrollId:guid}/lines/{lineId:guid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]

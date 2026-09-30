@@ -104,7 +104,7 @@ public sealed class PayrollPreviewService(SIAMISDbContext db, IPayrollCalculatio
             }
 
             results.Add(new PayrollPreviewEmployeeResult(employee.EmployeeId, employee.EmployeeNumber, name, "Calculated",
-                calculation.BasicSalary, calculation.GrossPay, calculation.TotalDeductions, calculation.NetPay,
+                calculation.BasicSalary, calculation.GrossPay, calculation.TotalDeductions, calculation.NetPay, calculation.TaxableEarnings,
                 calculation.SkippedRuleExplanations is { Count: > 0 }
                     ? $"Payroll preview calculated. {string.Join(" ", calculation.SkippedRuleExplanations)}"
                     : "Payroll preview calculated.",
@@ -112,7 +112,8 @@ public sealed class PayrollPreviewService(SIAMISDbContext db, IPayrollCalculatio
                     line.ComponentName, line.ComponentType, line.CalculationMethod, line.PercentageBase,
                     line.Quantity, line.Rate, line.Amount, line.Remarks, line.PayrollRuleId, line.RuleCode,
                     line.RuleName, line.ApplicationMode, line.BaseType, line.BaseAmount,
-                    line.MinimumBase, line.MaximumBase, line.SourceType, line.SourceId)).ToArray()));
+                    line.MinimumBase, line.MaximumBase, line.SourceType, line.SourceId,
+                    line.IsTaxableSnapshot, line.IsStatutorySnapshot, line.ContributionSideSnapshot)).ToArray()));
         }
 
         return ServiceResult<PayrollPreviewSummary>.Success(new PayrollPreviewSummary(payrollPeriodId, results.Count,
@@ -121,7 +122,7 @@ public sealed class PayrollPreviewService(SIAMISDbContext db, IPayrollCalculatio
     }
 
     private static PayrollPreviewEmployeeResult Result(EmployeeCandidate employee, string name, string status, string message)
-        => new(employee.EmployeeId, employee.EmployeeNumber, name, status, null, null, null, null, message, []);
+        => new(employee.EmployeeId, employee.EmployeeNumber, name, status, null, null, null, null, null, message, []);
 
     private static string FormatName(EmployeeCandidate employee)
         => string.Join(' ', new[] { string.IsNullOrWhiteSpace(employee.PreferredName) ? employee.FirstName : employee.PreferredName, employee.MiddleName, employee.LastName }

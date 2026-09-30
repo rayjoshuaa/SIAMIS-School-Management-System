@@ -12,6 +12,9 @@ public sealed class EmployeePayrollLine
     public string ComponentCode { get; set; } = string.Empty;
     public string ComponentName { get; set; } = string.Empty;
     public string ComponentType { get; set; } = string.Empty;
+    public bool IsTaxableSnapshot { get; set; }
+    public bool IsStatutorySnapshot { get; set; }
+    public string? ContributionSideSnapshot { get; set; }
     public decimal Amount { get; set; }
     public decimal? Quantity { get; set; }
     public decimal? Rate { get; set; }

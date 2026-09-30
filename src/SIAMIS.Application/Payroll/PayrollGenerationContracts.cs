@@ -16,7 +16,8 @@ public sealed record PayrollGenerationEmployeeResult(
     decimal? GrossPay,
     decimal? TotalDeductions,
     decimal? NetPay,
-    string Message);
+    string Message,
+    decimal? TaxableEarnings = null);
 
 public sealed record PayrollGenerationSummary(
     Guid PayrollPeriodId,

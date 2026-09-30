@@ -120,6 +120,7 @@ public sealed class PayrollGenerationService(SIAMISDbContext db, IPayrollCalcula
                 GrossPay = calculated.GrossPay,
                 TotalDeductions = calculated.TotalDeductions,
                 NetPay = calculated.NetPay,
+                TaxableEarnings = calculated.TaxableEarnings,
                 Status = "Calculated",
                 Lines = calculated.Lines.Select(line => new EmployeePayrollLine
                 {
@@ -129,6 +130,9 @@ public sealed class PayrollGenerationService(SIAMISDbContext db, IPayrollCalcula
                     ComponentCode = line.ComponentCode,
                     ComponentName = line.ComponentName,
                     ComponentType = line.ComponentType,
+                    IsTaxableSnapshot = line.IsTaxableSnapshot,
+                    IsStatutorySnapshot = line.IsStatutorySnapshot,
+                    ContributionSideSnapshot = line.ContributionSideSnapshot,
                     Amount = line.Amount,
                     Quantity = line.Quantity,
                     Rate = line.Rate,
@@ -149,7 +153,7 @@ public sealed class PayrollGenerationService(SIAMISDbContext db, IPayrollCalcula
             await transaction.CommitAsync(cancellationToken);
             return new PayrollGenerationEmployeeResult(employee.EmployeeId, employee.EmployeeNumber, "Generated",
                 payroll.EmployeePayrollId, payroll.GrossPay, payroll.TotalDeductions, payroll.NetPay,
-                existing is null ? "Payroll generated." : "Payroll regenerated.");
+                existing is null ? "Payroll generated." : "Payroll regenerated.", payroll.TaxableEarnings);
         }
         catch (OperationCanceledException) { throw; }
         catch (Exception)
@@ -170,9 +174,9 @@ public sealed class PayrollGenerationService(SIAMISDbContext db, IPayrollCalcula
     }
 
     private static PayrollGenerationEmployeeResult Skipped(EmployeeCandidate e, string m, EmployeePayroll? p = null)
-        => new(e.EmployeeId, e.EmployeeNumber, "Skipped", p?.EmployeePayrollId, p?.GrossPay, p?.TotalDeductions, p?.NetPay, m);
+        => new(e.EmployeeId, e.EmployeeNumber, "Skipped", p?.EmployeePayrollId, p?.GrossPay, p?.TotalDeductions, p?.NetPay, m, p?.TaxableEarnings);
     private static PayrollGenerationEmployeeResult Failed(EmployeeCandidate e, string m, EmployeePayroll? p = null)
-        => new(e.EmployeeId, e.EmployeeNumber, "Failed", p?.EmployeePayrollId, p?.GrossPay, p?.TotalDeductions, p?.NetPay, m);
+        => new(e.EmployeeId, e.EmployeeNumber, "Failed", p?.EmployeePayrollId, p?.GrossPay, p?.TotalDeductions, p?.NetPay, m, p?.TaxableEarnings);
     private static string WithExistingPayroll(string m, EmployeePayroll? p) => p is null ? m : $"{m} The previous payroll snapshot was left unchanged.";
     private static PayrollCalculationEmployee ToCalculationEmployee(Domain.Entities.Employees.Employee employee)
         => new(employee.EmployeeId, employee.EmployeeNumber, string.Join(' ', new[] { string.IsNullOrWhiteSpace(employee.PreferredName) ? employee.FirstName : employee.PreferredName, employee.MiddleName, employee.LastName }.Where(item => !string.IsNullOrWhiteSpace(item))));

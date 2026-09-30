@@ -89,7 +89,7 @@ public sealed class PayrollRuleEvaluator(SIAMISDbContext db) : IPayrollRuleEvalu
         var displays = await ResolveTargetDisplaysAsync(displayTargets, cancellationToken);
         var componentIds = applicable.Select(item => item.Rule.PayrollComponentId).Distinct().ToArray();
         var componentDisplays = await db.PayrollComponents.AsNoTracking().Where(item => componentIds.Contains(item.Id))
-            .Select(item => new { item.Id, item.Code, item.Name, item.Category })
+            .Select(item => new { item.Id, item.Code, item.Name, item.Category, item.IsTaxable, item.IsStatutory, item.ContributionSide })
             .ToDictionaryAsync(item => item.Id, cancellationToken);
         var orderedRules = applicable
             .Select(item => new ApplicablePayrollRuleDto(
@@ -107,7 +107,9 @@ public sealed class PayrollRuleEvaluator(SIAMISDbContext db) : IPayrollRuleEvalu
                     return new PayrollRuleEvaluationTargetDto(evaluated.Target.PayrollRuleTargetId,
                         evaluated.Target.TargetType, evaluated.Target.TargetId, display?.Name, display?.Code,
                         evaluated.Target.IsExcluded, evaluated.IsMatched);
-                }).ToArray()))
+                }).ToArray(), componentDisplays[item.Rule.PayrollComponentId].IsTaxable,
+                componentDisplays[item.Rule.PayrollComponentId].IsStatutory,
+                componentDisplays[item.Rule.PayrollComponentId].ContributionSide))
             .ToArray();
 
         return ServiceResult<PayrollRuleEvaluationDto>.Success(new(employee, period, orderedRules));

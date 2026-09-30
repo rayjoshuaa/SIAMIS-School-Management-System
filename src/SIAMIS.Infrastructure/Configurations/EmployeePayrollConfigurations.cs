@@ -14,12 +14,14 @@ internal sealed class EmployeePayrollConfiguration : IEntityTypeConfiguration<Em
                 "[BasicSalary] >= 0 AND [GrossPay] >= 0 AND [TotalDeductions] >= 0 AND [NetPay] >= 0");
             table.HasCheckConstraint("CK_EmployeePayrolls_Status",
                 "[Status] IN ('Draft', 'Calculated', 'Approved', 'Paid', 'Cancelled')");
+            table.HasCheckConstraint("CK_EmployeePayrolls_TaxableEarningsNonNegative", "[TaxableEarnings] >= 0");
         });
         builder.HasKey(item => item.EmployeePayrollId);
         builder.Property(item => item.BasicSalary).HasColumnType("decimal(19,4)").IsRequired();
         builder.Property(item => item.GrossPay).HasColumnType("decimal(19,4)").IsRequired();
         builder.Property(item => item.TotalDeductions).HasColumnType("decimal(19,4)").IsRequired();
         builder.Property(item => item.NetPay).HasColumnType("decimal(19,4)").IsRequired();
+        builder.Property(item => item.TaxableEarnings).HasColumnType("decimal(19,4)").HasDefaultValue(0m).IsRequired();
         builder.Property(item => item.Status).HasMaxLength(30).IsRequired();
         builder.Property(item => item.Remarks).HasMaxLength(2000);
         builder.Property(item => item.CreatedAt).HasColumnType("datetime2").IsRequired();
@@ -46,6 +48,8 @@ internal sealed class EmployeePayrollLineConfiguration : IEntityTypeConfiguratio
             table.HasCheckConstraint("CK_EmployeePayrollLines_QuantityNonNegative", "[Quantity] IS NULL OR [Quantity] >= 0");
             table.HasCheckConstraint("CK_EmployeePayrollLines_RateNonNegative", "[Rate] IS NULL OR [Rate] >= 0");
             table.HasCheckConstraint("CK_EmployeePayrollLines_ComponentType", "[ComponentType] IN ('Earning', 'Deduction')");
+            table.HasCheckConstraint("CK_EmployeePayrollLines_ContributionSideSnapshot",
+                "[ContributionSideSnapshot] IS NULL OR [ContributionSideSnapshot] IN ('Employee', 'Employer', 'Both')");
             table.HasCheckConstraint("CK_EmployeePayrollLines_SourceTypeAndId",
                 "([SourceType] = 'BasicSalary' AND [SourceId] IS NULL) OR ([SourceType] = 'Manual' AND [SourceId] IS NULL) OR ([SourceType] IN ('Assignment', 'PayrollRule') AND [SourceId] IS NOT NULL)");
         });
@@ -54,6 +58,9 @@ internal sealed class EmployeePayrollLineConfiguration : IEntityTypeConfiguratio
         builder.Property(item => item.ComponentName).HasMaxLength(150).IsRequired();
         builder.Property(item => item.ComponentType).HasMaxLength(20).IsRequired();
         builder.Property(item => item.SourceType).HasMaxLength(20).IsRequired();
+        builder.Property(item => item.IsTaxableSnapshot).HasDefaultValue(false).IsRequired();
+        builder.Property(item => item.IsStatutorySnapshot).HasDefaultValue(false).IsRequired();
+        builder.Property(item => item.ContributionSideSnapshot).HasMaxLength(20);
         builder.Property(item => item.Amount).HasColumnType("decimal(19,4)").IsRequired();
         builder.Property(item => item.Quantity).HasColumnType("decimal(19,4)");
         builder.Property(item => item.Rate).HasColumnType("decimal(19,4)");

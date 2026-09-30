@@ -58,7 +58,10 @@ public sealed record ApplicablePayrollRuleDto(
     DateOnly EffectiveFrom,
     DateOnly? EffectiveTo,
     string ApplicabilitySummary,
-    IReadOnlyList<PayrollRuleEvaluationTargetDto> Targets);
+    IReadOnlyList<PayrollRuleEvaluationTargetDto> Targets,
+    bool PayrollComponentIsTaxable = false,
+    bool PayrollComponentIsStatutory = false,
+    string? PayrollComponentContributionSide = null);
 
 public sealed record PayrollRuleEvaluationDto(
     PayrollRuleEvaluationEmployeeDto Employee,

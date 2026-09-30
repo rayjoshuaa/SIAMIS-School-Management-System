@@ -24,7 +24,9 @@ public sealed class PayrollCalculationService : IPayrollCalculationService
             {
                 new(basicSalaryComponent.Id, basicSalaryComponent.Code!, basicSalaryComponent.Name, "Earning",
                     "Compensation", null, null, null, roundedBasicSalary, "Basic Salary from applicable EmployeeCompensation.",
-                    SourceType: "BasicSalary")
+                    SourceType: "BasicSalary", IsTaxableSnapshot: basicSalaryComponent.IsTaxable,
+                    IsStatutorySnapshot: basicSalaryComponent.IsStatutory,
+                    ContributionSideSnapshot: basicSalaryComponent.ContributionSide)
             };
             var grossEarnings = roundedBasicSalary;
             var earningRules = applicableRules.Where(rule => rule.CalculationStage == "Earning").ToArray();
@@ -88,7 +90,11 @@ public sealed class PayrollCalculationService : IPayrollCalculationService
             netPay = RoundAmount(netPay);
             if (!ValidAmount(grossPay) || !ValidAmount(totalDeductions) || !ValidAmount(netPay))
                 return Fail(employee, "Calculated payroll totals exceed the supported decimal(19,4) range.");
-            return new(employee, "Calculated", "Payroll calculated.", roundedBasicSalary, grossPay, totalDeductions, netPay, lines, null, skippedRules);
+            // Sum final, already-rounded employee earning lines; deductions and contribution-side classification do not affect this total.
+            var taxableEarnings = lines.Where(line => line.ComponentType == "Earning" && line.IsTaxableSnapshot)
+                .Sum(line => line.Amount);
+            return new(employee, "Calculated", "Payroll calculated.", roundedBasicSalary, grossPay, totalDeductions,
+                netPay, taxableEarnings, lines, null, skippedRules);
         }
         catch (OverflowException)
         {
@@ -145,7 +151,8 @@ public sealed class PayrollCalculationService : IPayrollCalculationService
         var line = new PayrollCalculatedLine(rule.PayrollComponentId, rule.PayrollComponentCode!, rule.PayrollComponentName,
             rule.CalculationStage, rule.CalculationMethod, rule.BaseType, null, rule.Rate, amount, remarks,
             rule.PayrollRuleId, rule.Code, rule.Name, rule.ApplicationMode, rule.BaseType, baseAmount,
-            rule.MinimumBase, rule.MaximumBase, "PayrollRule", rule.PayrollRuleId);
+            rule.MinimumBase, rule.MaximumBase, "PayrollRule", rule.PayrollRuleId,
+            rule.PayrollComponentIsTaxable, rule.PayrollComponentIsStatutory, rule.PayrollComponentContributionSide);
         return (line, null, null);
     }
 
@@ -197,7 +204,10 @@ public sealed class PayrollCalculationService : IPayrollCalculationService
         => new(assignment.PayrollComponentId, assignment.PayrollComponent.Code!, assignment.PayrollComponent.Name,
             assignment.PayrollComponent.Category, assignment.PayrollComponent.CalculationMethod,
             assignment.PayrollComponent.PercentageBase, assignment.Quantity, assignment.Rate, amount, assignment.Remarks,
-            SourceType: "Assignment", SourceId: assignment.EmployeePayrollComponentAssignmentId);
+            SourceType: "Assignment", SourceId: assignment.EmployeePayrollComponentAssignmentId,
+            IsTaxableSnapshot: assignment.PayrollComponent.IsTaxable,
+            IsStatutorySnapshot: assignment.PayrollComponent.IsStatutory,
+            ContributionSideSnapshot: assignment.PayrollComponent.ContributionSide);
 
     private static string? NormalizePercentageBase(string? value) => value?.Trim() switch
     {
@@ -208,7 +218,7 @@ public sealed class PayrollCalculationService : IPayrollCalculationService
     };
 
     private static PayrollCalculationResult Fail(PayrollCalculationEmployee employee, string message)
-        => new(employee, "Failed", message, 0, 0, 0, 0, [], message);
+        => new(employee, "Failed", message, 0, 0, 0, 0, 0, [], message);
     private static string Format(decimal? value) => value?.ToString(CultureInfo.InvariantCulture) ?? "null";
     private static decimal RoundAmount(decimal value) => decimal.Round(value, 4, MidpointRounding.AwayFromZero);
     private static bool ValidAmount(decimal value) => value >= 0 && value <= MaximumAmount && decimal.Round(value, 4) == value;

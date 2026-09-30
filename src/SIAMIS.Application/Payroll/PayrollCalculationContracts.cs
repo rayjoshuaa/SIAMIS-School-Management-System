@@ -23,7 +23,10 @@ public sealed record PayrollCalculatedLine(
     decimal? MinimumBase = null,
     decimal? MaximumBase = null,
     string SourceType = "Manual",
-    Guid? SourceId = null);
+    Guid? SourceId = null,
+    bool IsTaxableSnapshot = false,
+    bool IsStatutorySnapshot = false,
+    string? ContributionSideSnapshot = null);
 
 public sealed record PayrollCalculationEmployee(Guid EmployeeId, string EmployeeNumber, string EmployeeName);
 
@@ -35,6 +38,7 @@ public sealed record PayrollCalculationResult(
     decimal GrossPay,
     decimal TotalDeductions,
     decimal NetPay,
+    decimal TaxableEarnings,
     IReadOnlyList<PayrollCalculatedLine> Lines,
     string? Failure,
     IReadOnlyList<string>? SkippedRuleExplanations = null);

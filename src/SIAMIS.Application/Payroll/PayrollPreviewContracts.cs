@@ -28,7 +28,10 @@ public sealed record PayrollPreviewLineDto(
     decimal? MinimumBase = null,
     decimal? MaximumBase = null,
     string SourceType = "Manual",
-    Guid? SourceId = null);
+    Guid? SourceId = null,
+    bool IsTaxable = false,
+    bool IsStatutory = false,
+    string? ContributionSide = null);
 
 public sealed record PayrollPreviewEmployeeResult(
     Guid EmployeeId,
@@ -39,6 +42,7 @@ public sealed record PayrollPreviewEmployeeResult(
     decimal? GrossPay,
     decimal? TotalDeductions,
     decimal? NetPay,
+    decimal? TaxableEarnings,
     string Message,
     IReadOnlyList<PayrollPreviewLineDto> Lines);
 

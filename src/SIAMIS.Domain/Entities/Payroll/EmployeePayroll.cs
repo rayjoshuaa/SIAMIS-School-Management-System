@@ -12,6 +12,7 @@ public sealed class EmployeePayroll : IHasTimestamps
     public decimal GrossPay { get; set; }
     public decimal TotalDeductions { get; set; }
     public decimal NetPay { get; set; }
+    public decimal TaxableEarnings { get; set; }
     public string Status { get; set; } = "Draft";
     public string? Remarks { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

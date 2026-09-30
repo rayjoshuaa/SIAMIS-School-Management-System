@@ -20,6 +20,7 @@ public sealed record EmployeePayrollDto(
     decimal GrossPay,
     decimal TotalDeductions,
     decimal NetPay,
+    decimal TaxableEarnings,
     string Status,
     string? Remarks,
     DateTime CreatedAt,
@@ -87,7 +88,10 @@ public sealed record EmployeePayrollLineDto(
     decimal? BaseAmount,
     decimal? MinimumBase,
     decimal? MaximumBase,
-    decimal? CalculationRate);
+    decimal? CalculationRate,
+    bool IsTaxableSnapshot,
+    bool IsStatutorySnapshot,
+    string? ContributionSideSnapshot);
 
 public sealed class EmployeePayrollLineRequest
 {
