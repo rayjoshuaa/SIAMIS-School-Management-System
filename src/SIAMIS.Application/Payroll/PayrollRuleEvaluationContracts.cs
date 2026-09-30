@@ -7,7 +7,10 @@ public sealed record PayrollRuleEvaluationEmployeeDto(
     string EmployeeNumber,
     string EmployeeName,
     bool IsActive,
-    PayrollRuleEvaluationEmploymentDto? CurrentEmployment);
+    // CurrentEmployment is retained for response compatibility; it now contains period-effective context.
+    PayrollRuleEvaluationEmploymentDto? CurrentEmployment,
+    DateOnly? TargetContextDate = null,
+    Guid? EmploymentRecordId = null);
 
 public sealed record PayrollRuleEvaluationEmploymentDto(
     Guid? DepartmentId,
@@ -72,4 +75,7 @@ public interface IPayrollRuleEvaluator
 {
     Task<ServiceResult<PayrollRuleEvaluationDto>> EvaluateApplicableRulesAsync(
         Guid payrollPeriodId, Guid employeeId, CancellationToken cancellationToken);
+    /// <summary>Uses an already-resolved context from the preview batch or generation transaction.</summary>
+    Task<ServiceResult<PayrollRuleEvaluationDto>> EvaluateApplicableRulesAsync(
+        Guid payrollPeriodId, Guid employeeId, PayrollEmploymentContextDto employmentContext, CancellationToken cancellationToken);
 }

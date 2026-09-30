@@ -7,13 +7,21 @@ using SIAMIS.Infrastructure.Data;
 namespace SIAMIS.Infrastructure.Services;
 
 /// <summary>Resolves effective payroll rules for a single employee/period without calculating payroll amounts.</summary>
-public sealed class PayrollRuleEvaluator(SIAMISDbContext db) : IPayrollRuleEvaluator
+public sealed class PayrollRuleEvaluator(SIAMISDbContext db, IPayrollEmploymentContextService employmentContexts) : IPayrollRuleEvaluator
 {
     private static readonly string[] SupportedAppliesTo = ["Employee", "Employer", "Both"];
     private static readonly string[] SupportedStages = ["Earning", "Deduction"];
 
-    public async Task<ServiceResult<PayrollRuleEvaluationDto>> EvaluateApplicableRulesAsync(
+    public Task<ServiceResult<PayrollRuleEvaluationDto>> EvaluateApplicableRulesAsync(
         Guid payrollPeriodId, Guid employeeId, CancellationToken cancellationToken)
+        => EvaluateAsync(payrollPeriodId, employeeId, null, cancellationToken);
+
+    public Task<ServiceResult<PayrollRuleEvaluationDto>> EvaluateApplicableRulesAsync(
+        Guid payrollPeriodId, Guid employeeId, PayrollEmploymentContextDto employmentContext, CancellationToken cancellationToken)
+        => EvaluateAsync(payrollPeriodId, employeeId, employmentContext, cancellationToken);
+
+    private async Task<ServiceResult<PayrollRuleEvaluationDto>> EvaluateAsync(
+        Guid payrollPeriodId, Guid employeeId, PayrollEmploymentContextDto? employmentRow, CancellationToken cancellationToken)
     {
         var period = await db.PayrollPeriods.AsNoTracking()
             .Where(item => item.PayrollPeriodId == payrollPeriodId)
@@ -27,14 +35,14 @@ public sealed class PayrollRuleEvaluator(SIAMISDbContext db) : IPayrollRuleEvalu
             .SingleOrDefaultAsync(cancellationToken);
         if (employeeRow is null) return NotFound("Employee was not found.");
 
-        var employmentRow = await db.EmploymentRecords.AsNoTracking()
-            .Where(item => item.EmployeeId == employeeId && item.IsCurrent)
-            .Select(item => new EmploymentSnapshot(
-                item.DepartmentId, item.Department == null ? null : item.Department.Name,
-                item.DesignationId, item.Designation == null ? null : item.Designation.Name,
-                item.EmploymentTypeId, item.EmploymentType == null ? null : item.EmploymentType.Name,
-                item.LocationId, item.Location == null ? null : item.Location.Name))
-            .SingleOrDefaultAsync(cancellationToken);
+        if (employmentRow is null)
+        {
+            var contexts = await employmentContexts.ResolveAsync([employeeId], period.StartDate, period.EndDate, cancellationToken);
+            var resolved = contexts[employeeId];
+            if (!resolved.IsSuccess) return ServiceResult<PayrollRuleEvaluationDto>.Fail(resolved.Failure!.Code, resolved.Failure.Message);
+            if (resolved.Value is null) return ServiceResult<PayrollRuleEvaluationDto>.Fail("validation", "Employee has no employment overlapping this payroll period and is not eligible.");
+            employmentRow = resolved.Value;
+        }
 
         var employeeName = string.Join(' ', new[]
         {
@@ -43,13 +51,13 @@ public sealed class PayrollRuleEvaluator(SIAMISDbContext db) : IPayrollRuleEvalu
             employeeRow.LastName
         }.Where(item => !string.IsNullOrWhiteSpace(item)));
         var employee = new PayrollRuleEvaluationEmployeeDto(employeeRow.EmployeeId, employeeRow.EmployeeNumber,
-            employeeName, employeeRow.IsActive, employmentRow is null ? null : new(
+            employeeName, employeeRow.IsActive, new(
                 employmentRow.DepartmentId, employmentRow.DepartmentName,
                 employmentRow.DesignationId, employmentRow.DesignationName,
                 employmentRow.EmploymentTypeId, employmentRow.EmploymentTypeName,
-                employmentRow.LocationId, employmentRow.LocationName));
-        var context = new EvaluationContext(employeeId, employeeRow.IsActive, period.StartDate, period.EndDate,
-            employmentRow?.DepartmentId, employmentRow?.DesignationId, employmentRow?.EmploymentTypeId, employmentRow?.LocationId);
+                employmentRow.LocationId, employmentRow.LocationName), employmentRow.TargetContextDate, employmentRow.EmploymentRecordId);
+        var context = new EvaluationContext(employeeId,
+            employmentRow.DepartmentId, employmentRow.DesignationId, employmentRow.EmploymentTypeId, employmentRow.LocationId);
 
         // Filter common eligibility in SQL, then evaluate target groups in memory from one batched target query.
         var candidateRules = await db.PayrollRules.AsNoTracking()
@@ -196,10 +204,8 @@ public sealed class PayrollRuleEvaluator(SIAMISDbContext db) : IPayrollRuleEvalu
     }
 
     private static ServiceResult<PayrollRuleEvaluationDto> NotFound(string message) => ServiceResult<PayrollRuleEvaluationDto>.Fail("not_found", message);
-    private sealed record EvaluationContext(Guid EmployeeId, bool EmployeeIsActive, DateOnly PeriodStartDate, DateOnly PeriodEndDate,
+    private sealed record EvaluationContext(Guid EmployeeId,
         Guid? DepartmentId, Guid? DesignationId, Guid? EmploymentTypeId, Guid? LocationId);
-    private sealed record EmploymentSnapshot(Guid? DepartmentId, string? DepartmentName, Guid? DesignationId, string? DesignationName,
-        Guid? EmploymentTypeId, string? EmploymentTypeName, Guid? LocationId, string? LocationName);
     private sealed record EvaluatedTarget(PayrollRuleTarget Target, bool IsMatched);
     private sealed record TargetEvaluation(bool IsApplicable, string Summary, IReadOnlyList<EvaluatedTarget> Targets);
     private sealed record ApplicableRuleCandidate(PayrollRule Rule, string Summary, IReadOnlyList<EvaluatedTarget> Targets);

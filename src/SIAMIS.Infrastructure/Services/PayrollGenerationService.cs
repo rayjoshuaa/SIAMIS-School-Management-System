@@ -10,7 +10,7 @@ namespace SIAMIS.Infrastructure.Services;
 
 /// <summary>Builds immutable payroll snapshots, committing each employee independently.</summary>
 public sealed class PayrollGenerationService(SIAMISDbContext db, IPayrollCalculationService calculator,
-    IPayrollRuleEvaluator ruleEvaluator) : IPayrollGenerationService
+    IPayrollRuleEvaluator ruleEvaluator, IPayrollEmploymentContextService employmentContexts) : IPayrollGenerationService
 {
     public async Task<ServiceResult<PayrollGenerationSummary>> GenerateAsync(
         Guid payrollPeriodId, PayrollGenerationRequest request, CancellationToken cancellationToken)
@@ -30,10 +30,12 @@ public sealed class PayrollGenerationService(SIAMISDbContext db, IPayrollCalcula
             if (missingIds.Length > 0) return Invalid($"Every EmployeeId must exist. Not found: {string.Join(", ", missingIds)}.");
         }
 
+        var eligibleEmployeeIds = db.EmploymentRecords.Where(EmploymentIntegrity.Overlapping(period.StartDate, period.EndDate))
+            .Select(record => record.EmployeeId);
         var candidatesQuery = db.Employees.AsNoTracking().AsQueryable();
         candidatesQuery = requestedIds is { Length: > 0 }
             ? candidatesQuery.Where(item => requestedIds.Contains(item.EmployeeId))
-            : candidatesQuery.Where(item => item.IsActive);
+            : candidatesQuery.Where(item => eligibleEmployeeIds.Contains(item.EmployeeId));
         var candidates = await candidatesQuery.OrderBy(item => item.EmployeeNumber).ThenBy(item => item.EmployeeId)
             .Select(item => new EmployeeCandidate(item.EmployeeId, item.EmployeeNumber)).ToListAsync(cancellationToken);
 
@@ -72,9 +74,10 @@ public sealed class PayrollGenerationService(SIAMISDbContext db, IPayrollCalcula
             if (!PayrollPeriodLock.AllowsMutation(lockedPeriod.Status))
                 return Skipped(candidate, PayrollPeriodLock.ConflictMessage(lockedPeriod.Status));
             period = lockedPeriod;
-            var employee = await db.Employees.AsNoTracking().SingleOrDefaultAsync(item => item.EmployeeId == candidate.EmployeeId, cancellationToken);
+            // D1 lifecycle writers use the same employee lock. Hold it through eligibility,
+            // targeting and snapshot commit so employment cannot change between these steps.
+            var employee = await EmploymentIntegrity.LockAsync(db, candidate.EmployeeId, cancellationToken);
             if (employee is null) return Skipped(candidate, "Employee no longer exists.");
-            if (!employee.IsActive) return Skipped(candidate, "Employee is inactive.");
 
             existingPayroll = await db.EmployeePayrolls.Include(item => item.Lines)
                 .SingleOrDefaultAsync(item => item.PayrollPeriodId == period.PayrollPeriodId && item.EmployeeId == employee.EmployeeId, cancellationToken);
@@ -86,6 +89,11 @@ public sealed class PayrollGenerationService(SIAMISDbContext db, IPayrollCalcula
                 if (existing.Status is not ("Draft" or "Calculated"))
                     return Failed(candidate, $"Existing payroll status '{existing.Status}' cannot be regenerated.", existing);
             }
+
+            var contexts = await employmentContexts.ResolveAsync([employee.EmployeeId], period.StartDate, period.EndDate, cancellationToken);
+            var employment = contexts[employee.EmployeeId];
+            if (!employment.IsSuccess) return Failed(candidate, WithExistingPayroll(employment.Failure!.Message, existing), existing);
+            if (employment.Value is null) return Skipped(candidate, "Employee has no employment overlapping this payroll period and is not eligible.", existing);
 
             var compensation = await db.EmployeeCompensations.AsNoTracking()
                 .Where(item => item.EmployeeId == employee.EmployeeId && item.EffectiveFrom <= period.StartDate
@@ -104,7 +112,7 @@ public sealed class PayrollGenerationService(SIAMISDbContext db, IPayrollCalcula
             if (assignments.Any(item => item.PayrollComponentId == basicSalaryComponent.Id))
                 return Failed(candidate, WithExistingPayroll("Basic Salary is generated from EmployeeCompensation and must not also have an employee component assignment.", existing), existing);
 
-            var evaluation = await ruleEvaluator.EvaluateApplicableRulesAsync(period.PayrollPeriodId, employee.EmployeeId, cancellationToken);
+            var evaluation = await ruleEvaluator.EvaluateApplicableRulesAsync(period.PayrollPeriodId, employee.EmployeeId, employment.Value, cancellationToken);
             if (evaluation.Failure is not null)
                 return Failed(candidate, WithExistingPayroll($"Payroll rule evaluation failed: {evaluation.Failure.Message}", existing), existing);
             var calculated = calculator.Calculate(ToCalculationEmployee(employee), compensation.BasicSalary, assignments,

@@ -10,15 +10,21 @@ namespace SIAMIS.Api.Controllers;
 [Produces("application/json")]
 public sealed class PayrollRuleEvaluationController(IPayrollRuleEvaluator evaluator, IWebHostEnvironment environment) : ControllerBase
 {
-    /// <summary>Returns effective, target-matched rules in calculation order, with match details and employee/current-employment context.</summary>
+    /// <summary>Returns effective, target-matched rules with employment context at the employee's first eligible point in the payroll period.</summary>
     [HttpGet("{payrollPeriodId:guid}/{employeeId:guid}")]
     [ProducesResponseType(typeof(PayrollRuleEvaluationDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
     public async Task<ActionResult<PayrollRuleEvaluationDto>> Evaluate(Guid payrollPeriodId, Guid employeeId, CancellationToken ct)
     {
         if (!environment.IsDevelopment()) return NotFound();
         var result = await evaluator.EvaluateApplicableRulesAsync(payrollPeriodId, employeeId, ct);
         if (result.IsSuccess) return Ok(result.Value);
+        if (result.Failure!.Code == "validation")
+            return BadRequest(new ValidationProblemDetails(new Dictionary<string, string[]> { ["request"] = [result.Failure.Message] }) { Status = 400 });
+        if (result.Failure.Code == "conflict")
+            return Problem(statusCode: 409, title: "Employment history conflict", detail: result.Failure.Message);
         return NotFound(new ProblemDetails
         {
             Title = "Not found",

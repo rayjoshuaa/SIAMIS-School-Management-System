@@ -8,7 +8,7 @@ namespace SIAMIS.Infrastructure.Services;
 
 /// <summary>Calculates payroll previews from current inputs without changing persisted data.</summary>
 public sealed class PayrollPreviewService(SIAMISDbContext db, IPayrollCalculationService calculator,
-    IPayrollRuleEvaluator ruleEvaluator) : IPayrollPreviewService
+    IPayrollRuleEvaluator ruleEvaluator, IPayrollEmploymentContextService employmentContexts) : IPayrollPreviewService
 {
     public async Task<ServiceResult<PayrollPreviewSummary>> PreviewAsync(
         Guid payrollPeriodId, PayrollPreviewRequest request, CancellationToken cancellationToken)
@@ -28,14 +28,17 @@ public sealed class PayrollPreviewService(SIAMISDbContext db, IPayrollCalculatio
             if (missing.Length > 0) return Fail("validation", $"Every EmployeeId must exist. Not found: {string.Join(", ", missing)}.");
         }
 
+        var eligibleEmployeeIds = db.EmploymentRecords.Where(EmploymentIntegrity.Overlapping(period.StartDate, period.EndDate))
+            .Select(record => record.EmployeeId);
         var employeeQuery = db.Employees.AsNoTracking().AsQueryable();
         employeeQuery = requestedIds is { Length: > 0 }
             ? employeeQuery.Where(item => requestedIds.Contains(item.EmployeeId))
-            : employeeQuery.Where(item => item.IsActive);
+            : employeeQuery.Where(item => eligibleEmployeeIds.Contains(item.EmployeeId));
         var employees = await employeeQuery.OrderBy(item => item.EmployeeNumber).ThenBy(item => item.EmployeeId)
-            .Select(item => new EmployeeCandidate(item.EmployeeId, item.EmployeeNumber, item.FirstName, item.MiddleName, item.LastName, item.PreferredName, item.IsActive))
+            .Select(item => new EmployeeCandidate(item.EmployeeId, item.EmployeeNumber, item.FirstName, item.MiddleName, item.LastName, item.PreferredName))
             .ToListAsync(cancellationToken);
 
+        var contexts = await employmentContexts.ResolveAsync(employees.Select(x => x.EmployeeId).ToArray(), period.StartDate, period.EndDate, cancellationToken);
         var basicSalaryComponents = await db.PayrollComponents.AsNoTracking()
             .Where(item => item.Name.Trim().ToLower() == "basic salary").Take(2).ToListAsync(cancellationToken);
         var basicSalaryComponent = basicSalaryComponents.Count == 1 && basicSalaryComponents[0].IsActive
@@ -47,9 +50,15 @@ public sealed class PayrollPreviewService(SIAMISDbContext db, IPayrollCalculatio
         {
             cancellationToken.ThrowIfCancellationRequested();
             var name = FormatName(employee);
-            if (!employee.IsActive)
+            var employment = contexts[employee.EmployeeId];
+            if (!employment.IsSuccess)
             {
-                results.Add(Result(employee, name, "Skipped", "Employee is inactive."));
+                results.Add(Result(employee, name, "Failed", employment.Failure!.Message));
+                continue;
+            }
+            if (employment.Value is null)
+            {
+                results.Add(Result(employee, name, "Skipped", "Employee has no employment overlapping this payroll period and is not eligible."));
                 continue;
             }
             if (basicSalaryComponent is null)
@@ -89,7 +98,7 @@ public sealed class PayrollPreviewService(SIAMISDbContext db, IPayrollCalculatio
                 continue;
             }
 
-            var evaluation = await ruleEvaluator.EvaluateApplicableRulesAsync(payrollPeriodId, employee.EmployeeId, cancellationToken);
+            var evaluation = await ruleEvaluator.EvaluateApplicableRulesAsync(payrollPeriodId, employee.EmployeeId, employment.Value, cancellationToken);
             if (evaluation.Failure is not null)
             {
                 results.Add(Result(employee, name, "Failed", $"Payroll rule evaluation failed: {evaluation.Failure.Message}"));
@@ -129,5 +138,5 @@ public sealed class PayrollPreviewService(SIAMISDbContext db, IPayrollCalculatio
             .Where(item => !string.IsNullOrWhiteSpace(item)));
 
     private static ServiceResult<PayrollPreviewSummary> Fail(string code, string message) => ServiceResult<PayrollPreviewSummary>.Fail(code, message);
-    private sealed record EmployeeCandidate(Guid EmployeeId, string EmployeeNumber, string FirstName, string? MiddleName, string LastName, string? PreferredName, bool IsActive);
+    private sealed record EmployeeCandidate(Guid EmployeeId, string EmployeeNumber, string FirstName, string? MiddleName, string LastName, string? PreferredName);
 }

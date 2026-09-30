@@ -95,7 +95,7 @@ public sealed class EmploymentLifecycleService(SIAMISDbContext db) : IEmployment
     public async Task<ServiceResult<EmploymentRecordDto?>> ResolveAsync(Guid id, DateOnly date, CancellationToken ct)
     {
         if (!await db.Employees.AnyAsync(x => x.EmployeeId == id, ct)) return ServiceResult<EmploymentRecordDto?>.Fail("not_found", "Employee was not found.");
-        var matches = await Project(Records(id).Where(x => (x.StartDate ?? x.HireDate) <= date && (!x.EndDate.HasValue || x.EndDate >= date))
+        var matches = await Project(Records(id).Where(EmploymentIntegrity.EffectiveOn(date))
             .OrderBy(x => x.EmploymentRecordId).Take(2)).ToListAsync(ct);
         return matches.Count > 1 ? ServiceResult<EmploymentRecordDto?>.Fail("conflict", "Multiple employment records match the supplied date; history is inconsistent.")
             : ServiceResult<EmploymentRecordDto?>.Success(matches.SingleOrDefault());

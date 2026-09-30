@@ -32,6 +32,7 @@ builder.Services.AddScoped<IMasterDataService, MasterDataService>();
 builder.Services.AddScoped<IEmploymentStatusService, EmploymentStatusService>();
 builder.Services.AddScoped<IEmploymentLifecycleService, EmploymentLifecycleService>();
 builder.Services.AddScoped<IEmploymentResolver, EmploymentLifecycleService>();
+builder.Services.AddScoped<IPayrollEmploymentContextService, PayrollEmploymentContextService>();
 builder.Services.AddScoped<IPayrollComponentService, PayrollComponentService>();
 builder.Services.AddScoped<IPayrollPeriodService, PayrollPeriodService>();
 builder.Services.AddScoped<IPayrollRuleService, PayrollRuleService>();

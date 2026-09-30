@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 using SIAMIS.Domain.Entities.Employees;
 using SIAMIS.Domain.Entities.MasterData;
 using SIAMIS.Infrastructure.Data;
@@ -12,6 +13,10 @@ internal static class EmploymentIntegrity
         => db.Employees.FromSqlInterpolated($"SELECT * FROM [Employees] WITH (UPDLOCK) WHERE [EmployeeId] = {id}").SingleOrDefaultAsync(ct);
 
     public static DateOnly Start(EmploymentRecord r) => r.StartDate ?? r.HireDate;
+    public static Expression<Func<EmploymentRecord, bool>> EffectiveOn(DateOnly date)
+        => r => (r.StartDate ?? r.HireDate) <= date && (!r.EndDate.HasValue || r.EndDate >= date);
+    public static Expression<Func<EmploymentRecord, bool>> Overlapping(DateOnly start, DateOnly end)
+        => r => (r.StartDate ?? r.HireDate) <= end && (!r.EndDate.HasValue || r.EndDate >= start);
     public static string? Dates(EmploymentRecord r)
         => r.StartDate < r.HireDate ? "StartDate cannot be before HireDate."
         : r.EndDate < Start(r) ? "EndDate cannot be before EmploymentStart."
