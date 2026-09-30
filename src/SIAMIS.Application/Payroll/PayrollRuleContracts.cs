@@ -7,6 +7,7 @@ public sealed class PayrollRuleListQuery
 {
     [StringLength(30)] public string? RuleType { get; set; }
     [StringLength(30)] public string? CalculationMethod { get; set; }
+    [StringLength(20)] public string? CalculationStage { get; set; }
     [StringLength(30)] public string? AppliesTo { get; set; }
     public bool? IsActive { get; set; }
     public DateOnly? ActiveOn { get; set; }
@@ -23,6 +24,7 @@ public sealed class PayrollRuleRequest
     [StringLength(1000)] public string? Description { get; set; }
     [StringLength(30)] public string? RuleType { get; set; }
     [StringLength(30)] public string? CalculationMethod { get; set; }
+    [Required, StringLength(20)] public string? CalculationStage { get; set; }
     public decimal? Rate { get; set; }
     public decimal? FixedAmount { get; set; }
     public decimal? MinimumBase { get; set; }
@@ -47,6 +49,7 @@ public sealed record PayrollRuleDto(
     string? Description,
     string RuleType,
     string CalculationMethod,
+    string CalculationStage,
     decimal? Rate,
     decimal? FixedAmount,
     decimal? MinimumBase,

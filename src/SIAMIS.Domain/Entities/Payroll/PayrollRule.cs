@@ -11,6 +11,7 @@ public sealed class PayrollRule : IHasTimestamps
     public string? Description { get; set; }
     public string RuleType { get; set; } = string.Empty;
     public string CalculationMethod { get; set; } = string.Empty;
+    public string CalculationStage { get; set; } = "Earning";
     public decimal? Rate { get; set; }
     public decimal? FixedAmount { get; set; }
     public decimal? MinimumBase { get; set; }

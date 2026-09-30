@@ -22,6 +22,7 @@ internal sealed class PayrollRuleConfiguration : IEntityTypeConfiguration<Payrol
         builder.Property(item => item.Description).HasMaxLength(1000);
         builder.Property(item => item.RuleType).HasMaxLength(30).IsRequired();
         builder.Property(item => item.CalculationMethod).HasMaxLength(30).IsRequired();
+        builder.Property(item => item.CalculationStage).HasMaxLength(20).HasDefaultValue("Earning").IsRequired();
         builder.Property(item => item.Rate).HasColumnType("decimal(19,4)");
         builder.Property(item => item.FixedAmount).HasColumnType("decimal(19,4)");
         builder.Property(item => item.MinimumBase).HasColumnType("decimal(19,4)");
