@@ -46,67 +46,39 @@ public sealed class PayrollCalculationService : IPayrollCalculationService
             var skippedRules = new List<string>();
             foreach (var rule in earningRules)
             {
-                if (rule.ApplicationMode is not ("Supplement" or "ReplaceAssignment"))
-                    return Fail(employee, $"Payroll rule '{rule.Code}' has unsupported ApplicationMode '{rule.ApplicationMode}'.");
-                if (rule.PayrollComponentType != "Earning" || string.IsNullOrWhiteSpace(rule.PayrollComponentCode))
-                    return Fail(employee, $"Payroll rule '{rule.Code}' does not reference a usable Earning payroll component.");
-                if (rule.AppliesTo != "Employee")
-                    return Fail(employee, $"Payroll rule '{rule.Code}' has AppliesTo '{rule.AppliesTo}'; employer contribution calculation is not supported.");
-
-                decimal amount;
-                decimal? baseAmount = null;
-                switch (rule.CalculationMethod)
-                {
-                    case "FixedAmount":
-                        if (!rule.FixedAmount.HasValue || rule.MinimumBase.HasValue || rule.MaximumBase.HasValue)
-                            return Fail(employee, $"Payroll rule '{rule.Code}' has invalid FixedAmount configuration.");
-                        amount = rule.FixedAmount.Value;
-                        break;
-                    case "Percentage":
-                        if (!rule.Rate.HasValue)
-                            return Fail(employee, $"Payroll rule '{rule.Code}' requires Rate for Percentage calculation.");
-                        baseAmount = rule.BaseType switch
-                        {
-                            "BasicSalary" => roundedBasicSalary,
-                            "GrossEarnings" => grossEarnings,
-                            _ => null
-                        };
-                        if (!baseAmount.HasValue)
-                            return Fail(employee, $"Payroll rule '{rule.Code}' has unsupported earning percentage BaseType '{rule.BaseType ?? "null"}'.");
-                        if ((rule.MinimumBase.HasValue && baseAmount.Value < rule.MinimumBase.Value)
-                            || (rule.MaximumBase.HasValue && baseAmount.Value > rule.MaximumBase.Value))
-                        {
-                            skippedRules.Add($"Payroll rule '{rule.Code}' produced no line: actual {rule.BaseType} base {Format(baseAmount.Value)} is outside inclusive MinimumBase {Format(rule.MinimumBase)} / MaximumBase {Format(rule.MaximumBase)}.");
-                            continue;
-                        }
-                        amount = checked(baseAmount.Value * (rule.Rate.Value / 100m));
-                        break;
-                    case "Manual":
-                        return Fail(employee, $"Payroll rule '{rule.Code}' uses Manual calculation, but no numeric amount source is configured.");
-                    default:
-                        return Fail(employee, $"Payroll rule '{rule.Code}' has unsupported CalculationMethod '{rule.CalculationMethod}'.");
-                }
-
-                amount = RoundAmount(amount);
-                if (!ValidLineAmount(amount))
-                    return Fail(employee, $"Payroll rule '{rule.Code}' calculates to an amount that cannot be stored as a positive payroll line.");
-                var remarks = $"PayrollRuleId={rule.PayrollRuleId}; Code={rule.Code}; Name={rule.Name}; ApplicationMode={rule.ApplicationMode}; CalculationMethod={rule.CalculationMethod}; BaseType={rule.BaseType ?? "null"}; BaseAmount={Format(baseAmount)}; MinimumBase={Format(rule.MinimumBase)}; MaximumBase={Format(rule.MaximumBase)}; Rate={Format(rule.Rate)}; Amount={Format(amount)}";
-                lines.Add(new PayrollCalculatedLine(rule.PayrollComponentId, rule.PayrollComponentCode!, rule.PayrollComponentName,
-                    "Earning", rule.CalculationMethod, rule.BaseType, null, rule.Rate, amount, remarks,
-                    rule.PayrollRuleId, rule.Code, rule.Name, rule.ApplicationMode, rule.BaseType, baseAmount,
-                    rule.MinimumBase, rule.MaximumBase));
-                grossEarnings = checked(grossEarnings + amount);
+                var calculation = CalculateRuleLine(rule, roundedBasicSalary, grossEarnings, null);
+                if (calculation.Failure is not null) return Fail(employee, calculation.Failure);
+                if (calculation.Skipped is not null) { skippedRules.Add(calculation.Skipped); continue; }
+                lines.Add(calculation.Line!);
+                grossEarnings = checked(grossEarnings + calculation.Line!.Amount);
                 if (!ValidAmount(grossEarnings)) return Fail(employee, "GrossPay exceeds the supported decimal(19,4) range.");
             }
 
             var grossPay = RoundAmount(grossEarnings);
             var totalDeductions = 0m;
-            foreach (var assignment in assignments.Where(item => item.PayrollComponent.Category == "Deduction"))
+            var deductionRules = applicableRules.Where(rule => rule.CalculationStage == "Deduction").ToArray();
+            var duplicateDeductionReplacement = deductionRules.Where(rule => rule.ApplicationMode == "ReplaceAssignment")
+                .GroupBy(rule => rule.PayrollComponentId).FirstOrDefault(group => group.Count() > 1);
+            if (duplicateDeductionReplacement is not null)
+                return Fail(employee, $"Multiple applicable ReplaceAssignment deduction rules target payroll component '{duplicateDeductionReplacement.First().PayrollComponentName}': {string.Join(", ", duplicateDeductionReplacement.Select(rule => rule.Code))}.");
+            var replacedDeductionComponentIds = deductionRules.Where(rule => rule.ApplicationMode == "ReplaceAssignment")
+                .Select(rule => rule.PayrollComponentId).ToHashSet();
+            foreach (var assignment in assignments.Where(item => item.PayrollComponent.Category == "Deduction"
+                && !replacedDeductionComponentIds.Contains(item.PayrollComponentId)))
             {
                 var calculation = CalculateLineAmount(assignment, grossEarnings, roundedBasicSalary, grossPay, false);
                 if (calculation.Failure is not null) return Fail(employee, calculation.Failure);
                 lines.Add(ToLine(assignment, calculation.Amount));
                 totalDeductions = checked(totalDeductions + calculation.Amount);
+                if (!ValidAmount(totalDeductions)) return Fail(employee, "TotalDeductions exceeds the supported decimal(19,4) range.");
+            }
+            foreach (var rule in deductionRules)
+            {
+                var calculation = CalculateRuleLine(rule, roundedBasicSalary, grossEarnings, grossPay);
+                if (calculation.Failure is not null) return Fail(employee, calculation.Failure);
+                if (calculation.Skipped is not null) { skippedRules.Add(calculation.Skipped); continue; }
+                lines.Add(calculation.Line!);
+                totalDeductions = checked(totalDeductions + calculation.Line!.Amount);
                 if (!ValidAmount(totalDeductions)) return Fail(employee, "TotalDeductions exceeds the supported decimal(19,4) range.");
             }
 
@@ -121,6 +93,59 @@ public sealed class PayrollCalculationService : IPayrollCalculationService
         {
             return Fail(employee, "A payroll calculation exceeded the supported decimal(19,4) range.");
         }
+    }
+
+    private static (PayrollCalculatedLine? Line, string? Skipped, string? Failure) CalculateRuleLine(
+        ApplicablePayrollRuleDto rule, decimal basicSalary, decimal grossEarnings, decimal? grossPay)
+    {
+        if (rule.ApplicationMode is not ("Supplement" or "ReplaceAssignment"))
+            return (null, null, $"Payroll rule '{rule.Code}' has unsupported ApplicationMode '{rule.ApplicationMode}'.");
+        if (rule.PayrollComponentType != rule.CalculationStage || string.IsNullOrWhiteSpace(rule.PayrollComponentCode))
+            return (null, null, $"Payroll rule '{rule.Code}' does not reference a usable {rule.CalculationStage} payroll component.");
+        if (rule.AppliesTo != "Employee")
+            return (null, null, $"Payroll rule '{rule.Code}' has AppliesTo '{rule.AppliesTo}'; employer contribution calculation is not supported.");
+
+        decimal amount;
+        decimal? baseAmount = null;
+        switch (rule.CalculationMethod)
+        {
+            case "FixedAmount":
+                if (!rule.FixedAmount.HasValue || rule.MinimumBase.HasValue || rule.MaximumBase.HasValue)
+                    return (null, null, $"Payroll rule '{rule.Code}' has invalid FixedAmount configuration.");
+                amount = rule.FixedAmount.Value;
+                break;
+            case "Percentage":
+                if (!rule.Rate.HasValue)
+                    return (null, null, $"Payroll rule '{rule.Code}' requires Rate for Percentage calculation.");
+                baseAmount = rule.BaseType switch
+                {
+                    "BasicSalary" => basicSalary,
+                    "GrossEarnings" => grossEarnings,
+                    "GrossPay" when rule.CalculationStage == "Deduction" => grossPay,
+                    _ => null
+                };
+                if (!baseAmount.HasValue)
+                    return (null, null, $"Payroll rule '{rule.Code}' has unsupported {rule.CalculationStage.ToLowerInvariant()} percentage BaseType '{rule.BaseType ?? "null"}'.");
+                if ((rule.MinimumBase.HasValue && baseAmount.Value < rule.MinimumBase.Value)
+                    || (rule.MaximumBase.HasValue && baseAmount.Value > rule.MaximumBase.Value))
+                    return (null, $"Payroll rule '{rule.Code}' produced no line: actual {rule.BaseType} base {Format(baseAmount.Value)} is outside inclusive MinimumBase {Format(rule.MinimumBase)} / MaximumBase {Format(rule.MaximumBase)}.", null);
+                amount = checked(baseAmount.Value * (rule.Rate.Value / 100m));
+                break;
+            case "Manual":
+                return (null, null, $"Payroll rule '{rule.Code}' uses Manual calculation, but no numeric amount source is configured.");
+            default:
+                return (null, null, $"Payroll rule '{rule.Code}' has unsupported CalculationMethod '{rule.CalculationMethod}'.");
+        }
+
+        amount = RoundAmount(amount);
+        if (!ValidLineAmount(amount))
+            return (null, null, $"Payroll rule '{rule.Code}' calculates to an amount that cannot be stored as a positive payroll line.");
+        var remarks = $"PayrollRuleId={rule.PayrollRuleId}; Code={rule.Code}; Name={rule.Name}; ApplicationMode={rule.ApplicationMode}; CalculationMethod={rule.CalculationMethod}; BaseType={rule.BaseType ?? "null"}; BaseAmount={Format(baseAmount)}; MinimumBase={Format(rule.MinimumBase)}; MaximumBase={Format(rule.MaximumBase)}; Rate={Format(rule.Rate)}; Amount={Format(amount)}";
+        var line = new PayrollCalculatedLine(rule.PayrollComponentId, rule.PayrollComponentCode!, rule.PayrollComponentName,
+            rule.CalculationStage, rule.CalculationMethod, rule.BaseType, null, rule.Rate, amount, remarks,
+            rule.PayrollRuleId, rule.Code, rule.Name, rule.ApplicationMode, rule.BaseType, baseAmount,
+            rule.MinimumBase, rule.MaximumBase);
+        return (line, null, null);
     }
 
     private static (decimal Amount, string? Failure) CalculateLineAmount(

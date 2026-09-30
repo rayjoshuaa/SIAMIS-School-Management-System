@@ -10,7 +10,7 @@ namespace SIAMIS.Api.Controllers;
 [Produces("application/json")]
 public sealed class PayrollRuleEvaluationController(IPayrollRuleEvaluator evaluator, IWebHostEnvironment environment) : ControllerBase
 {
-    /// <summary>Returns effective, target-matched rules in future calculation order, with match details and employee/current-employment context.</summary>
+    /// <summary>Returns effective, target-matched rules in calculation order, with match details and employee/current-employment context.</summary>
     [HttpGet("{payrollPeriodId:guid}/{employeeId:guid}")]
     [ProducesResponseType(typeof(PayrollRuleEvaluationDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]

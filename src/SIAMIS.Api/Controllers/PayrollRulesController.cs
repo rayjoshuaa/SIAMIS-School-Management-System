@@ -4,7 +4,7 @@ using SIAMIS.Application.Payroll;
 
 namespace SIAMIS.Api.Controllers;
 
-/// <summary>Manages effective-dated payroll rule configuration. Applicable Earning rules are executed by payroll preview and generation.</summary>
+/// <summary>Manages effective-dated payroll rule configuration. Applicable Earning and Deduction rules are executed by payroll preview and generation.</summary>
 [ApiController]
 [Route("api/payroll-rules")]
 [Produces("application/json")]
