@@ -33,6 +33,7 @@ builder.Services.AddScoped<IPayrollComponentService, PayrollComponentService>();
 builder.Services.AddScoped<IPayrollPeriodService, PayrollPeriodService>();
 builder.Services.AddScoped<IPayrollRuleService, PayrollRuleService>();
 builder.Services.AddScoped<IPayrollRuleTargetService, PayrollRuleTargetService>();
+builder.Services.AddScoped<IPayrollRuleEvaluator, PayrollRuleEvaluator>();
 builder.Services.AddScoped<IPayrollSettingsService, PayrollSettingsService>();
 builder.Services.AddScoped<IPayrollGenerationService, PayrollGenerationService>();
 builder.Services.AddScoped<IPayrollCalculationService, PayrollCalculationService>();
