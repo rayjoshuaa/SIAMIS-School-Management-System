@@ -14,6 +14,7 @@ internal sealed class PayrollSettingsConfiguration : IEntityTypeConfiguration<Pa
                 "[PayrollCutoffDay] BETWEEN 1 AND 31 AND [DefaultPayDay] BETWEEN 1 AND 31");
             table.HasCheckConstraint("CK_PayrollSettings_WorkingValues",
                 "[WorkingDaysPerPeriod] > 0 AND [WorkingDaysPerPeriod] <= 366 AND [WorkingHoursPerDay] > 0 AND [WorkingHoursPerDay] <= 24");
+            table.HasCheckConstraint("CK_PayrollSettings_BasicSalaryProrationMethod", "[BasicSalaryProrationMethod] = 'ThirtyDay'");
             table.HasCheckConstraint("CK_PayrollSettings_DecimalPlaces", "[DecimalPlaces] BETWEEN 0 AND 6");
         });
         builder.HasKey(item => item.PayrollSettingsId);
@@ -24,6 +25,7 @@ internal sealed class PayrollSettingsConfiguration : IEntityTypeConfiguration<Pa
         builder.Property(item => item.WorkingDaysPerPeriod).HasColumnType("decimal(5,2)").IsRequired();
         builder.Property(item => item.WorkingHoursPerDay).HasColumnType("decimal(5,2)").IsRequired();
         builder.Property(item => item.RoundingMode).HasMaxLength(20).IsRequired();
+        builder.Property(item => item.BasicSalaryProrationMethod).HasMaxLength(30).HasDefaultValue("ThirtyDay").IsRequired();
         builder.Property(item => item.DecimalPlaces).IsRequired();
         builder.Property(item => item.IsActive).IsRequired();
         builder.Property(item => item.CreatedAt).HasColumnType("datetime2").IsRequired();

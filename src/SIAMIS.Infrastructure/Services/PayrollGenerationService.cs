@@ -1,3 +1,4 @@
+using System.Text.Json;
 using System.Data;
 using Microsoft.EntityFrameworkCore;
 using SIAMIS.Application.Employees;
@@ -10,7 +11,8 @@ namespace SIAMIS.Infrastructure.Services;
 
 /// <summary>Builds immutable payroll snapshots, committing each employee independently.</summary>
 public sealed class PayrollGenerationService(SIAMISDbContext db, IPayrollCalculationService calculator,
-    IPayrollRuleEvaluator ruleEvaluator, IPayrollEmploymentContextService employmentContexts) : IPayrollGenerationService
+    IPayrollRuleEvaluator ruleEvaluator, IPayrollEmploymentContextService employmentContexts,
+    IBasicSalaryEntitlementService salaryEntitlements) : IPayrollGenerationService
 {
     public async Task<ServiceResult<PayrollGenerationSummary>> GenerateAsync(
         Guid payrollPeriodId, PayrollGenerationRequest request, CancellationToken cancellationToken)
@@ -20,6 +22,9 @@ public sealed class PayrollGenerationService(SIAMISDbContext db, IPayrollCalcula
         if (period is null) return NotFound("Payroll period was not found.");
         if (period.Status is not ("Open" or "Processing"))
             return Conflict($"Payroll generation is allowed only for Open or Processing periods. Current status: {period.Status}.");
+
+        if (!BasicSalaryPeriod.IsSupported(period.StartDate, period.EndDate))
+            return Invalid(BasicSalaryPeriod.ValidationMessage);
 
         var requestedIds = request.EmployeeIds?.Distinct().ToArray();
         if (requestedIds is { Length: > 0 })
@@ -95,12 +100,9 @@ public sealed class PayrollGenerationService(SIAMISDbContext db, IPayrollCalcula
             if (!employment.IsSuccess) return Failed(candidate, WithExistingPayroll(employment.Failure!.Message, existing), existing);
             if (employment.Value is null) return Skipped(candidate, "Employee has no employment overlapping this payroll period and is not eligible.", existing);
 
-            var compensation = await db.EmployeeCompensations.AsNoTracking()
-                .Where(item => item.EmployeeId == employee.EmployeeId && item.EffectiveFrom <= period.StartDate
-                    && (!item.EffectiveTo.HasValue || item.EffectiveTo.Value >= period.StartDate))
-                .OrderByDescending(item => item.EffectiveFrom).ThenByDescending(item => item.EmployeeCompensationId)
-                .FirstOrDefaultAsync(cancellationToken);
-            if (compensation is null) return Skipped(candidate, $"No EmployeeCompensation covers payroll period start {period.StartDate:yyyy-MM-dd}.");
+            var entitlement = await salaryEntitlements.CalculateAsync(employee.EmployeeId, period.StartDate, period.EndDate, cancellationToken);
+            if (entitlement.Status == "Skipped") return Skipped(candidate, WithExistingPayroll(entitlement.Message, existing), existing);
+            if (entitlement.Status != "Calculated") return Failed(candidate, WithExistingPayroll(entitlement.Message, existing), existing);
 
             var assignments = await db.EmployeePayrollComponentAssignments.AsNoTracking().Include(item => item.PayrollComponent)
                 .Where(item => item.EmployeeId == employee.EmployeeId && item.EffectiveFrom <= period.StartDate
@@ -115,7 +117,7 @@ public sealed class PayrollGenerationService(SIAMISDbContext db, IPayrollCalcula
             var evaluation = await ruleEvaluator.EvaluateApplicableRulesAsync(period.PayrollPeriodId, employee.EmployeeId, employment.Value, cancellationToken);
             if (evaluation.Failure is not null)
                 return Failed(candidate, WithExistingPayroll($"Payroll rule evaluation failed: {evaluation.Failure.Message}", existing), existing);
-            var calculated = calculator.Calculate(ToCalculationEmployee(employee), compensation.BasicSalary, assignments,
+            var calculated = calculator.Calculate(ToCalculationEmployee(employee), entitlement.Snapshot!.Amount, assignments,
                 basicSalaryComponent, evaluation.Value!.ApplicableRules);
             if (calculated.Status != "Calculated") return Failed(candidate, WithExistingPayroll(calculated.Message, existing), existing);
 
@@ -145,6 +147,8 @@ public sealed class PayrollGenerationService(SIAMISDbContext db, IPayrollCalcula
                     PayrollComponentId = line.PayrollComponentId,
                     SourceType = line.SourceType,
                     SourceId = line.SourceId,
+                    BasicSalaryCalculationSnapshotJson = line.SourceType == "BasicSalary"
+                        ? JsonSerializer.Serialize(entitlement.Snapshot!, SnapshotJsonOptions) : null,
                     ComponentCode = line.ComponentCode,
                     ComponentName = line.ComponentName,
                     ComponentType = line.ComponentType,
@@ -182,6 +186,8 @@ public sealed class PayrollGenerationService(SIAMISDbContext db, IPayrollCalcula
         }
         finally { db.ChangeTracker.Clear(); }
     }
+
+    private static readonly JsonSerializerOptions SnapshotJsonOptions = new(JsonSerializerDefaults.Web);
 
     private async Task<Domain.Entities.MasterData.PayrollComponent?> GetBasicSalaryComponentAsync(CancellationToken ct)
     {

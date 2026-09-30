@@ -41,3 +41,52 @@ dotnet user-secrets set "ConnectionStrings:SIAMIS" "<your SQL Server connection 
 ```
 
 The web starter uses the AdminLTE 3.2 CDN distribution, which includes its Bootstrap 4 foundation. An internet connection is needed to load those assets in the browser.
+
+## D3 Basic Salary entitlement
+
+Payroll Preview and Generation share `BasicSalaryEntitlementService`. Basic Salary
+supports one **complete calendar month** and existing Monthly compensation (`PAY-001`).
+PayrollPeriod CRUD still permits other ranges, but Preview/Generation return HTTP 400
+for partial, cross-month or multi-month periods. Daily/Hourly compensation is not converted:
+the affected employee fails calculation.
+
+`PayrollSettings.BasicSalaryProrationMethod` defaults to `ThirtyDay`, the only implemented
+policy. With no active settings, calculation uses **SystemFallback** without inserting settings.
+An active valid row uses **Configured**; an invalid configured method fails rather than falling
+back. Preview and historical audit identify both the method and its source. This is the approved
+SIAMIS payroll policy, not a claim of a universal statutory salary formula.
+
+Employment start (`StartDate ?? HireDate`), EndDate and compensation effective boundaries are
+inclusive. Payable days are the union of employment dates within the month; gaps are unpaid.
+Weekends, holidays, attendance and leave do not change entitlement in D3.
+
+- Full continuous month with unchanged monthly salary: exact monthly salary, including February
+  and 31-day months. Adjacent employment/context changes do not reduce entitlement.
+- Partial unchanged salary: `min(monthly salary, monthly salary / 30 * payable days)`.
+- Salary changes: calculate applicable compensation segments independently, with no global cap
+  across different salary rates. Each segment is capped at its own monthly salary.
+- No compensation anywhere on payable dates: employee Skipped. Partial or overlapping coverage:
+  employee Failed. Every payable date must have exactly one Monthly compensation.
+- Contributing currencies are trimmed and uppercased and must match. No currency conversion.
+- Decimal intermediates are retained; final amounts round to four places, AwayFromZero. The final
+  segment absorbs any rounding residual so displayed segments reconcile to the Basic Salary line.
+
+Preview exposes typed `basicSalaryCalculationSnapshot` on its BasicSalary line. Generation
+stores the same version-1 structure in `EmployeePayrollLines.BasicSalaryCalculationSnapshotJson`:
+method/source, period, currency, payable days, full/prorated flags, final amount, and employment/
+compensation segment inputs and amounts. For full unchanged salary split across explanatory
+segments, amounts are allocated by calendar days to reconcile to exact monthly entitlement;
+`fullMonthAllocation` distinguishes this from ThirtyDay partial proration. Other source types
+retain null snapshots. Existing historical rows remain nullable and are not backfilled.
+
+Generation retains period-then-employee locking and Serializable transactions; compensation
+create/update/delete now share the employee lock. Failed regeneration preserves the prior
+complete payroll. Stored audits do not query or change with live employment/compensation edits.
+Rules with BasicSalary bases use the final entitlement. Other rule formulas, assignments,
+manual adjustments, targeting and lifecycle behavior remain unchanged. Assignments still use
+period-start effective-date selection and are not prorated.
+
+Broader payroll amounts have no explicit currency field and remain effectively single-currency;
+this checkpoint prevents mixed compensation currencies only. Daily/hourly policies, statutory
+Thai tax/social security/provident fund, attendance/leave deductions, expected-population period
+closure, and multi-currency payroll remain deferred.

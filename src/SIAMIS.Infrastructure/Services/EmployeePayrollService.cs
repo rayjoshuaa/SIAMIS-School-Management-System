@@ -54,7 +54,7 @@ public sealed class EmployeePayrollService(SIAMISDbContext db) : IEmployeePayrol
                 item.ComponentCode, item.ComponentName, item.ComponentType, item.Amount, item.Quantity, item.Rate, item.Remarks,
                 item.SourceType, item.SourceId, item.CalculationMethodSnapshot, item.RuleCode, item.RuleName,
                 item.ApplicationMode, item.BaseType, item.BaseAmount, item.MinimumBase, item.MaximumBase, item.CalculationRate,
-                item.IsTaxableSnapshot, item.IsStatutorySnapshot, item.ContributionSideSnapshot))
+                item.IsTaxableSnapshot, item.IsStatutorySnapshot, item.ContributionSideSnapshot, item.BasicSalaryCalculationSnapshotJson))
             .ToListAsync(ct);
         var employee = payroll.Employee;
         var period = payroll.PayrollPeriod;
@@ -229,7 +229,7 @@ public sealed class EmployeePayrollService(SIAMISDbContext db) : IEmployeePayrol
                 item.ComponentCode, item.ComponentName, item.ComponentType, item.Amount, item.Quantity, item.Rate, item.Remarks,
                 item.SourceType, item.SourceId, item.CalculationMethodSnapshot, item.RuleCode, item.RuleName,
                 item.ApplicationMode, item.BaseType, item.BaseAmount, item.MinimumBase, item.MaximumBase, item.CalculationRate,
-                item.IsTaxableSnapshot, item.IsStatutorySnapshot, item.ContributionSideSnapshot))
+                item.IsTaxableSnapshot, item.IsStatutorySnapshot, item.ContributionSideSnapshot, item.BasicSalaryCalculationSnapshotJson))
             .ToListAsync(ct);
         return ServiceResult<IReadOnlyList<EmployeePayrollLineDto>>.Success(lines);
     }
@@ -244,7 +244,7 @@ public sealed class EmployeePayrollService(SIAMISDbContext db) : IEmployeePayrol
                 item.ComponentCode, item.ComponentName, item.ComponentType, item.Amount, item.Quantity, item.Rate, item.Remarks,
                 item.SourceType, item.SourceId, item.CalculationMethodSnapshot, item.RuleCode, item.RuleName,
                 item.ApplicationMode, item.BaseType, item.BaseAmount, item.MinimumBase, item.MaximumBase, item.CalculationRate,
-                item.IsTaxableSnapshot, item.IsStatutorySnapshot, item.ContributionSideSnapshot))
+                item.IsTaxableSnapshot, item.IsStatutorySnapshot, item.ContributionSideSnapshot, item.BasicSalaryCalculationSnapshotJson))
             .SingleOrDefaultAsync(ct);
         return line is null ? NotFound<EmployeePayrollLineDto>("Payroll line was not found for this payroll.")
             : ServiceResult<EmployeePayrollLineDto>.Success(line);
@@ -447,7 +447,7 @@ public sealed class EmployeePayrollService(SIAMISDbContext db) : IEmployeePayrol
         item.PayrollComponentId, item.ComponentCode, item.ComponentName, item.ComponentType, item.Amount, item.Quantity, item.Rate,
         item.Remarks, item.SourceType, item.SourceId, item.CalculationMethodSnapshot, item.RuleCode, item.RuleName,
         item.ApplicationMode, item.BaseType, item.BaseAmount, item.MinimumBase, item.MaximumBase, item.CalculationRate,
-        item.IsTaxableSnapshot, item.IsStatutorySnapshot, item.ContributionSideSnapshot);
+        item.IsTaxableSnapshot, item.IsStatutorySnapshot, item.ContributionSideSnapshot, item.BasicSalaryCalculationSnapshotJson);
 
     private static bool IsUniqueViolation(DbUpdateException ex) => ex.InnerException is SqlException { Number: 2601 or 2627 };
     private static ServiceResult<T> Invalid<T>(string message) => ServiceResult<T>.Fail("validation", message);

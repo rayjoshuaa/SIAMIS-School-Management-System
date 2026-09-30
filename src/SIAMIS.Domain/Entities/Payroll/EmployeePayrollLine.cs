@@ -27,6 +27,7 @@ public sealed class EmployeePayrollLine
     public decimal? MinimumBase { get; set; }
     public decimal? MaximumBase { get; set; }
     public decimal? CalculationRate { get; set; }
+    public string? BasicSalaryCalculationSnapshotJson { get; set; }
     public string? Remarks { get; set; }
 
     public EmployeePayroll EmployeePayroll { get; set; } = null!;

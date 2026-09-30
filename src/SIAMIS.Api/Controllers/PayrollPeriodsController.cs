@@ -10,9 +10,9 @@ namespace SIAMIS.Api.Controllers;
 [Produces("application/json")]
 public sealed class PayrollPeriodsController(IPayrollPeriodService service, IPayrollGenerationService generation, IPayrollPreviewService preview) : ControllerBase
 {
-    /// <summary>Calculates payroll from current compensation and assignments without saving payroll records.</summary>
+    /// <summary>Previews period-eligible payroll without writing snapshots. Basic Salary requires a complete calendar month and Monthly compensation; typed details explain ThirtyDay entitlement.</summary>
     /// <param name="payrollPeriodId">The Open or Processing payroll period to preview.</param>
-    /// <param name="request">Optional employee IDs. Omit or provide an empty list to preview all active employees.</param>
+    /// <param name="request">Optional employee IDs. Omit or provide an empty list to preview employees whose employment overlaps this complete calendar month.</param>
     [HttpPost("{payrollPeriodId:guid}/preview")]
     [ProducesResponseType(typeof(PayrollPreviewSummary), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
@@ -25,7 +25,7 @@ public sealed class PayrollPeriodsController(IPayrollPeriodService service, IPay
         return result.IsSuccess ? Ok(result.Value) : Failure<PayrollPreviewSummary>(result.Failure!);
     }
 
-    /// <summary>Generates payroll snapshots for active employees or the supplied employee IDs. Each employee is processed atomically.</summary>
+    /// <summary>Generates payroll snapshots for period-eligible employees or the supplied IDs. Basic Salary requires a complete calendar month and Monthly compensation. Each employee is processed atomically.</summary>
     /// <param name="payrollPeriodId">The payroll period to generate.</param>
     /// <param name="request">Optional employee selection and force-regeneration settings.</param>
     [HttpPost("{payrollPeriodId:guid}/generate")]

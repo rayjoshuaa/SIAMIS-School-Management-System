@@ -8,7 +8,8 @@ namespace SIAMIS.Infrastructure.Services;
 
 /// <summary>Calculates payroll previews from current inputs without changing persisted data.</summary>
 public sealed class PayrollPreviewService(SIAMISDbContext db, IPayrollCalculationService calculator,
-    IPayrollRuleEvaluator ruleEvaluator, IPayrollEmploymentContextService employmentContexts) : IPayrollPreviewService
+    IPayrollRuleEvaluator ruleEvaluator, IPayrollEmploymentContextService employmentContexts,
+    IBasicSalaryEntitlementService salaryEntitlements) : IPayrollPreviewService
 {
     public async Task<ServiceResult<PayrollPreviewSummary>> PreviewAsync(
         Guid payrollPeriodId, PayrollPreviewRequest request, CancellationToken cancellationToken)
@@ -18,6 +19,9 @@ public sealed class PayrollPreviewService(SIAMISDbContext db, IPayrollCalculatio
         if (period is null) return Fail("not_found", "Payroll period was not found.");
         if (period.Status is not ("Open" or "Processing"))
             return Fail("conflict", $"Payroll preview is allowed only for Open or Processing periods. Current status: {period.Status}.");
+
+        if (!BasicSalaryPeriod.IsSupported(period.StartDate, period.EndDate))
+            return Fail("validation", BasicSalaryPeriod.ValidationMessage);
 
         var requestedIds = request.EmployeeIds?.Distinct().ToArray();
         if (requestedIds is { Length: > 0 })
@@ -70,14 +74,10 @@ public sealed class PayrollPreviewService(SIAMISDbContext db, IPayrollCalculatio
                 continue;
             }
 
-            var compensation = await db.EmployeeCompensations.AsNoTracking()
-                .Where(item => item.EmployeeId == employee.EmployeeId && item.EffectiveFrom <= period.StartDate
-                    && (!item.EffectiveTo.HasValue || item.EffectiveTo.Value >= period.StartDate))
-                .OrderByDescending(item => item.EffectiveFrom).ThenByDescending(item => item.EmployeeCompensationId)
-                .FirstOrDefaultAsync(cancellationToken);
-            if (compensation is null)
+            var entitlement = await salaryEntitlements.CalculateAsync(employee.EmployeeId, period.StartDate, period.EndDate, cancellationToken);
+            if (entitlement.Status != "Calculated")
             {
-                results.Add(Result(employee, name, "Skipped", "No applicable compensation found for payroll period start date."));
+                results.Add(Result(employee, name, entitlement.Status, entitlement.Message));
                 continue;
             }
 
@@ -105,7 +105,7 @@ public sealed class PayrollPreviewService(SIAMISDbContext db, IPayrollCalculatio
                 continue;
             }
             var calculation = calculator.Calculate(new PayrollCalculationEmployee(employee.EmployeeId, employee.EmployeeNumber, name),
-                compensation.BasicSalary, assignments, basicSalaryComponent, evaluation.Value!.ApplicableRules);
+                entitlement.Snapshot!.Amount, assignments, basicSalaryComponent, evaluation.Value!.ApplicableRules);
             if (calculation.Status != "Calculated")
             {
                 results.Add(Result(employee, name, "Failed", calculation.Message));
@@ -122,7 +122,7 @@ public sealed class PayrollPreviewService(SIAMISDbContext db, IPayrollCalculatio
                     line.Quantity, line.Rate, line.Amount, line.Remarks, line.PayrollRuleId, line.RuleCode,
                     line.RuleName, line.ApplicationMode, line.BaseType, line.BaseAmount,
                     line.MinimumBase, line.MaximumBase, line.SourceType, line.SourceId,
-                    line.IsTaxableSnapshot, line.IsStatutorySnapshot, line.ContributionSideSnapshot)).ToArray()));
+                    line.IsTaxableSnapshot, line.IsStatutorySnapshot, line.ContributionSideSnapshot, line.SourceType == "BasicSalary" ? entitlement.Snapshot : null)).ToArray()));
         }
 
         return ServiceResult<PayrollPreviewSummary>.Success(new PayrollPreviewSummary(payrollPeriodId, results.Count,

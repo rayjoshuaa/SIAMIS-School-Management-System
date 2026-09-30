@@ -41,6 +41,7 @@ builder.Services.AddScoped<IPayrollRuleEvaluator, PayrollRuleEvaluator>();
 builder.Services.AddScoped<IPayrollSettingsService, PayrollSettingsService>();
 builder.Services.AddScoped<IPayrollGenerationService, PayrollGenerationService>();
 builder.Services.AddScoped<IPayrollCalculationService, PayrollCalculationService>();
+builder.Services.AddScoped<IBasicSalaryEntitlementService, BasicSalaryEntitlementService>();
 builder.Services.AddScoped<IPayrollPreviewService, PayrollPreviewService>();
 builder.Services.AddScoped<IEmployeePayrollService, EmployeePayrollService>();
 builder.Services.AddScoped<IEmployeePayrollComponentAssignmentService, EmployeePayrollComponentAssignmentService>();

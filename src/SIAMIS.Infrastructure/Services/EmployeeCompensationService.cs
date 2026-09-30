@@ -35,7 +35,7 @@ public sealed class EmployeeCompensationService(SIAMISDbContext db) : IEmployeeC
     public async Task<ServiceResult<EmployeeCompensationDto>> CreateCompensationAsync(Guid employeeId, EmployeeCompensationRequest request, CancellationToken ct)
     {
         await using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct);
-        if (!await EmployeeExists(employeeId, ct)) return NotFound<EmployeeCompensationDto>("Employee was not found.");
+        if (await EmploymentIntegrity.LockAsync(db, employeeId, ct) is null) return NotFound<EmployeeCompensationDto>("Employee was not found.");
         var validation = await ValidateRequest(request, ct);
         if (validation is not null) return Invalid<EmployeeCompensationDto>(validation);
 
@@ -69,7 +69,7 @@ public sealed class EmployeeCompensationService(SIAMISDbContext db) : IEmployeeC
     public async Task<ServiceResult<EmployeeCompensationDto>> UpdateCompensationAsync(Guid employeeId, Guid compensationId, EmployeeCompensationRequest request, CancellationToken ct)
     {
         await using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct);
-        if (!await EmployeeExists(employeeId, ct)) return NotFound<EmployeeCompensationDto>("Employee was not found.");
+        if (await EmploymentIntegrity.LockAsync(db, employeeId, ct) is null) return NotFound<EmployeeCompensationDto>("Employee was not found.");
         var compensation = await db.EmployeeCompensations.SingleOrDefaultAsync(
             x => x.EmployeeId == employeeId && x.EmployeeCompensationId == compensationId, ct);
         if (compensation is null) return NotFound<EmployeeCompensationDto>("Compensation was not found for this employee.");
@@ -108,12 +108,14 @@ public sealed class EmployeeCompensationService(SIAMISDbContext db) : IEmployeeC
 
     public async Task<ServiceResult<bool>> DeleteCompensationAsync(Guid employeeId, Guid compensationId, CancellationToken ct)
     {
-        if (!await EmployeeExists(employeeId, ct)) return NotFound<bool>("Employee was not found.");
+        await using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct);
+        if (await EmploymentIntegrity.LockAsync(db, employeeId, ct) is null) return NotFound<bool>("Employee was not found.");
         var compensation = await db.EmployeeCompensations.SingleOrDefaultAsync(
             x => x.EmployeeId == employeeId && x.EmployeeCompensationId == compensationId, ct);
         if (compensation is null) return NotFound<bool>("Compensation was not found for this employee.");
         db.EmployeeCompensations.Remove(compensation);
         await db.SaveChangesAsync(ct);
+        await transaction.CommitAsync(ct);
         return ServiceResult<bool>.Success(true);
     }
 

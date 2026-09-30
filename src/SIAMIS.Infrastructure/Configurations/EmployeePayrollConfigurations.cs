@@ -48,6 +48,8 @@ internal sealed class EmployeePayrollLineConfiguration : IEntityTypeConfiguratio
     {
         builder.ToTable("EmployeePayrollLines", table =>
         {
+            table.HasCheckConstraint("CK_EmployeePayrollLines_BasicSalarySnapshotJson",
+                "[BasicSalaryCalculationSnapshotJson] IS NULL OR ([SourceType] = 'BasicSalary' AND ISJSON([BasicSalaryCalculationSnapshotJson]) = 1)");
             table.HasCheckConstraint("CK_EmployeePayrollLines_AmountPositive", "[Amount] > 0");
             table.HasCheckConstraint("CK_EmployeePayrollLines_QuantityNonNegative", "[Quantity] IS NULL OR [Quantity] >= 0");
             table.HasCheckConstraint("CK_EmployeePayrollLines_RateNonNegative", "[Rate] IS NULL OR [Rate] >= 0");
@@ -76,6 +78,7 @@ internal sealed class EmployeePayrollLineConfiguration : IEntityTypeConfiguratio
         builder.Property(item => item.BaseAmount).HasColumnType("decimal(19,4)");
         builder.Property(item => item.MinimumBase).HasColumnType("decimal(19,4)");
         builder.Property(item => item.MaximumBase).HasColumnType("decimal(19,4)");
+        builder.Property(item => item.BasicSalaryCalculationSnapshotJson).HasColumnType("nvarchar(max)");
         builder.Property(item => item.CalculationRate).HasColumnType("decimal(19,4)");
         builder.Property(item => item.Remarks).HasMaxLength(1000);
         builder.HasIndex(item => item.EmployeePayrollId).HasDatabaseName("IX_EmployeePayrollLines_EmployeePayrollId");

@@ -12,6 +12,8 @@ public sealed class PayrollSettingsRequest
     public decimal? WorkingDaysPerPeriod { get; set; }
     public decimal? WorkingHoursPerDay { get; set; }
     [StringLength(20)] public string? RoundingMode { get; set; }
+    /// <summary>Approved Monthly salary policy. Only ThirtyDay is currently supported.</summary>
+    [StringLength(30)] public string? BasicSalaryProrationMethod { get; set; } = "ThirtyDay";
     public int? DecimalPlaces { get; set; }
     public bool? IsActive { get; set; }
 }
@@ -33,7 +35,8 @@ public sealed record PayrollSettingsDto(
     int DecimalPlaces,
     bool IsActive,
     DateTime CreatedAt,
-    DateTime UpdatedAt);
+    DateTime UpdatedAt,
+    string BasicSalaryProrationMethod);
 
 public interface IPayrollSettingsService
 {

@@ -16,14 +16,14 @@ public sealed class PayrollSettingsService(SIAMISDbContext db) : IPayrollSetting
         => await db.PayrollSettings.AsNoTracking().Where(item => item.IsActive)
             .Select(item => new PayrollSettingsDto(item.PayrollSettingsId, item.Currency, item.PayFrequency,
                 item.PayrollCutoffDay, item.DefaultPayDay, item.WorkingDaysPerPeriod, item.WorkingHoursPerDay,
-                item.RoundingMode, item.DecimalPlaces, item.IsActive, item.CreatedAt, item.UpdatedAt))
+                item.RoundingMode, item.DecimalPlaces, item.IsActive, item.CreatedAt, item.UpdatedAt, item.BasicSalaryProrationMethod))
             .SingleOrDefaultAsync(cancellationToken);
 
     public async Task<PayrollSettingsDto?> GetPayrollSettingsAsync(Guid payrollSettingsId, CancellationToken cancellationToken)
         => await db.PayrollSettings.AsNoTracking().Where(item => item.PayrollSettingsId == payrollSettingsId)
             .Select(item => new PayrollSettingsDto(item.PayrollSettingsId, item.Currency, item.PayFrequency,
                 item.PayrollCutoffDay, item.DefaultPayDay, item.WorkingDaysPerPeriod, item.WorkingHoursPerDay,
-                item.RoundingMode, item.DecimalPlaces, item.IsActive, item.CreatedAt, item.UpdatedAt))
+                item.RoundingMode, item.DecimalPlaces, item.IsActive, item.CreatedAt, item.UpdatedAt, item.BasicSalaryProrationMethod))
             .SingleOrDefaultAsync(cancellationToken);
 
     public async Task<ServiceResult<PayrollSettingsDto>> CreatePayrollSettingsAsync(PayrollSettingsRequest request, CancellationToken cancellationToken)
@@ -85,8 +85,10 @@ public sealed class PayrollSettingsService(SIAMISDbContext db) : IPayrollSetting
     }
 
     private static (string? Currency, string? PayFrequency, int? PayrollCutoffDay, int? DefaultPayDay,
-        decimal? WorkingDaysPerPeriod, decimal? WorkingHoursPerDay, string? RoundingMode, int? DecimalPlaces, ApiFailure? Failure) Normalize(PayrollSettingsRequest request)
+        decimal? WorkingDaysPerPeriod, decimal? WorkingHoursPerDay, string? RoundingMode, int? DecimalPlaces, string? ProrationMethod, ApiFailure? Failure) Normalize(PayrollSettingsRequest request)
     {
+        var proration = Canonical(request.BasicSalaryProrationMethod, ["ThirtyDay"]);
+        if (proration is null) return Invalid("BasicSalaryProrationMethod must be ThirtyDay.");
         var currency = request.Currency?.Trim().ToUpperInvariant();
         var frequency = Canonical(request.PayFrequency, PayFrequencies);
         var rounding = Canonical(request.RoundingMode, RoundingModes);
@@ -102,12 +104,12 @@ public sealed class PayrollSettingsService(SIAMISDbContext db) : IPayrollSetting
         if (rounding is null) return Invalid("RoundingMode must be None, Up, Down, or Nearest.");
         if (!request.DecimalPlaces.HasValue || request.DecimalPlaces is < 0 or > 6) return Invalid("DecimalPlaces must be between 0 and 6.");
         return (currency, frequency, request.PayrollCutoffDay, request.DefaultPayDay, request.WorkingDaysPerPeriod,
-            request.WorkingHoursPerDay, rounding, request.DecimalPlaces, null);
+            request.WorkingHoursPerDay, rounding, request.DecimalPlaces, proration, null);
     }
 
     private static void Apply(PayrollSettings settings,
         (string? Currency, string? PayFrequency, int? PayrollCutoffDay, int? DefaultPayDay,
-            decimal? WorkingDaysPerPeriod, decimal? WorkingHoursPerDay, string? RoundingMode, int? DecimalPlaces, ApiFailure? Failure) values,
+            decimal? WorkingDaysPerPeriod, decimal? WorkingHoursPerDay, string? RoundingMode, int? DecimalPlaces, string? ProrationMethod, ApiFailure? Failure) values,
         bool isActive)
     {
         settings.Currency = values.Currency!;
@@ -118,6 +120,7 @@ public sealed class PayrollSettingsService(SIAMISDbContext db) : IPayrollSetting
         settings.WorkingHoursPerDay = values.WorkingHoursPerDay!.Value;
         settings.RoundingMode = values.RoundingMode!;
         settings.DecimalPlaces = values.DecimalPlaces!.Value;
+        settings.BasicSalaryProrationMethod = values.ProrationMethod!;
         settings.IsActive = isActive;
     }
 
@@ -126,10 +129,10 @@ public sealed class PayrollSettingsService(SIAMISDbContext db) : IPayrollSetting
     private static PayrollSettingsDto ToDto(PayrollSettings item)
         => new(item.PayrollSettingsId, item.Currency, item.PayFrequency, item.PayrollCutoffDay, item.DefaultPayDay,
             item.WorkingDaysPerPeriod, item.WorkingHoursPerDay, item.RoundingMode, item.DecimalPlaces, item.IsActive,
-            item.CreatedAt, item.UpdatedAt);
+            item.CreatedAt, item.UpdatedAt, item.BasicSalaryProrationMethod);
     private static (string? Currency, string? PayFrequency, int? PayrollCutoffDay, int? DefaultPayDay,
-        decimal? WorkingDaysPerPeriod, decimal? WorkingHoursPerDay, string? RoundingMode, int? DecimalPlaces, ApiFailure? Failure) Invalid(string message)
-        => (null, null, null, null, null, null, null, null, new("validation", message));
+        decimal? WorkingDaysPerPeriod, decimal? WorkingHoursPerDay, string? RoundingMode, int? DecimalPlaces, string? ProrationMethod, ApiFailure? Failure) Invalid(string message)
+        => (null, null, null, null, null, null, null, null, null, new("validation", message));
     private static ServiceResult<T> Failure<T>(ApiFailure failure) => ServiceResult<T>.Fail(failure.Code, failure.Message);
     private static ServiceResult<T> Conflict<T>(string message) => ServiceResult<T>.Fail("conflict", message);
     private static ServiceResult<T> NotFound<T>() => ServiceResult<T>.Fail("not_found", "Payroll Settings record was not found.");
