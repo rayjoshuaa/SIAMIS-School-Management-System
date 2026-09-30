@@ -10,7 +10,8 @@ namespace SIAMIS.Api.Controllers;
 [Produces("application/json")]
 public sealed class PayrollRulesController(IPayrollRuleService service) : ControllerBase
 {
-    /// <summary>Lists rules with filters and pagination. Active rules are returned by default, ordered by Priority, Name, then PayrollRuleId. This presentation order does not change payroll calculation behavior.</summary>
+    /// <summary>Lists rules with filters and pagination. Active rules are returned by default, ordered by Priority, Name, then PayrollRuleId. This endpoint returns configuration only and does not execute rules.</summary>
+    /// <param name="query">Optional filters include componentId and applicationMode (Supplement or ReplaceAssignment).</param>
     [HttpGet]
     [ProducesResponseType(typeof(PagedResult<PayrollRuleDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
@@ -30,10 +31,11 @@ public sealed class PayrollRulesController(IPayrollRuleService service) : Contro
         return rule is null ? NotFoundProblem() : Ok(rule);
     }
 
-    /// <summary>Creates a payroll rule configuration. Priority is required, non-negative, and does not affect calculation order yet. This does not execute the rule during payroll calculation.</summary>
+    /// <summary>Creates a rule linked to one active, stage-compatible payroll component. ApplicationMode defaults to Supplement. Rule configuration is not executed by payroll calculation yet.</summary>
     [HttpPost]
     [ProducesResponseType(typeof(PayrollRuleDto), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
     public async Task<ActionResult<PayrollRuleDto>> CreatePayrollRule([FromBody] PayrollRuleRequest request, CancellationToken ct)
     {
@@ -42,7 +44,7 @@ public sealed class PayrollRulesController(IPayrollRuleService service) : Contro
         return CreatedAtAction(nameof(GetPayrollRule), new { id = result.Value!.PayrollRuleId }, result.Value);
     }
 
-    /// <summary>Updates a payroll rule configuration without changing its primary key. Priority is required, non-negative, and does not affect calculation order yet.</summary>
+    /// <summary>Updates a rule and its active, stage-compatible payroll component and application mode without changing the rule ID.</summary>
     [HttpPut("{id:guid}")]
     [ProducesResponseType(typeof(PayrollRuleDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]

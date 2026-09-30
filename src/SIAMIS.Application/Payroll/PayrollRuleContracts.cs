@@ -8,6 +8,8 @@ public sealed class PayrollRuleListQuery
     [StringLength(30)] public string? RuleType { get; set; }
     [StringLength(30)] public string? CalculationMethod { get; set; }
     [StringLength(20)] public string? CalculationStage { get; set; }
+    public Guid? ComponentId { get; set; }
+    [StringLength(30)] public string? ApplicationMode { get; set; }
     [StringLength(30)] public string? AppliesTo { get; set; }
     public bool? IsActive { get; set; }
     public DateOnly? ActiveOn { get; set; }
@@ -20,6 +22,8 @@ public sealed class PayrollRuleRequest
 {
     [StringLength(50)] public string? Code { get; set; }
     [StringLength(150)] public string? Name { get; set; }
+    [Required] public Guid? PayrollComponentId { get; set; }
+    [StringLength(30)] public string? ApplicationMode { get; set; } = "Supplement";
     [Required, Range(0, int.MaxValue)] public int? Priority { get; set; }
     [StringLength(1000)] public string? Description { get; set; }
     [StringLength(30)] public string? RuleType { get; set; }
@@ -45,6 +49,11 @@ public sealed record PayrollRuleDto(
     Guid PayrollRuleId,
     string Code,
     string Name,
+    Guid PayrollComponentId,
+    string? PayrollComponentCode,
+    string PayrollComponentName,
+    string PayrollComponentType,
+    string ApplicationMode,
     int Priority,
     string? Description,
     string RuleType,

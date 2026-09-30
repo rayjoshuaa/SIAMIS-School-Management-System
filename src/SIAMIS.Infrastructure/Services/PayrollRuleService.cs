@@ -2,6 +2,7 @@ using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using SIAMIS.Application.Employees;
 using SIAMIS.Application.Payroll;
+using SIAMIS.Domain.Entities.MasterData;
 using SIAMIS.Domain.Entities.Payroll;
 using SIAMIS.Infrastructure.Data;
 
@@ -15,6 +16,7 @@ public sealed class PayrollRuleService(SIAMISDbContext db) : IPayrollRuleService
     private static readonly string[] CalculationStages = ["Earning", "Deduction"];
     private static readonly string[] BaseTypes = ["BasicSalary", "GrossEarnings", "GrossPay", "TaxableIncome", "Custom"];
     private static readonly string[] AppliesToValues = ["Employee", "Employer", "Both"];
+    private static readonly string[] ApplicationModes = ["Supplement", "ReplaceAssignment"];
 
     public async Task<ServiceResult<PagedResult<PayrollRuleDto>>> GetPayrollRulesAsync(PayrollRuleListQuery query, CancellationToken cancellationToken)
     {
@@ -26,14 +28,19 @@ public sealed class PayrollRuleService(SIAMISDbContext db) : IPayrollRuleService
         if (query.CalculationStage is not null && stage is null) return Invalid<PagedResult<PayrollRuleDto>>("CalculationStage must be Earning or Deduction.");
         var appliesTo = Normalize(query.AppliesTo, AppliesToValues);
         if (query.AppliesTo is not null && appliesTo is null) return Invalid<PagedResult<PayrollRuleDto>>("AppliesTo is not supported.");
+        var applicationMode = Normalize(query.ApplicationMode, ApplicationModes);
+        if (query.ApplicationMode is not null && applicationMode is null)
+            return Invalid<PagedResult<PayrollRuleDto>>("ApplicationMode must be Supplement or ReplaceAssignment.");
         if (query.Page < 1 || query.PageSize is < 1 or > 100) return Invalid<PagedResult<PayrollRuleDto>>("Page must be positive and PageSize must be between 1 and 100.");
 
-        IQueryable<PayrollRule> rules = db.PayrollRules.AsNoTracking();
+        IQueryable<PayrollRule> rules = db.PayrollRules.AsNoTracking().Include(item => item.PayrollComponent);
         rules = rules.Where(item => item.IsActive == (query.IsActive ?? true));
         if (ruleType is not null) rules = rules.Where(item => item.RuleType == ruleType);
         if (method is not null) rules = rules.Where(item => item.CalculationMethod == method);
         if (stage is not null) rules = rules.Where(item => item.CalculationStage == stage);
         if (appliesTo is not null) rules = rules.Where(item => item.AppliesTo == appliesTo);
+        if (query.ComponentId.HasValue) rules = rules.Where(item => item.PayrollComponentId == query.ComponentId.Value);
+        if (applicationMode is not null) rules = rules.Where(item => item.ApplicationMode == applicationMode);
         if (query.ActiveOn.HasValue)
         {
             var date = query.ActiveOn.Value;
@@ -47,25 +54,31 @@ public sealed class PayrollRuleService(SIAMISDbContext db) : IPayrollRuleService
         }
 
         var totalCount = await rules.CountAsync(cancellationToken);
-        var items = await rules.OrderBy(item => item.Priority).ThenBy(item => item.Name).ThenBy(item => item.PayrollRuleId)
+        var rows = await rules.OrderBy(item => item.Priority).ThenBy(item => item.Name).ThenBy(item => item.PayrollRuleId)
             .Skip((query.Page - 1) * query.PageSize).Take(query.PageSize)
-            .Select(item => ToDto(item)).ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken);
+        var items = rows.Select(ToDto).ToArray();
         return ServiceResult<PagedResult<PayrollRuleDto>>.Success(new(items, query.Page, query.PageSize, totalCount));
     }
 
     public async Task<PayrollRuleDto?> GetPayrollRuleAsync(Guid payrollRuleId, CancellationToken cancellationToken)
-        => await db.PayrollRules.AsNoTracking().Where(item => item.PayrollRuleId == payrollRuleId)
-            .Select(item => ToDto(item)).SingleOrDefaultAsync(cancellationToken);
+    {
+        var rule = await db.PayrollRules.AsNoTracking().Include(item => item.PayrollComponent)
+            .SingleOrDefaultAsync(item => item.PayrollRuleId == payrollRuleId, cancellationToken);
+        return rule is null ? null : ToDto(rule);
+    }
 
     public async Task<ServiceResult<PayrollRuleDto>> CreatePayrollRuleAsync(PayrollRuleRequest request, CancellationToken cancellationToken)
     {
         var values = NormalizeRequest(request);
         if (values.Failure is not null) return Failure<PayrollRuleDto>(values.Failure);
-        if (await db.PayrollRules.AnyAsync(item => item.Code == values.Code, cancellationToken))
+        var componentResult = await ValidateComponentAsync(values.Values!.PayrollComponentId, values.Values.CalculationStage, cancellationToken);
+        if (componentResult.Failure is not null) return Failure<PayrollRuleDto>(componentResult.Failure);
+        if (await db.PayrollRules.AnyAsync(item => item.Code == values.Values!.Code, cancellationToken))
             return Conflict<PayrollRuleDto>("A payroll rule with this Code already exists.");
 
-        var rule = new PayrollRule();
-        Apply(rule, values, request.IsActive ?? true);
+        var rule = new PayrollRule { PayrollComponent = componentResult.Component! };
+        Apply(rule, values.Values!, request.IsActive ?? true);
         db.PayrollRules.Add(rule);
         try { await db.SaveChangesAsync(cancellationToken); }
         catch (DbUpdateException exception) when (IsUniqueViolation(exception))
@@ -79,9 +92,12 @@ public sealed class PayrollRuleService(SIAMISDbContext db) : IPayrollRuleService
         if (rule is null) return NotFound<PayrollRuleDto>();
         var values = NormalizeRequest(request);
         if (values.Failure is not null) return Failure<PayrollRuleDto>(values.Failure);
-        if (await db.PayrollRules.AnyAsync(item => item.PayrollRuleId != payrollRuleId && item.Code == values.Code, cancellationToken))
+        var componentResult = await ValidateComponentAsync(values.Values!.PayrollComponentId, values.Values.CalculationStage, cancellationToken);
+        if (componentResult.Failure is not null) return Failure<PayrollRuleDto>(componentResult.Failure);
+        if (await db.PayrollRules.AnyAsync(item => item.PayrollRuleId != payrollRuleId && item.Code == values.Values!.Code, cancellationToken))
             return Conflict<PayrollRuleDto>("A payroll rule with this Code already exists.");
-        Apply(rule, values, request.IsActive ?? rule.IsActive);
+        rule.PayrollComponent = componentResult.Component!;
+        Apply(rule, values.Values!, request.IsActive ?? rule.IsActive);
         try { await db.SaveChangesAsync(cancellationToken); }
         catch (DbUpdateException exception) when (IsUniqueViolation(exception))
         { return Conflict<PayrollRuleDto>("A payroll rule with this Code already exists."); }
@@ -106,24 +122,25 @@ public sealed class PayrollRuleService(SIAMISDbContext db) : IPayrollRuleService
         return ServiceResult<bool>.Success(true);
     }
 
-    private static (string? Code, string? Name, int? Priority, string? Description, string? RuleType, string? CalculationMethod, string? CalculationStage,
-        decimal? Rate, decimal? FixedAmount, decimal? MinimumBase, decimal? MaximumBase, string? BaseType,
-        string? AppliesTo, DateOnly? EffectiveFrom, DateOnly? EffectiveTo, ApiFailure? Failure) NormalizeRequest(PayrollRuleRequest request)
+    private static (NormalizedPayrollRule? Values, ApiFailure? Failure) NormalizeRequest(PayrollRuleRequest request)
     {
         var code = request.Code?.Trim();
         var name = request.Name?.Trim();
         var ruleType = Normalize(request.RuleType, RuleTypes);
         var method = Normalize(request.CalculationMethod, CalculationMethods);
         var stage = NormalizeCalculationStage(request.CalculationStage);
+        var applicationMode = Normalize(request.ApplicationMode ?? "Supplement", ApplicationModes);
         var baseType = request.BaseType is null ? null : Normalize(request.BaseType, BaseTypes);
         var appliesTo = Normalize(request.AppliesTo, AppliesToValues);
 
         if (string.IsNullOrWhiteSpace(code)) return InvalidValues("Code is required.");
         if (string.IsNullOrWhiteSpace(name)) return InvalidValues("Name is required.");
+        if (!request.PayrollComponentId.HasValue || request.PayrollComponentId.Value == Guid.Empty) return InvalidValues("PayrollComponentId is required.");
         if (!request.Priority.HasValue || request.Priority.Value < 0) return InvalidValues("Priority is required and must be greater than or equal to zero.");
         if (ruleType is null) return InvalidValues("RuleType must be Statutory, EmployerBenefit, EmployeeBenefit, Deduction, or Other.");
         if (method is null) return InvalidValues("CalculationMethod must be Percentage, FixedAmount, or Manual.");
         if (stage is null) return InvalidValues("CalculationStage must be Earning or Deduction.");
+        if (applicationMode is null) return InvalidValues("ApplicationMode must be Supplement or ReplaceAssignment.");
         if (request.BaseType is not null && baseType is null) return InvalidValues("BaseType must be BasicSalary, GrossEarnings, GrossPay, TaxableIncome, or Custom.");
         if (appliesTo is null) return InvalidValues("AppliesTo must be Employee, Employer, or Both.");
         if (!request.EffectiveFrom.HasValue) return InvalidValues("EffectiveFrom is required.");
@@ -140,19 +157,30 @@ public sealed class PayrollRuleService(SIAMISDbContext db) : IPayrollRuleService
         if (method == "Manual" && (request.Rate.HasValue || request.FixedAmount.HasValue || baseType is not null))
             return InvalidValues("Manual rules cannot specify Rate, FixedAmount, or BaseType.");
 
-        return (code, name, request.Priority, string.IsNullOrWhiteSpace(request.Description) ? null : request.Description.Trim(), ruleType, method, stage,
+        return (new NormalizedPayrollRule(code, name, request.PayrollComponentId.Value, applicationMode, request.Priority.Value,
+            string.IsNullOrWhiteSpace(request.Description) ? null : request.Description.Trim(), ruleType, method, stage,
             request.Rate, request.FixedAmount, request.MinimumBase, request.MaximumBase, baseType, appliesTo,
-            request.EffectiveFrom, request.EffectiveTo, null);
+            request.EffectiveFrom.Value, request.EffectiveTo), null);
     }
 
-    private static void Apply(PayrollRule rule,
-        (string? Code, string? Name, int? Priority, string? Description, string? RuleType, string? CalculationMethod, string? CalculationStage, decimal? Rate,
-            decimal? FixedAmount, decimal? MinimumBase, decimal? MaximumBase, string? BaseType, string? AppliesTo,
-            DateOnly? EffectiveFrom, DateOnly? EffectiveTo, ApiFailure? Failure) values, bool isActive)
+    private async Task<(PayrollComponent? Component, ApiFailure? Failure)> ValidateComponentAsync(
+        Guid componentId, string calculationStage, CancellationToken cancellationToken)
+    {
+        var component = await db.PayrollComponents.SingleOrDefaultAsync(item => item.Id == componentId, cancellationToken);
+        if (component is null) return (null, new("not_found", "Payroll component was not found."));
+        if (!component.IsActive) return (null, new("validation", "The selected PayrollComponent is inactive."));
+        if (!string.Equals(component.Category, calculationStage, StringComparison.OrdinalIgnoreCase))
+            return (null, new("validation", $"CalculationStage '{calculationStage}' must match the selected PayrollComponent type '{component.Category}'."));
+        return (component, null);
+    }
+
+    private static void Apply(PayrollRule rule, NormalizedPayrollRule values, bool isActive)
     {
         rule.Code = values.Code!;
         rule.Name = values.Name!;
-        rule.Priority = values.Priority!.Value;
+        rule.PayrollComponentId = values.PayrollComponentId;
+        rule.ApplicationMode = values.ApplicationMode;
+        rule.Priority = values.Priority;
         rule.Description = values.Description;
         rule.RuleType = values.RuleType!;
         rule.CalculationMethod = values.CalculationMethod!;
@@ -163,7 +191,7 @@ public sealed class PayrollRuleService(SIAMISDbContext db) : IPayrollRuleService
         rule.MaximumBase = values.MaximumBase;
         rule.BaseType = values.BaseType;
         rule.AppliesTo = values.AppliesTo!;
-        rule.EffectiveFrom = values.EffectiveFrom!.Value;
+        rule.EffectiveFrom = values.EffectiveFrom;
         rule.EffectiveTo = values.EffectiveTo;
         rule.IsActive = isActive;
     }
@@ -177,14 +205,19 @@ public sealed class PayrollRuleService(SIAMISDbContext db) : IPayrollRuleService
             : Normalize(value, CalculationStages);
 
     private static PayrollRuleDto ToDto(PayrollRule item)
-        => new(item.PayrollRuleId, item.Code, item.Name, item.Priority, item.Description, item.RuleType, item.CalculationMethod, item.CalculationStage,
+        => new(item.PayrollRuleId, item.Code, item.Name, item.PayrollComponentId, item.PayrollComponent.Code,
+            item.PayrollComponent.Name, item.PayrollComponent.Category, item.ApplicationMode,
+            item.Priority, item.Description, item.RuleType, item.CalculationMethod, item.CalculationStage,
             item.Rate, item.FixedAmount, item.MinimumBase, item.MaximumBase, item.BaseType, item.AppliesTo,
             item.EffectiveFrom, item.EffectiveTo, item.IsActive, item.CreatedAt, item.UpdatedAt);
 
-    private static (string? Code, string? Name, int? Priority, string? Description, string? RuleType, string? CalculationMethod, string? CalculationStage,
+    private static (NormalizedPayrollRule? Values, ApiFailure? Failure) InvalidValues(string message)
+        => (null, new("validation", message));
+
+    private sealed record NormalizedPayrollRule(string Code, string Name, Guid PayrollComponentId, string ApplicationMode,
+        int Priority, string? Description, string RuleType, string CalculationMethod, string CalculationStage,
         decimal? Rate, decimal? FixedAmount, decimal? MinimumBase, decimal? MaximumBase, string? BaseType,
-        string? AppliesTo, DateOnly? EffectiveFrom, DateOnly? EffectiveTo, ApiFailure? Failure) InvalidValues(string message)
-        => (null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, new("validation", message));
+        string AppliesTo, DateOnly EffectiveFrom, DateOnly? EffectiveTo);
 
     private static ServiceResult<T> Failure<T>(ApiFailure failure) => ServiceResult<T>.Fail(failure.Code, failure.Message);
     private static ServiceResult<T> Invalid<T>(string message) => ServiceResult<T>.Fail("validation", message);

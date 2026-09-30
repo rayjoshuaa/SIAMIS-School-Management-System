@@ -87,9 +87,16 @@ public sealed class PayrollRuleEvaluator(SIAMISDbContext db) : IPayrollRuleEvalu
 
         var displayTargets = applicable.SelectMany(item => item.Targets).Select(item => item.Target).ToArray();
         var displays = await ResolveTargetDisplaysAsync(displayTargets, cancellationToken);
+        var componentIds = applicable.Select(item => item.Rule.PayrollComponentId).Distinct().ToArray();
+        var componentDisplays = await db.PayrollComponents.AsNoTracking().Where(item => componentIds.Contains(item.Id))
+            .Select(item => new { item.Id, item.Code, item.Name, item.Category })
+            .ToDictionaryAsync(item => item.Id, cancellationToken);
         var orderedRules = applicable
             .Select(item => new ApplicablePayrollRuleDto(
-                item.Rule.PayrollRuleId, item.Rule.Code, item.Rule.Name, item.Rule.RuleType,
+                item.Rule.PayrollRuleId, item.Rule.Code, item.Rule.Name,
+                item.Rule.PayrollComponentId, componentDisplays[item.Rule.PayrollComponentId].Code,
+                componentDisplays[item.Rule.PayrollComponentId].Name, componentDisplays[item.Rule.PayrollComponentId].Category,
+                item.Rule.ApplicationMode, item.Rule.RuleType,
                 item.Rule.CalculationStage, item.Rule.Priority, item.Rule.CalculationMethod,
                 item.Rule.BaseType, item.Rule.Rate, item.Rule.FixedAmount, item.Rule.MinimumBase,
                 item.Rule.MaximumBase, item.Rule.AppliesTo, item.Rule.EffectiveFrom, item.Rule.EffectiveTo,
