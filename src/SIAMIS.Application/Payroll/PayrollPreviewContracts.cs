@@ -1,0 +1,46 @@
+using System.ComponentModel.DataAnnotations;
+using SIAMIS.Application.Employees;
+
+namespace SIAMIS.Application.Payroll;
+
+public sealed class PayrollPreviewRequest
+{
+    public IReadOnlyList<Guid>? EmployeeIds { get; set; }
+}
+
+public sealed record PayrollPreviewLineDto(
+    Guid PayrollComponentId,
+    string ComponentCode,
+    string ComponentName,
+    string ComponentType,
+    string CalculationMethod,
+    string? PercentageBase,
+    decimal? Quantity,
+    decimal? Rate,
+    decimal Amount,
+    string? Remarks);
+
+public sealed record PayrollPreviewEmployeeResult(
+    Guid EmployeeId,
+    string EmployeeNumber,
+    string EmployeeName,
+    string Status,
+    decimal? BasicSalary,
+    decimal? GrossPay,
+    decimal? TotalDeductions,
+    decimal? NetPay,
+    string Message,
+    IReadOnlyList<PayrollPreviewLineDto> Lines);
+
+public sealed record PayrollPreviewSummary(
+    Guid PayrollPeriodId,
+    int ProcessedEmployees,
+    int CalculatedEmployees,
+    int SkippedEmployees,
+    int FailedEmployees,
+    IReadOnlyList<PayrollPreviewEmployeeResult> Results);
+
+public interface IPayrollPreviewService
+{
+    Task<ServiceResult<PayrollPreviewSummary>> PreviewAsync(Guid payrollPeriodId, PayrollPreviewRequest request, CancellationToken cancellationToken);
+}

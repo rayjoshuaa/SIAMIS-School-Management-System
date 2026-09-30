@@ -1,0 +1,39 @@
+using System.ComponentModel.DataAnnotations;
+using SIAMIS.Application.Employees;
+
+namespace SIAMIS.Application.MasterData;
+
+public sealed record PayrollComponentDto(
+    Guid PayrollComponentId,
+    string Code,
+    string Name,
+    string ComponentType,
+    string? Description,
+    string CalculationMethod,
+    string? PercentageBase,
+    bool IsActive);
+
+public sealed class PayrollComponentRequest
+{
+    [Required, StringLength(50, MinimumLength = 1)] public string Code { get; set; } = string.Empty;
+    [Required, StringLength(150, MinimumLength = 1)] public string Name { get; set; } = string.Empty;
+    [Required, StringLength(30, MinimumLength = 1)] public string ComponentType { get; set; } = string.Empty;
+    [Required, StringLength(30, MinimumLength = 1)] public string? CalculationMethod { get; set; }
+    [StringLength(30)] public string? PercentageBase { get; set; }
+    [StringLength(1000)] public string? Description { get; set; }
+}
+
+public sealed class PayrollComponentStatusRequest
+{
+    [Required] public bool? IsActive { get; set; }
+}
+
+public interface IPayrollComponentService
+{
+    Task<ServiceResult<IReadOnlyList<PayrollComponentDto>>> GetPayrollComponentsAsync(string? componentType, bool includeInactive, string? search, CancellationToken cancellationToken);
+    Task<PayrollComponentDto?> GetPayrollComponentAsync(Guid id, CancellationToken cancellationToken);
+    Task<ServiceResult<PayrollComponentDto>> CreatePayrollComponentAsync(PayrollComponentRequest request, CancellationToken cancellationToken);
+    Task<ServiceResult<PayrollComponentDto>> UpdatePayrollComponentAsync(Guid id, PayrollComponentRequest request, CancellationToken cancellationToken);
+    Task<ServiceResult<bool>> SetPayrollComponentStatusAsync(Guid id, bool isActive, CancellationToken cancellationToken);
+    Task<ServiceResult<bool>> DeletePayrollComponentAsync(Guid id, CancellationToken cancellationToken);
+}

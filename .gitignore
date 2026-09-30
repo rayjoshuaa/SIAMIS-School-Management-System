@@ -1,0 +1,24 @@
+## .NET
+**/bin/
+**/obj/
+.dotnet/
+*.user
+*.suo
+*.cache
+## IDE
+.vs/
+.idea/
+## Local settings and secrets
+appsettings.Local.json
+secrets.json
+
+## Local development configuration
+**/appsettings.Development.json
+**/appsettings.Local.json
+**/secrets.json
+
+## Certificates and keys
+*.pfx
+*.p12
+*.pem
+*.key

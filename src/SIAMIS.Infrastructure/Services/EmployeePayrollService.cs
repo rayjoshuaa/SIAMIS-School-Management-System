@@ -1,0 +1,290 @@
+using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
+using SIAMIS.Application.Employees;
+using SIAMIS.Application.Payroll;
+using SIAMIS.Domain.Entities.Payroll;
+using SIAMIS.Infrastructure.Data;
+
+namespace SIAMIS.Infrastructure.Services;
+
+public sealed class EmployeePayrollService(SIAMISDbContext db) : IEmployeePayrollService
+{
+    private const decimal MaximumAmount = 999_999_999_999_999.9999m;
+    private static readonly string[] PayrollStatuses = ["Draft", "Calculated", "Approved", "Paid", "Cancelled"];
+    private static readonly string[] ActivePeriodStatuses = ["Open", "Processing"];
+
+    public async Task<ServiceResult<PagedResult<EmployeePayrollListItemDto>>> GetPayrollsAsync(EmployeePayrollListQuery query, CancellationToken ct)
+    {
+        if (query.Page < 1 || query.PageSize is < 1 or > 100)
+            return Invalid<PagedResult<EmployeePayrollListItemDto>>("Page must be positive and PageSize must be between 1 and 100.");
+        var status = query.Status is null ? null : NormalizeStatus(query.Status);
+        if (query.Status is not null && status is null)
+            return Invalid<PagedResult<EmployeePayrollListItemDto>>("Status must be Draft, Calculated, Approved, Paid, or Cancelled.");
+
+        var source = db.EmployeePayrolls.AsNoTracking().AsQueryable();
+        if (query.PayrollPeriodId.HasValue) source = source.Where(item => item.PayrollPeriodId == query.PayrollPeriodId.Value);
+        if (query.EmployeeId.HasValue) source = source.Where(item => item.EmployeeId == query.EmployeeId.Value);
+        if (status is not null) source = source.Where(item => item.Status == status);
+        var total = await source.CountAsync(ct);
+        var items = await source.OrderByDescending(item => item.PayrollPeriod.StartDate)
+            .ThenBy(item => item.Employee.EmployeeNumber).ThenBy(item => item.EmployeePayrollId)
+            .Skip((query.Page - 1) * query.PageSize).Take(query.PageSize)
+            .Select(item => new EmployeePayrollListItemDto(
+                new EmployeePayrollDto(item.EmployeePayrollId, item.PayrollPeriodId, item.EmployeeId, item.BasicSalary,
+                    item.GrossPay, item.TotalDeductions, item.NetPay, item.Status, item.Remarks, item.CreatedAt, item.UpdatedAt),
+                item.Employee.EmployeeNumber,
+                (item.Employee.PreferredName ?? item.Employee.FirstName) + " " + item.Employee.LastName,
+                item.PayrollPeriod.Code,
+                item.PayrollPeriod.Name))
+            .ToListAsync(ct);
+        return ServiceResult<PagedResult<EmployeePayrollListItemDto>>.Success(new(items, query.Page, query.PageSize, total));
+    }
+
+    public async Task<ServiceResult<EmployeePayrollDetailDto>> GetPayrollAsync(Guid id, CancellationToken ct)
+    {
+        var payroll = await db.EmployeePayrolls.AsNoTracking()
+            .Include(item => item.Employee).Include(item => item.PayrollPeriod)
+            .SingleOrDefaultAsync(item => item.EmployeePayrollId == id, ct);
+        if (payroll is null) return NotFound<EmployeePayrollDetailDto>("Employee payroll was not found.");
+        var lines = await db.EmployeePayrollLines.AsNoTracking().Where(item => item.EmployeePayrollId == id)
+            .OrderBy(item => item.ComponentName).ThenBy(item => item.EmployeePayrollLineId)
+            .Select(item => new EmployeePayrollLineDto(item.EmployeePayrollLineId, item.EmployeePayrollId, item.PayrollComponentId,
+                item.ComponentCode, item.ComponentName, item.ComponentType, item.Amount, item.Quantity, item.Rate, item.Remarks))
+            .ToListAsync(ct);
+        var employee = payroll.Employee;
+        var period = payroll.PayrollPeriod;
+        return ServiceResult<EmployeePayrollDetailDto>.Success(new(
+            ToDto(payroll),
+            new(employee.EmployeeId, employee.EmployeeNumber, EmployeeName(employee), employee.IsActive),
+            new(period.PayrollPeriodId, period.Code, period.Name, period.StartDate, period.EndDate, period.PayDate, period.Status),
+            lines));
+    }
+
+    public async Task<ServiceResult<EmployeePayrollDetailDto>> CreatePayrollAsync(EmployeePayrollRequest request, CancellationToken ct)
+    {
+        var validation = ValidateHeader(request, "Draft");
+        if (validation.Failure is not null) return ServiceResult<EmployeePayrollDetailDto>.Fail("validation", validation.Failure);
+        if (!await db.Employees.AsNoTracking().AnyAsync(item => item.EmployeeId == request.EmployeeId!.Value, ct))
+            return NotFound<EmployeePayrollDetailDto>("Employee was not found.");
+        var period = await db.PayrollPeriods.AsNoTracking().SingleOrDefaultAsync(item => item.PayrollPeriodId == request.PayrollPeriodId!.Value, ct);
+        if (period is null) return NotFound<EmployeePayrollDetailDto>("Payroll period was not found.");
+        if (!IsActivePeriod(period.Status)) return Invalid<EmployeePayrollDetailDto>("Payroll period must be Open or Processing to create employee payroll.");
+        if (await db.EmployeePayrolls.AnyAsync(item => item.EmployeeId == request.EmployeeId && item.PayrollPeriodId == request.PayrollPeriodId, ct))
+            return Conflict<EmployeePayrollDetailDto>("An employee payroll already exists for this employee and payroll period.");
+
+        var payroll = new EmployeePayroll { PayrollPeriodId = period.PayrollPeriodId, EmployeeId = request.EmployeeId!.Value };
+        ApplyHeader(payroll, request, validation.Status!);
+        db.EmployeePayrolls.Add(payroll);
+        try
+        {
+            await db.SaveChangesAsync(ct);
+        }
+        catch (DbUpdateException ex) when (IsUniqueViolation(ex))
+        {
+            return Conflict<EmployeePayrollDetailDto>("An employee payroll already exists for this employee and payroll period.");
+        }
+        return await GetPayrollAsync(payroll.EmployeePayrollId, ct);
+    }
+
+    public async Task<ServiceResult<EmployeePayrollDetailDto>> UpdatePayrollAsync(Guid id, EmployeePayrollRequest request, CancellationToken ct)
+    {
+        var payroll = await db.EmployeePayrolls.SingleOrDefaultAsync(item => item.EmployeePayrollId == id, ct);
+        if (payroll is null) return NotFound<EmployeePayrollDetailDto>("Employee payroll was not found.");
+        var validation = ValidateHeader(request, payroll.Status);
+        if (validation.Failure is not null) return ServiceResult<EmployeePayrollDetailDto>.Fail("validation", validation.Failure);
+        if (payroll.Status == "Paid" && HasChangedTotals(payroll, request))
+            return Conflict<EmployeePayrollDetailDto>("Paid payroll monetary values cannot be modified.");
+        if (!await db.Employees.AsNoTracking().AnyAsync(item => item.EmployeeId == request.EmployeeId!.Value, ct))
+            return NotFound<EmployeePayrollDetailDto>("Employee was not found.");
+        var period = await db.PayrollPeriods.AsNoTracking().SingleOrDefaultAsync(item => item.PayrollPeriodId == request.PayrollPeriodId!.Value, ct);
+        if (period is null) return NotFound<EmployeePayrollDetailDto>("Payroll period was not found.");
+        var periodChanged = payroll.PayrollPeriodId != request.PayrollPeriodId!.Value;
+        if (periodChanged && !IsActivePeriod(period.Status))
+            return Invalid<EmployeePayrollDetailDto>("Payroll period must be Open or Processing when assigning employee payroll to it.");
+        if (await db.EmployeePayrolls.AnyAsync(item => item.EmployeePayrollId != id
+            && item.EmployeeId == request.EmployeeId && item.PayrollPeriodId == request.PayrollPeriodId, ct))
+            return Conflict<EmployeePayrollDetailDto>("An employee payroll already exists for this employee and payroll period.");
+
+        payroll.EmployeeId = request.EmployeeId!.Value;
+        payroll.PayrollPeriodId = request.PayrollPeriodId!.Value;
+        ApplyHeader(payroll, request, validation.Status!);
+        try
+        {
+            await db.SaveChangesAsync(ct);
+        }
+        catch (DbUpdateException ex) when (IsUniqueViolation(ex))
+        {
+            return Conflict<EmployeePayrollDetailDto>("An employee payroll already exists for this employee and payroll period.");
+        }
+        return await GetPayrollAsync(id, ct);
+    }
+
+    public async Task<ServiceResult<bool>> SetPayrollStatusAsync(Guid id, string status, CancellationToken ct)
+    {
+        var canonical = NormalizeStatus(status);
+        if (canonical is null) return Invalid<bool>("Status must be Draft, Calculated, Approved, Paid, or Cancelled.");
+        var payroll = await db.EmployeePayrolls.SingleOrDefaultAsync(item => item.EmployeePayrollId == id, ct);
+        if (payroll is null) return NotFound<bool>("Employee payroll was not found.");
+        payroll.Status = canonical;
+        await db.SaveChangesAsync(ct);
+        return ServiceResult<bool>.Success(true);
+    }
+
+    public async Task<ServiceResult<bool>> DeletePayrollAsync(Guid id, CancellationToken ct)
+    {
+        var payroll = await db.EmployeePayrolls.SingleOrDefaultAsync(item => item.EmployeePayrollId == id, ct);
+        if (payroll is null) return NotFound<bool>("Employee payroll was not found.");
+        if (payroll.Status == "Paid") return Conflict<bool>("Paid payroll cannot be deleted.");
+        if (await db.EmployeePayrollLines.AnyAsync(item => item.EmployeePayrollId == id, ct))
+            return Conflict<bool>("Employee payroll cannot be deleted while payroll lines exist.");
+        db.EmployeePayrolls.Remove(payroll);
+        await db.SaveChangesAsync(ct);
+        return ServiceResult<bool>.Success(true);
+    }
+
+    public async Task<ServiceResult<IReadOnlyList<EmployeePayrollLineDto>>> GetLinesAsync(Guid payrollId, CancellationToken ct)
+    {
+        if (!await db.EmployeePayrolls.AsNoTracking().AnyAsync(item => item.EmployeePayrollId == payrollId, ct))
+            return NotFound<IReadOnlyList<EmployeePayrollLineDto>>("Employee payroll was not found.");
+        var lines = await db.EmployeePayrollLines.AsNoTracking().Where(item => item.EmployeePayrollId == payrollId)
+            .OrderBy(item => item.ComponentName).ThenBy(item => item.EmployeePayrollLineId)
+            .Select(item => new EmployeePayrollLineDto(item.EmployeePayrollLineId, item.EmployeePayrollId, item.PayrollComponentId,
+                item.ComponentCode, item.ComponentName, item.ComponentType, item.Amount, item.Quantity, item.Rate, item.Remarks))
+            .ToListAsync(ct);
+        return ServiceResult<IReadOnlyList<EmployeePayrollLineDto>>.Success(lines);
+    }
+
+    public async Task<ServiceResult<EmployeePayrollLineDto>> GetLineAsync(Guid payrollId, Guid lineId, CancellationToken ct)
+    {
+        if (!await db.EmployeePayrolls.AsNoTracking().AnyAsync(item => item.EmployeePayrollId == payrollId, ct))
+            return NotFound<EmployeePayrollLineDto>("Employee payroll was not found.");
+        var line = await db.EmployeePayrollLines.AsNoTracking().Where(item => item.EmployeePayrollId == payrollId
+            && item.EmployeePayrollLineId == lineId)
+            .Select(item => new EmployeePayrollLineDto(item.EmployeePayrollLineId, item.EmployeePayrollId, item.PayrollComponentId,
+                item.ComponentCode, item.ComponentName, item.ComponentType, item.Amount, item.Quantity, item.Rate, item.Remarks))
+            .SingleOrDefaultAsync(ct);
+        return line is null ? NotFound<EmployeePayrollLineDto>("Payroll line was not found for this payroll.")
+            : ServiceResult<EmployeePayrollLineDto>.Success(line);
+    }
+
+    public async Task<ServiceResult<EmployeePayrollLineDto>> CreateLineAsync(Guid payrollId, EmployeePayrollLineRequest request, CancellationToken ct)
+    {
+        var payroll = await db.EmployeePayrolls.SingleOrDefaultAsync(item => item.EmployeePayrollId == payrollId, ct);
+        if (payroll is null) return NotFound<EmployeePayrollLineDto>("Employee payroll was not found.");
+        if (payroll.Status == "Paid") return Conflict<EmployeePayrollLineDto>("Paid payroll cannot have lines added.");
+        var validation = ValidateLine(request);
+        if (validation is not null) return Invalid<EmployeePayrollLineDto>(validation);
+        var component = await db.PayrollComponents.AsNoTracking().SingleOrDefaultAsync(item => item.Id == request.PayrollComponentId!.Value, ct);
+        if (component is null) return NotFound<EmployeePayrollLineDto>("Payroll component was not found.");
+        if (!component.IsActive) return Invalid<EmployeePayrollLineDto>("Payroll component must be active.");
+        if (component.Code is null) return Invalid<EmployeePayrollLineDto>("Payroll component must have a code before it can be added to payroll.");
+
+        var line = new EmployeePayrollLine { EmployeePayrollId = payrollId };
+        ApplyLine(line, request, component);
+        db.EmployeePayrollLines.Add(line);
+        await db.SaveChangesAsync(ct);
+        return ServiceResult<EmployeePayrollLineDto>.Success(ToDto(line));
+    }
+
+    public async Task<ServiceResult<EmployeePayrollLineDto>> UpdateLineAsync(Guid payrollId, Guid lineId, EmployeePayrollLineRequest request, CancellationToken ct)
+    {
+        var payroll = await db.EmployeePayrolls.SingleOrDefaultAsync(item => item.EmployeePayrollId == payrollId, ct);
+        if (payroll is null) return NotFound<EmployeePayrollLineDto>("Employee payroll was not found.");
+        var line = await db.EmployeePayrollLines.SingleOrDefaultAsync(item => item.EmployeePayrollId == payrollId
+            && item.EmployeePayrollLineId == lineId, ct);
+        if (line is null) return NotFound<EmployeePayrollLineDto>("Payroll line was not found for this payroll.");
+        if (payroll.Status == "Paid") return Conflict<EmployeePayrollLineDto>("Paid payroll lines cannot be updated.");
+        var validation = ValidateLine(request);
+        if (validation is not null) return Invalid<EmployeePayrollLineDto>(validation);
+        var component = await db.PayrollComponents.AsNoTracking().SingleOrDefaultAsync(item => item.Id == request.PayrollComponentId!.Value, ct);
+        if (component is null) return NotFound<EmployeePayrollLineDto>("Payroll component was not found.");
+        if (!component.IsActive) return Invalid<EmployeePayrollLineDto>("Payroll component must be active.");
+        if (component.Code is null) return Invalid<EmployeePayrollLineDto>("Payroll component must have a code before it can be added to payroll.");
+        ApplyLine(line, request, component);
+        await db.SaveChangesAsync(ct);
+        return ServiceResult<EmployeePayrollLineDto>.Success(ToDto(line));
+    }
+
+    public async Task<ServiceResult<bool>> DeleteLineAsync(Guid payrollId, Guid lineId, CancellationToken ct)
+    {
+        var payroll = await db.EmployeePayrolls.SingleOrDefaultAsync(item => item.EmployeePayrollId == payrollId, ct);
+        if (payroll is null) return NotFound<bool>("Employee payroll was not found.");
+        var line = await db.EmployeePayrollLines.SingleOrDefaultAsync(item => item.EmployeePayrollId == payrollId
+            && item.EmployeePayrollLineId == lineId, ct);
+        if (line is null) return NotFound<bool>("Payroll line was not found for this payroll.");
+        if (payroll.Status == "Paid") return Conflict<bool>("Paid payroll lines cannot be deleted.");
+        db.EmployeePayrollLines.Remove(line);
+        await db.SaveChangesAsync(ct);
+        return ServiceResult<bool>.Success(true);
+    }
+
+    private static string? ValidateLine(EmployeePayrollLineRequest request)
+    {
+        if (!request.PayrollComponentId.HasValue) return "PayrollComponentId is required.";
+        if (!request.Amount.HasValue || request.Amount.Value <= 0 || request.Amount.Value > MaximumAmount || !HasScaleFour(request.Amount.Value))
+            return "Amount must be greater than zero and fit decimal(19,4).";
+        if (request.Quantity.HasValue && (request.Quantity.Value < 0 || request.Quantity.Value > MaximumAmount || !HasScaleFour(request.Quantity.Value)))
+            return "Quantity must be non-negative and fit decimal(19,4).";
+        if (request.Rate.HasValue && (request.Rate.Value < 0 || request.Rate.Value > MaximumAmount || !HasScaleFour(request.Rate.Value)))
+            return "Rate must be non-negative and fit decimal(19,4).";
+        if (request.Remarks?.Length > 1000) return "Remarks cannot exceed 1000 characters.";
+        return null;
+    }
+
+    private static (string? Status, string? Failure) ValidateHeader(EmployeePayrollRequest request, string fallbackStatus)
+    {
+        if (!request.PayrollPeriodId.HasValue) return (null, "PayrollPeriodId is required.");
+        if (!request.EmployeeId.HasValue) return (null, "EmployeeId is required.");
+        if (!request.BasicSalary.HasValue || !ValidAmount(request.BasicSalary.Value)) return (null, "BasicSalary must be non-negative and fit decimal(19,4).");
+        if (!request.GrossPay.HasValue || !ValidAmount(request.GrossPay.Value)) return (null, "GrossPay must be non-negative and fit decimal(19,4).");
+        if (!request.TotalDeductions.HasValue || !ValidAmount(request.TotalDeductions.Value)) return (null, "TotalDeductions must be non-negative and fit decimal(19,4).");
+        if (!request.NetPay.HasValue || !ValidAmount(request.NetPay.Value)) return (null, "NetPay must be non-negative and fit decimal(19,4).");
+        if (request.Remarks?.Length > 2000) return (null, "Remarks cannot exceed 2000 characters.");
+        var status = request.Status is null ? fallbackStatus : NormalizeStatus(request.Status);
+        return status is null ? (null, "Status must be Draft, Calculated, Approved, Paid, or Cancelled.") : (status, null);
+    }
+
+    private static void ApplyHeader(EmployeePayroll item, EmployeePayrollRequest request, string status)
+    {
+        item.BasicSalary = request.BasicSalary!.Value;
+        item.GrossPay = request.GrossPay!.Value;
+        item.TotalDeductions = request.TotalDeductions!.Value;
+        item.NetPay = request.NetPay!.Value;
+        item.Status = status;
+        item.Remarks = Clean(request.Remarks);
+    }
+
+    private static void ApplyLine(EmployeePayrollLine line, EmployeePayrollLineRequest request, Domain.Entities.MasterData.PayrollComponent component)
+    {
+        line.PayrollComponentId = component.Id;
+        line.ComponentCode = component.Code!;
+        line.ComponentName = component.Name;
+        line.ComponentType = component.Category;
+        line.Amount = request.Amount!.Value;
+        line.Quantity = request.Quantity;
+        line.Rate = request.Rate;
+        line.Remarks = Clean(request.Remarks);
+    }
+
+    private static bool HasChangedTotals(EmployeePayroll existing, EmployeePayrollRequest request)
+        => existing.BasicSalary != request.BasicSalary || existing.GrossPay != request.GrossPay
+            || existing.TotalDeductions != request.TotalDeductions || existing.NetPay != request.NetPay;
+
+    private static bool ValidAmount(decimal value) => value >= 0 && value <= MaximumAmount && HasScaleFour(value);
+    private static bool HasScaleFour(decimal value) => decimal.Round(value, 4) == value;
+    private static bool IsActivePeriod(string status) => ActivePeriodStatuses.Contains(status, StringComparer.Ordinal);
+    private static string? NormalizeStatus(string? status) => PayrollStatuses.FirstOrDefault(value => value.Equals(status?.Trim(), StringComparison.OrdinalIgnoreCase));
+    private static string EmployeeName(Domain.Entities.Employees.Employee employee) => $"{employee.PreferredName ?? employee.FirstName} {employee.LastName}";
+    private static string? Clean(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+
+    private static EmployeePayrollDto ToDto(EmployeePayroll item) => new(item.EmployeePayrollId, item.PayrollPeriodId, item.EmployeeId,
+        item.BasicSalary, item.GrossPay, item.TotalDeductions, item.NetPay, item.Status, item.Remarks, item.CreatedAt, item.UpdatedAt);
+
+    private static EmployeePayrollLineDto ToDto(EmployeePayrollLine item) => new(item.EmployeePayrollLineId, item.EmployeePayrollId,
+        item.PayrollComponentId, item.ComponentCode, item.ComponentName, item.ComponentType, item.Amount, item.Quantity, item.Rate, item.Remarks);
+
+    private static bool IsUniqueViolation(DbUpdateException ex) => ex.InnerException is SqlException { Number: 2601 or 2627 };
+    private static ServiceResult<T> Invalid<T>(string message) => ServiceResult<T>.Fail("validation", message);
+    private static ServiceResult<T> NotFound<T>(string message) => ServiceResult<T>.Fail("not_found", message);
+    private static ServiceResult<T> Conflict<T>(string message) => ServiceResult<T>.Fail("conflict", message);
+}
