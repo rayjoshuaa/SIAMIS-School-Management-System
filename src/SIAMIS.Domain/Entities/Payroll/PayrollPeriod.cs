@@ -12,6 +12,10 @@ public sealed class PayrollPeriod : IHasTimestamps
     public DateOnly PayDate { get; set; }
     public string Status { get; set; } = "Open";
     public string? Remarks { get; set; }
+    public DateTime? ProcessingStartedAt { get; set; }
+    public DateTime? ClosedAt { get; set; }
+    public DateTime? CancelledAt { get; set; }
+    public string? CancellationReason { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
     public ICollection<EmployeePayroll> EmployeePayrolls { get; set; } = new List<EmployeePayroll>();

@@ -8,7 +8,8 @@ internal sealed class PayrollPeriodConfiguration : IEntityTypeConfiguration<Payr
 {
     public void Configure(EntityTypeBuilder<PayrollPeriod> builder)
     {
-        builder.ToTable("PayrollPeriods");
+        builder.ToTable("PayrollPeriods", table => table.HasCheckConstraint("CK_PayrollPeriods_Status",
+            "[Status] IN ('Open', 'Processing', 'Closed', 'Cancelled')"));
         builder.HasKey(item => item.PayrollPeriodId);
         builder.Property(item => item.Code).HasMaxLength(50).IsRequired();
         builder.Property(item => item.Name).HasMaxLength(150).IsRequired();
@@ -17,6 +18,10 @@ internal sealed class PayrollPeriodConfiguration : IEntityTypeConfiguration<Payr
         builder.Property(item => item.PayDate).HasColumnType("date").IsRequired();
         builder.Property(item => item.Status).HasMaxLength(20).IsRequired();
         builder.Property(item => item.Remarks).HasMaxLength(1000);
+        builder.Property(item => item.ProcessingStartedAt).HasColumnType("datetime2");
+        builder.Property(item => item.ClosedAt).HasColumnType("datetime2");
+        builder.Property(item => item.CancelledAt).HasColumnType("datetime2");
+        builder.Property(item => item.CancellationReason).HasMaxLength(1000);
         builder.Property(item => item.CreatedAt).HasColumnType("datetime2").IsRequired();
         builder.Property(item => item.UpdatedAt).HasColumnType("datetime2").IsRequired();
         builder.HasIndex(item => item.Code).IsUnique();

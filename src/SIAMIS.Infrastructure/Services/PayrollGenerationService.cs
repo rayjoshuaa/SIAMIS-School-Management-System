@@ -66,6 +66,12 @@ public sealed class PayrollGenerationService(SIAMISDbContext db, IPayrollCalcula
         try
         {
             await using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken);
+            // Reload under the shared parent lock: the batch's earlier period read cannot authorize a later mutation.
+            var lockedPeriod = await PayrollPeriodLock.GetAsync(db, period.PayrollPeriodId, cancellationToken);
+            if (lockedPeriod is null) return Skipped(candidate, "Payroll period no longer exists.");
+            if (!PayrollPeriodLock.AllowsMutation(lockedPeriod.Status))
+                return Skipped(candidate, PayrollPeriodLock.ConflictMessage(lockedPeriod.Status));
+            period = lockedPeriod;
             var employee = await db.Employees.AsNoTracking().SingleOrDefaultAsync(item => item.EmployeeId == candidate.EmployeeId, cancellationToken);
             if (employee is null) return Skipped(candidate, "Employee no longer exists.");
             if (!employee.IsActive) return Skipped(candidate, "Employee is inactive.");

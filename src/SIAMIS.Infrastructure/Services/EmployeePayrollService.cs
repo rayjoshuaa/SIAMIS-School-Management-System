@@ -69,11 +69,12 @@ public sealed class EmployeePayrollService(SIAMISDbContext db) : IEmployeePayrol
     {
         var validation = ValidateHeader(request.PayrollPeriodId, request.EmployeeId, request.Remarks);
         if (validation is not null) return Invalid<EmployeePayrollDetailDto>(validation);
+        await using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct);
+        var period = await PayrollPeriodLock.GetAsync(db, request.PayrollPeriodId!.Value, ct);
+        if (period is null) return NotFound<EmployeePayrollDetailDto>("Payroll period was not found.");
+        if (!IsActivePeriod(period.Status)) return Conflict<EmployeePayrollDetailDto>(PayrollPeriodLock.ConflictMessage(period.Status));
         if (!await db.Employees.AsNoTracking().AnyAsync(item => item.EmployeeId == request.EmployeeId!.Value, ct))
             return NotFound<EmployeePayrollDetailDto>("Employee was not found.");
-        var period = await db.PayrollPeriods.AsNoTracking().SingleOrDefaultAsync(item => item.PayrollPeriodId == request.PayrollPeriodId!.Value, ct);
-        if (period is null) return NotFound<EmployeePayrollDetailDto>("Payroll period was not found.");
-        if (!IsActivePeriod(period.Status)) return Invalid<EmployeePayrollDetailDto>("Payroll period must be Open or Processing to create employee payroll.");
         if (await db.EmployeePayrolls.AnyAsync(item => item.EmployeeId == request.EmployeeId && item.PayrollPeriodId == request.PayrollPeriodId, ct))
             return Conflict<EmployeePayrollDetailDto>("An employee payroll already exists for this employee and payroll period.");
 
@@ -93,6 +94,7 @@ public sealed class EmployeePayrollService(SIAMISDbContext db) : IEmployeePayrol
         try
         {
             await db.SaveChangesAsync(ct);
+            await transaction.CommitAsync(ct);
         }
         catch (DbUpdateException ex) when (IsUniqueViolation(ex))
         {
@@ -103,8 +105,10 @@ public sealed class EmployeePayrollService(SIAMISDbContext db) : IEmployeePayrol
 
     public async Task<ServiceResult<EmployeePayrollDetailDto>> UpdatePayrollAsync(Guid id, EmployeePayrollUpdateRequest request, CancellationToken ct)
     {
+        var periodId = await FindPayrollPeriodIdAsync(id, ct);
         await using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct);
-        var payroll = await GetPayrollForMutationAsync(id, ct);
+        var (payroll, parentConflict) = await GetPayrollForMutationAsync(id, periodId, ct, request.PayrollPeriodId);
+        if (parentConflict is not null) return Conflict<EmployeePayrollDetailDto>(parentConflict);
         if (payroll is null) return NotFound<EmployeePayrollDetailDto>("Employee payroll was not found.");
         if (!IsEditable(payroll.Status)) return Conflict<EmployeePayrollDetailDto>($"{payroll.Status} payroll is finalized and cannot be updated.");
         var validation = ValidateHeader(request.PayrollPeriodId, request.EmployeeId, request.Remarks);
@@ -118,7 +122,7 @@ public sealed class EmployeePayrollService(SIAMISDbContext db) : IEmployeePayrol
         if (period is null) return NotFound<EmployeePayrollDetailDto>("Payroll period was not found.");
         var periodChanged = payroll.PayrollPeriodId != request.PayrollPeriodId!.Value;
         if (periodChanged && !IsActivePeriod(period.Status))
-            return Invalid<EmployeePayrollDetailDto>("Payroll period must be Open or Processing when assigning employee payroll to it.");
+            return Conflict<EmployeePayrollDetailDto>(PayrollPeriodLock.ConflictMessage(period.Status));
         if (await db.EmployeePayrolls.AnyAsync(item => item.EmployeePayrollId != id
             && item.EmployeeId == request.EmployeeId && item.PayrollPeriodId == request.PayrollPeriodId, ct))
             return Conflict<EmployeePayrollDetailDto>("An employee payroll already exists for this employee and payroll period.");
@@ -141,8 +145,10 @@ public sealed class EmployeePayrollService(SIAMISDbContext db) : IEmployeePayrol
     // Authorization and authenticated actor attribution must be added when SIAMIS authentication exists.
     public async Task<ServiceResult<bool>> ApprovePayrollAsync(Guid id, CancellationToken ct)
     {
+        var periodId = await FindPayrollPeriodIdAsync(id, ct);
         await using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct);
-        var payroll = await GetPayrollForMutationAsync(id, ct);
+        var (payroll, parentConflict) = await GetPayrollForMutationAsync(id, periodId, ct);
+        if (parentConflict is not null) return Conflict<bool>(parentConflict);
         if (payroll is null) return NotFound<bool>("Employee payroll was not found.");
         if (payroll.Status != "Calculated") return Conflict<bool>($"Only Calculated payroll can be approved. Current status: {payroll.Status}.");
         var integrityError = await ValidateStoredSnapshotAsync(payroll, ct);
@@ -159,8 +165,10 @@ public sealed class EmployeePayrollService(SIAMISDbContext db) : IEmployeePayrol
 
     public async Task<ServiceResult<bool>> MarkPayrollPaidAsync(Guid id, CancellationToken ct)
     {
+        var periodId = await FindPayrollPeriodIdAsync(id, ct);
         await using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct);
-        var payroll = await GetPayrollForMutationAsync(id, ct);
+        var (payroll, parentConflict) = await GetPayrollForMutationAsync(id, periodId, ct);
+        if (parentConflict is not null) return Conflict<bool>(parentConflict);
         if (payroll is null) return NotFound<bool>("Employee payroll was not found.");
         if (payroll.Status != "Approved") return Conflict<bool>($"Only Approved payroll can be marked paid. Current status: {payroll.Status}.");
         if (!payroll.ApprovedAt.HasValue) return Conflict<bool>("ApprovedAt is missing. Historical approval must be reviewed before this payroll can be marked paid.");
@@ -177,8 +185,10 @@ public sealed class EmployeePayrollService(SIAMISDbContext db) : IEmployeePayrol
 
     public async Task<ServiceResult<bool>> CancelPayrollAsync(Guid id, EmployeePayrollCancelRequest request, CancellationToken ct)
     {
+        var periodId = await FindPayrollPeriodIdAsync(id, ct);
         await using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct);
-        var payroll = await GetPayrollForMutationAsync(id, ct);
+        var (payroll, parentConflict) = await GetPayrollForMutationAsync(id, periodId, ct);
+        if (parentConflict is not null) return Conflict<bool>(parentConflict);
         if (payroll is null) return NotFound<bool>("Employee payroll was not found.");
         if (!IsEditable(payroll.Status)) return Conflict<bool>($"Only Draft or Calculated payroll can be cancelled. Current status: {payroll.Status}.");
         if (string.IsNullOrWhiteSpace(request.Reason) || request.Reason.Length > 1000)
@@ -195,8 +205,10 @@ public sealed class EmployeePayrollService(SIAMISDbContext db) : IEmployeePayrol
 
     public async Task<ServiceResult<bool>> DeletePayrollAsync(Guid id, CancellationToken ct)
     {
+        var periodId = await FindPayrollPeriodIdAsync(id, ct);
         await using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct);
-        var payroll = await GetPayrollForMutationAsync(id, ct);
+        var (payroll, parentConflict) = await GetPayrollForMutationAsync(id, periodId, ct);
+        if (parentConflict is not null) return Conflict<bool>(parentConflict);
         if (payroll is null) return NotFound<bool>("Employee payroll was not found.");
         if (payroll.Status != "Draft") return Conflict<bool>("Only an empty Draft payroll can be deleted.");
         if (await db.EmployeePayrollLines.AnyAsync(item => item.EmployeePayrollId == id, ct))
@@ -240,8 +252,10 @@ public sealed class EmployeePayrollService(SIAMISDbContext db) : IEmployeePayrol
 
     public async Task<ServiceResult<EmployeePayrollLineDto>> CreateLineAsync(Guid payrollId, EmployeePayrollLineRequest request, CancellationToken ct)
     {
+        var periodId = await FindPayrollPeriodIdAsync(payrollId, ct);
         await using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct);
-        var payroll = await GetPayrollForMutationAsync(payrollId, ct);
+        var (payroll, parentConflict) = await GetPayrollForMutationAsync(payrollId, periodId, ct);
+        if (parentConflict is not null) return Conflict<EmployeePayrollLineDto>(parentConflict);
         if (payroll is null) return NotFound<EmployeePayrollLineDto>("Employee payroll was not found.");
         if (!IsEditable(payroll.Status)) return Conflict<EmployeePayrollLineDto>($"{payroll.Status} payroll cannot have lines added.");
         var validation = ValidateLine(request);
@@ -263,8 +277,10 @@ public sealed class EmployeePayrollService(SIAMISDbContext db) : IEmployeePayrol
 
     public async Task<ServiceResult<EmployeePayrollLineDto>> UpdateLineAsync(Guid payrollId, Guid lineId, EmployeePayrollLineRequest request, CancellationToken ct)
     {
+        var periodId = await FindPayrollPeriodIdAsync(payrollId, ct);
         await using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct);
-        var payroll = await GetPayrollForMutationAsync(payrollId, ct);
+        var (payroll, parentConflict) = await GetPayrollForMutationAsync(payrollId, periodId, ct);
+        if (parentConflict is not null) return Conflict<EmployeePayrollLineDto>(parentConflict);
         if (payroll is null) return NotFound<EmployeePayrollLineDto>("Employee payroll was not found.");
         var line = await db.EmployeePayrollLines.SingleOrDefaultAsync(item => item.EmployeePayrollId == payrollId
             && item.EmployeePayrollLineId == lineId, ct);
@@ -288,8 +304,10 @@ public sealed class EmployeePayrollService(SIAMISDbContext db) : IEmployeePayrol
 
     public async Task<ServiceResult<bool>> DeleteLineAsync(Guid payrollId, Guid lineId, CancellationToken ct)
     {
+        var periodId = await FindPayrollPeriodIdAsync(payrollId, ct);
         await using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct);
-        var payroll = await GetPayrollForMutationAsync(payrollId, ct);
+        var (payroll, parentConflict) = await GetPayrollForMutationAsync(payrollId, periodId, ct);
+        if (parentConflict is not null) return Conflict<bool>(parentConflict);
         if (payroll is null) return NotFound<bool>("Employee payroll was not found.");
         var line = await db.EmployeePayrollLines.SingleOrDefaultAsync(item => item.EmployeePayrollId == payrollId
             && item.EmployeePayrollLineId == lineId, ct);
@@ -325,10 +343,29 @@ public sealed class EmployeePayrollService(SIAMISDbContext db) : IEmployeePayrol
         return null;
     }
 
-    private Task<EmployeePayroll?> GetPayrollForMutationAsync(Guid id, CancellationToken ct)
-        // UPDLOCK serializes competing transitions before they read status; callers hold a transaction.
-        => db.EmployeePayrolls.FromSqlInterpolated($"SELECT * FROM [EmployeePayrolls] WITH (UPDLOCK) WHERE [EmployeePayrollId] = {id}")
-            .SingleOrDefaultAsync(ct);
+    // Discover the parent before starting the transaction; no child lock is held while acquiring parents.
+    private Task<Guid?> FindPayrollPeriodIdAsync(Guid id, CancellationToken ct)
+        => db.EmployeePayrolls.AsNoTracking().Where(item => item.EmployeePayrollId == id)
+            .Select(item => (Guid?)item.PayrollPeriodId).SingleOrDefaultAsync(ct);
+
+    private async Task<(EmployeePayroll? Payroll, string? Conflict)> GetPayrollForMutationAsync(
+        Guid id, Guid? periodId, CancellationToken ct, Guid? targetPeriodId = null)
+    {
+        if (!periodId.HasValue) return (null, null);
+        // Reassignment locks both parents in a stable order before the payroll row.
+        var parentIds = new[] { periodId.Value, targetPeriodId ?? periodId.Value }.Distinct().Order().ToArray();
+        foreach (var parentId in parentIds)
+        {
+            var period = await PayrollPeriodLock.GetAsync(db, parentId, ct);
+            if (period is not null && !PayrollPeriodLock.AllowsMutation(period.Status))
+                return (null, PayrollPeriodLock.ConflictMessage(period.Status));
+        }
+        var payroll = await db.EmployeePayrolls.FromSqlInterpolated(
+            $"SELECT * FROM [EmployeePayrolls] WITH (UPDLOCK) WHERE [EmployeePayrollId] = {id}").SingleOrDefaultAsync(ct);
+        if (payroll is not null && payroll.PayrollPeriodId != periodId.Value)
+            return (null, "Payroll period changed concurrently. Reload the payroll and retry.");
+        return (payroll, null);
+    }
 
     private Task<StoredTotals?> GetStoredTotalsAsync(Guid id, CancellationToken ct)
         => db.EmployeePayrollLines.AsNoTracking().Where(line => line.EmployeePayrollId == id)

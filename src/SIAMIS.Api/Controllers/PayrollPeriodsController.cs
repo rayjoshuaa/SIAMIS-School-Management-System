@@ -61,7 +61,7 @@ public sealed class PayrollPeriodsController(IPayrollPeriodService service, IPay
         return period is null ? NotFoundProblem() : Ok(period);
     }
 
-    /// <summary>Creates a payroll period. Status defaults to Open when omitted.</summary>
+    /// <summary>Creates an Open payroll period. Status and lifecycle audit values are server-managed.</summary>
     [HttpPost]
     [ProducesResponseType(typeof(PayrollPeriodDto), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
@@ -73,7 +73,7 @@ public sealed class PayrollPeriodsController(IPayrollPeriodService service, IPay
         return CreatedAtAction(nameof(GetPayrollPeriod), new { id = result.Value!.PayrollPeriodId }, result.Value);
     }
 
-    /// <summary>Updates a payroll period's identifying data, dates, status and remarks.</summary>
+    /// <summary>Updates Open/Processing name and remarks. Code/dates can change only in an empty Open period.</summary>
     [HttpPut("{id:guid}")]
     [ProducesResponseType(typeof(PayrollPeriodDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
@@ -85,21 +85,48 @@ public sealed class PayrollPeriodsController(IPayrollPeriodService service, IPay
         return result.IsSuccess ? Ok(result.Value) : Failure<PayrollPeriodDto>(result.Failure!);
     }
 
-    /// <summary>Changes only the payroll period status.</summary>
-    [HttpPatch("{id:guid}/status")]
+    /// <summary>Starts formal processing of an Open period and freezes its code and dates.</summary>
+    /// <remarks>Authorization and authenticated actor attribution will be added when SIAMIS authentication exists.</remarks>
+    [HttpPost("{id:guid}/start-processing")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> SetStatus(Guid id, [FromBody] PayrollPeriodStatusRequest request, CancellationToken ct)
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> StartProcessing(Guid id, CancellationToken ct)
     {
-        var result = await service.SetPayrollPeriodStatusAsync(id, request.Status, ct);
+        var result = await service.StartProcessingAsync(id, ct);
         return result.IsSuccess ? NoContent() : Failure<bool>(result.Failure!).Result!;
     }
 
-    /// <summary>Deletes a payroll period.</summary>
+    /// <summary>Closes a Processing period with at least one existing payroll, all Paid or Cancelled.</summary>
+    /// <remarks>Validates existing payrolls only, not an expected employee population. Authorization and actor attribution will follow SIAMIS authentication.</remarks>
+    [HttpPost("{id:guid}/close")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> Close(Guid id, CancellationToken ct)
+    {
+        var result = await service.CloseAsync(id, ct);
+        return result.IsSuccess ? NoContent() : Failure<bool>(result.Failure!).Result!;
+    }
+
+    /// <summary>Cancels an Open/Processing period with a reason, preserving children. Approved/Paid children prevent cancellation.</summary>
+    /// <remarks>Authorization and authenticated actor attribution will be added when SIAMIS authentication exists.</remarks>
+    [HttpPost("{id:guid}/cancel")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> Cancel(Guid id, [FromBody] PayrollPeriodCancelRequest request, CancellationToken ct)
+    {
+        var result = await service.CancelAsync(id, request, ct);
+        return result.IsSuccess ? NoContent() : Failure<bool>(result.Failure!).Result!;
+    }
+
+    /// <summary>Deletes only an Open period with no employee payrolls.</summary>
     [HttpDelete("{id:guid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
     public async Task<IActionResult> DeletePayrollPeriod(Guid id, CancellationToken ct)
     {
         var result = await service.DeletePayrollPeriodAsync(id, ct);

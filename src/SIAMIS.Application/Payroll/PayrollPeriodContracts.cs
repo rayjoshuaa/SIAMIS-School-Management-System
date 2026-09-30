@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 using SIAMIS.Application.Employees;
 
 namespace SIAMIS.Application.Payroll;
@@ -13,8 +14,13 @@ public sealed record PayrollPeriodDto(
     string Status,
     string? Remarks,
     DateTime CreatedAt,
-    DateTime UpdatedAt);
+    DateTime UpdatedAt,
+    DateTime? ProcessingStartedAt,
+    DateTime? ClosedAt,
+    DateTime? CancelledAt,
+    string? CancellationReason);
 
+[JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
 public sealed class PayrollPeriodRequest
 {
     [Required, StringLength(50, MinimumLength = 1)] public string Code { get; set; } = string.Empty;
@@ -22,13 +28,13 @@ public sealed class PayrollPeriodRequest
     [Required] public DateOnly? StartDate { get; set; }
     [Required] public DateOnly? EndDate { get; set; }
     [Required] public DateOnly? PayDate { get; set; }
-    [StringLength(20)] public string? Status { get; set; }
     [StringLength(1000)] public string? Remarks { get; set; }
 }
 
-public sealed class PayrollPeriodStatusRequest
+[JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
+public sealed class PayrollPeriodCancelRequest
 {
-    [Required] public string Status { get; set; } = string.Empty;
+    [Required, StringLength(1000)] public string Reason { get; set; } = string.Empty;
 }
 
 public interface IPayrollPeriodService
@@ -37,6 +43,8 @@ public interface IPayrollPeriodService
     Task<PayrollPeriodDto?> GetPayrollPeriodAsync(Guid id, CancellationToken cancellationToken);
     Task<ServiceResult<PayrollPeriodDto>> CreatePayrollPeriodAsync(PayrollPeriodRequest request, CancellationToken cancellationToken);
     Task<ServiceResult<PayrollPeriodDto>> UpdatePayrollPeriodAsync(Guid id, PayrollPeriodRequest request, CancellationToken cancellationToken);
-    Task<ServiceResult<bool>> SetPayrollPeriodStatusAsync(Guid id, string status, CancellationToken cancellationToken);
+    Task<ServiceResult<bool>> StartProcessingAsync(Guid id, CancellationToken cancellationToken);
+    Task<ServiceResult<bool>> CloseAsync(Guid id, CancellationToken cancellationToken);
+    Task<ServiceResult<bool>> CancelAsync(Guid id, PayrollPeriodCancelRequest request, CancellationToken cancellationToken);
     Task<ServiceResult<bool>> DeletePayrollPeriodAsync(Guid id, CancellationToken cancellationToken);
 }
