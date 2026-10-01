@@ -14,7 +14,8 @@ public sealed record PayrollComponentDto(
     bool IsActive,
     bool IsTaxable,
     bool IsStatutory,
-    string? ContributionSide);
+    string? ContributionSide,
+    string SsoWageTreatment);
 
 public sealed class PayrollComponentRequest
 {
@@ -27,6 +28,8 @@ public sealed class PayrollComponentRequest
     public bool IsTaxable { get; set; }
     public bool IsStatutory { get; set; }
     [StringLength(20)] public string? ContributionSide { get; set; }
+    /// <summary>Unknown, Included, or Excluded. Omitted/null defaults to Unknown on create and preserves the value on update. No legal treatment is inferred.</summary>
+    [StringLength(20), RegularExpression("^(Unknown|Included|Excluded)$")] public string? SsoWageTreatment { get; set; }
 }
 
 public sealed class PayrollComponentStatusRequest

@@ -102,7 +102,8 @@ public sealed record EmployeePayrollLineDto(
     bool IsTaxableSnapshot,
     bool IsStatutorySnapshot,
     string? ContributionSideSnapshot,
-    string? BasicSalaryCalculationSnapshotJson);
+    string? BasicSalaryCalculationSnapshotJson,
+    string SsoWageTreatmentSnapshot);
 
 public sealed class EmployeePayrollLineRequest
 {

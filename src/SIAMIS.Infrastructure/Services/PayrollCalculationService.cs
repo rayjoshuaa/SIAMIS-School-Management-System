@@ -26,7 +26,8 @@ public sealed class PayrollCalculationService : IPayrollCalculationService
                     "Compensation", null, null, null, roundedBasicSalary, "Basic Salary from applicable EmployeeCompensation.",
                     SourceType: "BasicSalary", IsTaxableSnapshot: basicSalaryComponent.IsTaxable,
                     IsStatutorySnapshot: basicSalaryComponent.IsStatutory,
-                    ContributionSideSnapshot: basicSalaryComponent.ContributionSide)
+                    ContributionSideSnapshot: basicSalaryComponent.ContributionSide,
+                    SsoWageTreatmentSnapshot: basicSalaryComponent.SsoWageTreatment)
             };
             var grossEarnings = roundedBasicSalary;
             var earningRules = applicableRules.Where(rule => rule.CalculationStage == "Earning").ToArray();
@@ -152,7 +153,8 @@ public sealed class PayrollCalculationService : IPayrollCalculationService
             rule.CalculationStage, rule.CalculationMethod, rule.BaseType, null, rule.Rate, amount, remarks,
             rule.PayrollRuleId, rule.Code, rule.Name, rule.ApplicationMode, rule.BaseType, baseAmount,
             rule.MinimumBase, rule.MaximumBase, "PayrollRule", rule.PayrollRuleId,
-            rule.PayrollComponentIsTaxable, rule.PayrollComponentIsStatutory, rule.PayrollComponentContributionSide);
+            rule.PayrollComponentIsTaxable, rule.PayrollComponentIsStatutory, rule.PayrollComponentContributionSide,
+            rule.PayrollComponentSsoWageTreatment);
         return (line, null, null);
     }
 
@@ -207,7 +209,8 @@ public sealed class PayrollCalculationService : IPayrollCalculationService
             SourceType: "Assignment", SourceId: assignment.EmployeePayrollComponentAssignmentId,
             IsTaxableSnapshot: assignment.PayrollComponent.IsTaxable,
             IsStatutorySnapshot: assignment.PayrollComponent.IsStatutory,
-            ContributionSideSnapshot: assignment.PayrollComponent.ContributionSide);
+            ContributionSideSnapshot: assignment.PayrollComponent.ContributionSide,
+            SsoWageTreatmentSnapshot: assignment.PayrollComponent.SsoWageTreatment);
 
     private static string? NormalizePercentageBase(string? value) => value?.Trim() switch
     {

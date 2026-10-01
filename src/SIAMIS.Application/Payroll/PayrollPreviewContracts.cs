@@ -32,7 +32,8 @@ public sealed record PayrollPreviewLineDto(
     bool IsTaxable = false,
     bool IsStatutory = false,
     string? ContributionSide = null,
-    BasicSalaryCalculationSnapshot? BasicSalaryCalculationSnapshot = null);
+    BasicSalaryCalculationSnapshot? BasicSalaryCalculationSnapshot = null,
+    string SsoWageTreatmentSnapshot = "Unknown");
 
 public sealed record PayrollPreviewEmployeeResult(
     Guid EmployeeId,

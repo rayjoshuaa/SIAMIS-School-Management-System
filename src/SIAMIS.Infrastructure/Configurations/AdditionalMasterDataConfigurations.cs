@@ -27,13 +27,18 @@ internal sealed class PayrollComponentConfiguration : IEntityTypeConfiguration<P
     public void Configure(EntityTypeBuilder<PayrollComponent> builder)
     {
         builder.ToTable("PayrollComponents", table =>
-            table.HasCheckConstraint("CK_PayrollComponents_ContributionSide",
-                "[ContributionSide] IS NULL OR [ContributionSide] IN ('Employee', 'Employer', 'Both')"));
+            {
+                table.HasCheckConstraint("CK_PayrollComponents_ContributionSide",
+                    "[ContributionSide] IS NULL OR [ContributionSide] IN ('Employee', 'Employer', 'Both')");
+                table.HasCheckConstraint("CK_PayrollComponents_SsoWageTreatment",
+                    "[SsoWageTreatment] IN ('Unknown', 'Included', 'Excluded')");
+            });
         builder.Property(item => item.Category).HasMaxLength(30).IsRequired();
         builder.Property(item => item.CalculationMethod).HasMaxLength(30).HasDefaultValue("FixedAmount").IsRequired();
         builder.Property(item => item.PercentageBase).HasMaxLength(30).IsRequired(false);
         builder.Property(item => item.IsTaxable).HasDefaultValue(false).IsRequired();
         builder.Property(item => item.IsStatutory).HasDefaultValue(false).IsRequired();
         builder.Property(item => item.ContributionSide).HasMaxLength(20).IsRequired(false);
+        builder.Property(item => item.SsoWageTreatment).HasMaxLength(20).HasDefaultValue("Unknown").IsRequired();
     }
 }

@@ -15,6 +15,7 @@ public sealed class EmployeePayrollLine
     public bool IsTaxableSnapshot { get; set; }
     public bool IsStatutorySnapshot { get; set; }
     public string? ContributionSideSnapshot { get; set; }
+    public string SsoWageTreatmentSnapshot { get; set; } = "Unknown";
     public decimal Amount { get; set; }
     public decimal? Quantity { get; set; }
     public decimal? Rate { get; set; }

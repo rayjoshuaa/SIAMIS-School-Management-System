@@ -106,3 +106,11 @@ Employee statutory enrollments and taxpayer profiles now have focused APIs. Tax-
 declarations use immutable Verified revisions, manual Spouse/Child/Parent claims and
 explicit aggregate opening states. These inputs do not participate in payroll calculations yet.
 No employee inputs are automatically created. See [D4B implementation and verification report](D4B-REPORT.md).
+
+## D5A SSO contribution wage classification
+
+Components now carry explicit Unknown / Included / Excluded metadata, copied into
+historical payroll-line snapshots without changing monetary calculations. Existing
+components remain Unknown. The focused migration is applied to local Development SIAMIS.
+See [D5A implementation and verification report](D5A-REPORT.md) for changed files,
+API semantics, migration/schema verification, live tests, final baseline counts and deferred statutory decisions.

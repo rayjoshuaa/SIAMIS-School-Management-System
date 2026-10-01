@@ -42,7 +42,7 @@ public sealed class PayrollComponentService(SIAMISDbContext db) : IPayrollCompon
         IReadOnlyList<PayrollComponentDto> items = await query
             .OrderBy(item => item.Name).ThenBy(item => item.Id)
             .Select(item => new PayrollComponentDto(item.Id, item.Code!, item.Name, item.Category, item.Description, item.CalculationMethod,
-                item.PercentageBase, item.IsActive, item.IsTaxable, item.IsStatutory, item.ContributionSide))
+                item.PercentageBase, item.IsActive, item.IsTaxable, item.IsStatutory, item.ContributionSide, item.SsoWageTreatment))
             .ToListAsync(cancellationToken);
         return ServiceResult<IReadOnlyList<PayrollComponentDto>>.Success(items);
     }
@@ -51,7 +51,7 @@ public sealed class PayrollComponentService(SIAMISDbContext db) : IPayrollCompon
         => await db.PayrollComponents.AsNoTracking()
             .Where(item => item.Id == id)
             .Select(item => new PayrollComponentDto(item.Id, item.Code!, item.Name, item.Category, item.Description, item.CalculationMethod,
-                item.PercentageBase, item.IsActive, item.IsTaxable, item.IsStatutory, item.ContributionSide))
+                item.PercentageBase, item.IsActive, item.IsTaxable, item.IsStatutory, item.ContributionSide, item.SsoWageTreatment))
             .SingleOrDefaultAsync(cancellationToken);
 
     public async Task<ServiceResult<PayrollComponentDto>> CreatePayrollComponentAsync(PayrollComponentRequest request, CancellationToken cancellationToken)
@@ -72,6 +72,7 @@ public sealed class PayrollComponentService(SIAMISDbContext db) : IPayrollCompon
             IsTaxable = request.IsTaxable,
             IsStatutory = request.IsStatutory,
             ContributionSide = values.ContributionSide,
+            SsoWageTreatment = request.SsoWageTreatment ?? "Unknown",
             IsActive = true
         };
         db.PayrollComponents.Add(component);
@@ -104,6 +105,7 @@ public sealed class PayrollComponentService(SIAMISDbContext db) : IPayrollCompon
         component.IsTaxable = request.IsTaxable;
         component.IsStatutory = request.IsStatutory;
         component.ContributionSide = values.ContributionSide;
+        component.SsoWageTreatment = request.SsoWageTreatment ?? component.SsoWageTreatment;
         try
         {
             await db.SaveChangesAsync(cancellationToken);
@@ -136,6 +138,8 @@ public sealed class PayrollComponentService(SIAMISDbContext db) : IPayrollCompon
     private static (string? Code, string? Name, string? Type, string? CalculationMethod, string? PercentageBase,
         string? Description, string? ContributionSide, ApiFailure? Failure) Normalize(PayrollComponentRequest request)
     {
+        if (request.SsoWageTreatment is not (null or "Unknown" or "Included" or "Excluded"))
+            return (null, null, null, null, null, null, null, new("validation", "SsoWageTreatment must be Unknown, Included, or Excluded."));
         var code = request.Code?.Trim();
         var name = request.Name?.Trim();
         var type = NormalizeType(request.ComponentType);
@@ -191,7 +195,7 @@ public sealed class PayrollComponentService(SIAMISDbContext db) : IPayrollCompon
 
     private static PayrollComponentDto Map(PayrollComponent item)
         => new(item.Id, item.Code!, item.Name, item.Category, item.Description, item.CalculationMethod, item.PercentageBase,
-            item.IsActive, item.IsTaxable, item.IsStatutory, item.ContributionSide);
+            item.IsActive, item.IsTaxable, item.IsStatutory, item.ContributionSide, item.SsoWageTreatment);
 
     private static bool IsUniqueConstraintViolation(DbUpdateException exception)
         => exception.InnerException is SqlException { Number: 2601 or 2627 };
