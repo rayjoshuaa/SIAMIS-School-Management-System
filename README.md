@@ -90,3 +90,12 @@ Broader payroll amounts have no explicit currency field and remain effectively s
 this checkpoint prevents mixed compensation currencies only. Daily/hourly policies, statutory
 Thai tax/social security/provident fund, attendance/leave deductions, expected-population period
 closure, and multi-currency payroll remain deferred.
+
+## D4A statutory policy foundation
+
+Statutory configuration now has separate schemes, immutable Published policy versions,
+typed Social Security/PIT parameters, and a date-based resolver. It is not connected to
+payroll monetary calculation. No schemes or legal numeric parameters are seeded.
+
+See [D4A implementation and verification report](D4A-REPORT.md) for the schema, APIs,
+publication rules, local migration result, verification evidence and future boundaries.
