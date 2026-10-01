@@ -12,7 +12,7 @@ namespace SIAMIS.Infrastructure.Services;
 /// <summary>Builds immutable payroll snapshots, committing each employee independently.</summary>
 public sealed class PayrollGenerationService(SIAMISDbContext db, IPayrollCalculationService calculator,
     IPayrollRuleEvaluator ruleEvaluator, IPayrollEmploymentContextService employmentContexts,
-    IBasicSalaryEntitlementService salaryEntitlements) : IPayrollGenerationService
+    IBasicSalaryEntitlementService salaryEntitlements, ISection33PayrollService section33) : IPayrollGenerationService
 {
     public async Task<ServiceResult<PayrollGenerationSummary>> GenerateAsync(
         Guid payrollPeriodId, PayrollGenerationRequest request, CancellationToken cancellationToken)
@@ -95,6 +95,12 @@ public sealed class PayrollGenerationService(SIAMISDbContext db, IPayrollCalcula
                     return Failed(candidate, $"Existing payroll status '{existing.Status}' cannot be regenerated.", existing);
             }
 
+            // Refresh classification under the transaction; the earlier batch read is not a historical snapshot.
+            var currentBasicSalaryComponent = await GetBasicSalaryComponentAsync(cancellationToken);
+            if (currentBasicSalaryComponent is null)
+                return Failed(candidate, WithExistingPayroll("Basic Salary component configuration changed or is invalid.", existing), existing);
+            basicSalaryComponent = currentBasicSalaryComponent;
+
             var contexts = await employmentContexts.ResolveAsync([employee.EmployeeId], period.StartDate, period.EndDate, cancellationToken);
             var employment = contexts[employee.EmployeeId];
             if (!employment.IsSuccess) return Failed(candidate, WithExistingPayroll(employment.Failure!.Message, existing), existing);
@@ -121,8 +127,16 @@ public sealed class PayrollGenerationService(SIAMISDbContext db, IPayrollCalcula
                 basicSalaryComponent, evaluation.Value!.ApplicableRules);
             if (calculated.Status != "Calculated") return Failed(candidate, WithExistingPayroll(calculated.Message, existing), existing);
 
+            var statutory = await section33.CalculateAsync(employee.EmployeeId, period, entitlement.Snapshot.Currency, calculated, cancellationToken);
+            if (!statutory.IsSuccess) return Failed(candidate, WithExistingPayroll(statutory.Failure!.Message, existing), existing);
+            calculated = statutory.Value!.Calculation;
+
             if (existing is not null)
             {
+                var previousResults = await db.EmployeePayrollStatutoryResults.Include(x => x.SocialSecurity)
+                    .Where(x => x.EmployeePayrollId == existing.EmployeePayrollId).ToListAsync(cancellationToken);
+                db.EmployeePayrollSocialSecurityResults.RemoveRange(previousResults.Select(x => x.SocialSecurity));
+                db.EmployeePayrollStatutoryResults.RemoveRange(previousResults);
                 db.EmployeePayrollLines.RemoveRange(existing.Lines);
                 db.EmployeePayrolls.Remove(existing);
                 await db.SaveChangesAsync(cancellationToken);
@@ -172,6 +186,12 @@ public sealed class PayrollGenerationService(SIAMISDbContext db, IPayrollCalcula
                 }).ToList()
             };
             db.EmployeePayrolls.Add(payroll);
+            if (statutory.Value.Result is { } statutoryResult)
+            {
+                statutoryResult.EmployeePayrollId = payroll.EmployeePayrollId;
+                statutoryResult.SocialSecurity.EmployeePayrollStatutoryResultId = statutoryResult.EmployeePayrollStatutoryResultId;
+                db.EmployeePayrollStatutoryResults.Add(statutoryResult);
+            }
             await db.SaveChangesAsync(cancellationToken);
             await transaction.CommitAsync(cancellationToken);
             return new PayrollGenerationEmployeeResult(employee.EmployeeId, employee.EmployeeNumber, "Generated",

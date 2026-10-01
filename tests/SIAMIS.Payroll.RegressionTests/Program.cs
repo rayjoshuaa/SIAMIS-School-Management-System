@@ -135,4 +135,6 @@ Check(migration.UpOperations.OfType<UpdateDataOperation>().All(x => x.Table == "
 Check(migration.UpOperations.All(x => x is AddColumnOperation or AddCheckConstraintOperation or UpdateDataOperation), "migration has no monetary/schema operations outside classification");
 var roundTrip = JsonSerializer.Deserialize<PayrollCalculatedLine>(JsonSerializer.Serialize(supplement.Lines.Single(x => x.SourceType == "PayrollRule")))!;
 Check(roundTrip.SsoWageTreatmentSnapshot == "Unknown" && roundTrip.SourceType == "PayrollRule" && roundTrip.SourceId.HasValue, "snapshot serialization retains classification and provenance");
-Console.WriteLine($"PASS: {checks} focused D5A regression assertions. No database connections or writes.");
+Section33WageRegressionTests.Run(Check);
+Section33CalculationRegressionTests.Run(Check);
+Console.WriteLine($"PASS: {checks} focused D5A/D5B/D5C regression assertions. No database connections or writes.");

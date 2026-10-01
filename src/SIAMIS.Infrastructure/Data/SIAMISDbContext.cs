@@ -31,6 +31,8 @@ public sealed class SIAMISDbContext(DbContextOptions<SIAMISDbContext> options) :
     public DbSet<PayrollRuleTarget> PayrollRuleTargets => Set<PayrollRuleTarget>();
     public DbSet<PayrollSettings> PayrollSettings => Set<PayrollSettings>();
     public DbSet<EmployeePayroll> EmployeePayrolls => Set<EmployeePayroll>();
+    public DbSet<EmployeePayrollStatutoryResult> EmployeePayrollStatutoryResults => Set<EmployeePayrollStatutoryResult>();
+    public DbSet<EmployeePayrollSocialSecurityResult> EmployeePayrollSocialSecurityResults => Set<EmployeePayrollSocialSecurityResult>();
     public DbSet<EmployeePayrollLine> EmployeePayrollLines => Set<EmployeePayrollLine>();
     public DbSet<EmployeePayrollComponentAssignment> EmployeePayrollComponentAssignments => Set<EmployeePayrollComponentAssignment>();
     public DbSet<PerformanceRating> PerformanceRatings => Set<PerformanceRating>();

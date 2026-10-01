@@ -56,13 +56,15 @@ public sealed class EmployeePayrollService(SIAMISDbContext db) : IEmployeePayrol
                 item.ApplicationMode, item.BaseType, item.BaseAmount, item.MinimumBase, item.MaximumBase, item.CalculationRate,
                 item.IsTaxableSnapshot, item.IsStatutorySnapshot, item.ContributionSideSnapshot, item.BasicSalaryCalculationSnapshotJson, item.SsoWageTreatmentSnapshot))
             .ToListAsync(ct);
+        var statutoryResults = await db.EmployeePayrollStatutoryResults.AsNoTracking().Include(x => x.SocialSecurity)
+            .Where(x => x.EmployeePayrollId == id).OrderBy(x => x.StatutorySchemeId).ToListAsync(ct);
         var employee = payroll.Employee;
         var period = payroll.PayrollPeriod;
         return ServiceResult<EmployeePayrollDetailDto>.Success(new(
             ToDto(payroll),
             new(employee.EmployeeId, employee.EmployeeNumber, EmployeeName(employee), employee.IsActive),
             new(period.PayrollPeriodId, period.Code, period.Name, period.StartDate, period.EndDate, period.PayDate, period.Status),
-            lines));
+            lines, statutoryResults.Select(Section33PayrollService.ToDto).ToArray()));
     }
 
     public async Task<ServiceResult<EmployeePayrollDetailDto>> CreatePayrollAsync(EmployeePayrollCreateRequest request, CancellationToken ct)
@@ -265,6 +267,8 @@ public sealed class EmployeePayrollService(SIAMISDbContext db) : IEmployeePayrol
         if (!component.IsActive) return Invalid<EmployeePayrollLineDto>("Payroll component must be active.");
         if (component.Code is null) return Invalid<EmployeePayrollLineDto>("Payroll component must have a code before it can be added to payroll.");
 
+        if (component.Category == "Earning" && await HasSsoResultAsync(payrollId, ct))
+            return Conflict<EmployeePayrollLineDto>(SsoManualConflict);
         var line = new EmployeePayrollLine { EmployeePayrollId = payrollId, SourceType = "Manual", SourceId = null };
         ApplyLine(line, request, component);
         db.EmployeePayrollLines.Add(line);
@@ -294,6 +298,8 @@ public sealed class EmployeePayrollService(SIAMISDbContext db) : IEmployeePayrol
         if (component is null) return NotFound<EmployeePayrollLineDto>("Payroll component was not found.");
         if (!component.IsActive) return Invalid<EmployeePayrollLineDto>("Payroll component must be active.");
         if (component.Code is null) return Invalid<EmployeePayrollLineDto>("Payroll component must have a code before it can be added to payroll.");
+        if ((line.ComponentType == "Earning" || component.Category == "Earning") && await HasSsoResultAsync(payrollId, ct))
+            return Conflict<EmployeePayrollLineDto>(SsoManualConflict);
         ApplyLine(line, request, component);
         await db.SaveChangesAsync(ct);
         var reconciliationError = await ReconcileTotalsAsync(payroll, ct);
@@ -315,6 +321,8 @@ public sealed class EmployeePayrollService(SIAMISDbContext db) : IEmployeePayrol
         if (!IsEditable(payroll.Status)) return Conflict<bool>($"{payroll.Status} payroll lines cannot be deleted.");
         if (line.SourceType != "Manual")
             return Conflict<bool>("Generated payroll lines cannot be manually deleted. Use a separate Manual adjustment or payroll regeneration.");
+        if (line.ComponentType == "Earning" && await HasSsoResultAsync(payrollId, ct))
+            return Conflict<bool>(SsoManualConflict);
         db.EmployeePayrollLines.Remove(line);
         await db.SaveChangesAsync(ct);
         var reconciliationError = await ReconcileTotalsAsync(payroll, ct);
@@ -322,6 +330,10 @@ public sealed class EmployeePayrollService(SIAMISDbContext db) : IEmployeePayrol
         await transaction.CommitAsync(ct);
         return ServiceResult<bool>.Success(true);
     }
+
+    private const string SsoManualConflict = "A persisted SSO statutory result exists. Change earnings through the underlying payroll inputs and regenerate payroll; regeneration also removes existing Manual adjustments.";
+    private Task<bool> HasSsoResultAsync(Guid payrollId, CancellationToken ct)
+        => db.EmployeePayrollStatutoryResults.AnyAsync(x => x.EmployeePayrollId == payrollId && x.CalculationMethodVersion == "SSO-TH-V1", ct);
 
     private async Task<string?> ReconcileTotalsAsync(EmployeePayroll payroll, CancellationToken ct)
     {

@@ -10,6 +10,7 @@ namespace SIAMIS.Api.Controllers;
 [Produces("application/json")]
 public sealed class PayrollPeriodsController(IPayrollPeriodService service, IPayrollGenerationService generation, IPayrollPreviewService preview) : ControllerBase
 {
+    /// <remarks>Section 33 uses explicit EndDate enrollment and Published SSO-TH-V1 policy. The response includes a transient structured statutory explanation; no data is persisted.</remarks>
     /// <summary>Previews period-eligible payroll without writing snapshots. Basic Salary requires a complete calendar month and Monthly compensation; typed details explain ThirtyDay entitlement.</summary>
     /// <param name="payrollPeriodId">The Open or Processing payroll period to preview.</param>
     /// <param name="request">Optional employee IDs. Omit or provide an empty list to preview employees whose employment overlaps this complete calendar month.</param>
@@ -25,6 +26,7 @@ public sealed class PayrollPeriodsController(IPayrollPeriodService service, IPay
         return result.IsSuccess ? Ok(result.Value) : Failure<PayrollPreviewSummary>(result.Failure!);
     }
 
+    /// <remarks>Persists Section 33 results and positive employee deductions atomically. Forced regeneration replaces the header, lines, statutory results and existing Manual adjustments; finalized payroll remains protected.</remarks>
     /// <summary>Generates payroll snapshots for period-eligible employees or the supplied IDs. Basic Salary requires a complete calendar month and Monthly compensation. Each employee is processed atomically.</summary>
     /// <param name="payrollPeriodId">The payroll period to generate.</param>
     /// <param name="request">Optional employee selection and force-regeneration settings.</param>

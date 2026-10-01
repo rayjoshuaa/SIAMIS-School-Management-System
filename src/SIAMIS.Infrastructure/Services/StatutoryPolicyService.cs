@@ -219,7 +219,9 @@ public sealed class StatutoryPolicyService(SIAMISDbContext db) : IStatutoryPolic
                 || !c.MinimumContributionBase.HasValue || !c.MaximumContributionBase.HasValue || string.IsNullOrWhiteSpace(c.InsuredPersonClassification))
                 return "Social Security configuration must include employee/employer rates, minimum/maximum base and insured-person classification.";
             return Numbers(c.EmployeeContributionRate, c.EmployerContributionRate, c.MinimumContributionBase, c.MaximumContributionBase)
-                ?? (c.MinimumContributionBase > c.MaximumContributionBase ? "Invalid contribution base range." : null);
+                ?? (c.MinimumContributionBase > c.MaximumContributionBase ? "Invalid contribution base range." : null)
+                ?? (x.CalculationMethodVersion == "SSO-TH-V1" && c.EmployeeContributionRate != c.EmployerContributionRate
+                    ? "SSO-TH-V1 requires equal EmployeeRate and EmployerRate for publication." : null);
         }
         var p = x.PersonalIncomeTax;
         if (p is null || !p.TaxYear.HasValue || !p.EmploymentExpenseDeductionRate.HasValue || !p.EmploymentExpenseDeductionCap.HasValue

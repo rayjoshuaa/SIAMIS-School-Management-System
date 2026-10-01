@@ -29,7 +29,7 @@ def cleanup():
     clauses=[]
     if fixtures['periods']:
         ids=','.join(map(ident,fixtures['periods']))
-        clauses += [f'DELETE FROM EmployeePayrollLines WHERE EmployeePayrollId IN (SELECT EmployeePayrollId FROM EmployeePayrolls WHERE PayrollPeriodId IN ({ids}))',f'DELETE FROM EmployeePayrolls WHERE PayrollPeriodId IN ({ids})',f'DELETE FROM PayrollPeriods WHERE PayrollPeriodId IN ({ids})']
+        clauses += [f'DELETE FROM EmployeePayrollSocialSecurityResults WHERE EmployeePayrollStatutoryResultId IN (SELECT EmployeePayrollStatutoryResultId FROM EmployeePayrollStatutoryResults WHERE EmployeePayrollId IN (SELECT EmployeePayrollId FROM EmployeePayrolls WHERE PayrollPeriodId IN ({ids})))', f'DELETE FROM EmployeePayrollStatutoryResults WHERE EmployeePayrollId IN (SELECT EmployeePayrollId FROM EmployeePayrolls WHERE PayrollPeriodId IN ({ids}))',f'DELETE FROM EmployeePayrollLines WHERE EmployeePayrollId IN (SELECT EmployeePayrollId FROM EmployeePayrolls WHERE PayrollPeriodId IN ({ids}))',f'DELETE FROM EmployeePayrolls WHERE PayrollPeriodId IN ({ids})',f'DELETE FROM PayrollPeriods WHERE PayrollPeriodId IN ({ids})']
     for table,key,group in [('PayrollRuleTargets','PayrollRuleId','rules'),('PayrollRules','PayrollRuleId','rules'),('EmployeePayrollComponentAssignments','EmployeePayrollComponentAssignmentId','assignments'),('EmployeeCompensations','EmployeeCompensationId','compensations'),('EmployeeStatutoryEnrollments','EmployeeStatutoryEnrollmentId','enrollments')]:
         if fixtures[group]: clauses.append(f'DELETE FROM [{table}] WHERE [{key}] IN ('+','.join(map(ident,fixtures[group]))+')')
     if fixtures['declarations']:
@@ -81,6 +81,9 @@ try:
     existing=api('GET','payroll-components?includeInactive=true')
     check(len(existing)==17 and all(x['ssoWageTreatment']=='Unknown' for x in existing),'17 existing components Unknown')
     taxable_salary=30000 if next(c for c in existing if c['name']=='Basic Salary')['isTaxable'] else 0
+    # Monetary integration requires an explicit opt-out for these non-statutory regression fixtures.
+    opt=api('POST','statutory-schemes',{'code':'TH-SSO-33','name':PREFIX+'Explicit opt-out','jurisdiction':'TH','schemeType':'SocialSecurity'},201); fixtures['schemes'].append(opt['statutorySchemeId'])
+    opten=api('POST',f'employees/{EMP}/statutory-enrollments',{'statutorySchemeId':opt['statutorySchemeId'],'effectiveFrom':'2026-09-01','effectiveTo':'2026-12-31','applicability':'NotApplicable'},201); fixtures['enrollments'].append(opten['employeeStatutoryEnrollmentId'])
     a=component('Default'); u=component('ExplicitUnknown','Unknown'); e=component('Included','Included'); x=component('Excluded','Excluded'); d=component('Deduction','Unknown','Deduction',False)
     for c,value in [(a,'Unknown'),(u,'Unknown'),(e,'Included'),(x,'Excluded')]:
         check(c['ssoWageTreatment']==value and api('GET','payroll-components/'+c['payrollComponentId'])['ssoWageTreatment']==value,'component create/detail '+value)
@@ -170,10 +173,10 @@ try:
     api('POST',f'payroll-periods/{novp}/preview',{'employeeIds':[EMP]},409);check(True,'Cancelled period preview protected')
     # D4A/B remain independently configured; values below are synthetic verification fixtures, not legal policy.
     decp=period(12); before_statutory=preview(decp)
-    scheme=api('POST','statutory-schemes',{'code':'TH-SSO-33','name':PREFIX+'Synthetic SSO','jurisdiction':'TH','schemeType':'SocialSecurity'},201);sid=scheme['statutorySchemeId'];fixtures['schemes'].append(sid)
+    scheme=api('POST','statutory-schemes',{'code':PREFIX+'Synthetic-SSO','name':PREFIX+'Synthetic SSO','jurisdiction':'TH','schemeType':'SocialSecurity'},201);sid=scheme['statutorySchemeId'];fixtures['schemes'].append(sid)
     policy=api('POST','statutory-policy-versions',{'statutorySchemeId':sid,'version':PREFIX+'Synthetic','effectiveFrom':'2026-01-01','effectiveTo':'2026-12-31','currency':'THB','calculationMethodVersion':'SSO-TH-V1','officialReference':'Synthetic verification only; not legal values'},201);polid=policy['statutoryPolicyVersionId']
     api('POST',f'statutory-policy-versions/{polid}/publish',{},400);check(True,'D4A incomplete publication rejected')
-    api('PUT',f'statutory-policy-versions/{polid}/social-security',{'employeeContributionRate':1.23,'employerContributionRate':2.34,'minimumContributionBase':100,'maximumContributionBase':200,'insuredPersonClassification':'33'})
+    api('PUT',f'statutory-policy-versions/{polid}/social-security',{'employeeContributionRate':1.23,'employerContributionRate':1.23,'minimumContributionBase':100,'maximumContributionBase':200,'insuredPersonClassification':'33'})
     api('POST',f'statutory-policy-versions/{polid}/publish',{})
     check(api('GET',f'statutory-schemes/{sid}/resolve?governingDate=2026-10-01')['outcome']=='Resolved','D4A publication/resolution unchanged; caller date only')
     api('PUT',f'statutory-policy-versions/{polid}/social-security',{'employeeContributionRate':1},409);check(True,'D4A Published immutability unchanged')
@@ -181,8 +184,8 @@ try:
     en=api('POST',f'employees/{EMP}/statutory-enrollments',{'statutorySchemeId':sid,'effectiveFrom':'2026-10-01','effectiveTo':'2026-12-31','applicability':'Applicable','remarks':PREFIX+'Synthetic enrollment'},201);fixtures['enrollments'].append(en['employeeStatutoryEnrollmentId'])
     resolved=api('GET',f'employees/{EMP}/statutory-enrollments/resolve?schemeId={sid}&date=2026-10-01');check(resolved.get('applicability',resolved.get('outcome'))=='Applicable','D4B inclusive enrollment resolution unchanged')
     api('POST',f'employees/{EMP}/statutory-enrollments',{'statutorySchemeId':sid,'effectiveFrom':'2026-11-01','applicability':'NotApplicable'},409);check(True,'D4B overlapping enrollment rejected')
-    check(totals(preview(decp))==totals(before_statutory)==(30000,33000,taxable_salary+3000,500,32500),'Applicable enrollment plus Published policy introduces no SSO monetary calculation')
-    decgen=generate(decp);check(decgen['status']=='Generated' and totals(detail(decgen['payrollId'])['payroll'])==totals(before_statutory),'Generation with Applicable enrollment remains unchanged')
+    check(totals(preview(decp))==totals(before_statutory)==(30000,33000,taxable_salary+3000,500,32500),'independent scheme enrollment does not override explicit canonical NotApplicable')
+    decgen=generate(decp);check(decgen['status']=='Generated' and totals(detail(decgen['payrollId'])['payroll'])==totals(before_statutory),'Generation with canonical NotApplicable preserves generic payroll money')
     decl=api('POST',f'employees/{EMP}/tax-declarations',{'taxYear':2026,'remarks':PREFIX+'Synthetic declaration'},201);did=decl['declaration']['employeeTaxDeclarationId'];fixtures['declarations'].append(did)
     api('POST',f'employees/{EMP}/tax-declarations/{did}/verify',{},400);check(True,'D4B declaration needs explicit opening state')
     api('PUT',f'employees/{EMP}/tax-declarations/{did}/opening-balance',{'state':'Unknown','currency':'THB','asOfDate':'2025-12-31'})
@@ -194,7 +197,7 @@ finally:
     try:
         cleanup()
         final=snapshot()
-        check(final==baseline,'cleanup restores exact pre-fixture contents of all 49 application tables')
+        check(final==baseline,'cleanup restores exact pre-fixture contents of all application tables')
         check(rows('SELECT IsActive FROM Employees WHERE EmployeeId='+ident(EMP))[0]['IsActive']==False,'TEST-EMP-001 remains inactive')
     except Exception as cleanup_error:
         error=(error or '')+' CLEANUP: '+str(cleanup_error);traceback.print_exc()

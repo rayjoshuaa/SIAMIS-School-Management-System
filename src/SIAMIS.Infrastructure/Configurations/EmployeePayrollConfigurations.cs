@@ -59,7 +59,7 @@ internal sealed class EmployeePayrollLineConfiguration : IEntityTypeConfiguratio
             table.HasCheckConstraint("CK_EmployeePayrollLines_SsoWageTreatmentSnapshot",
                 "[SsoWageTreatmentSnapshot] IN ('Unknown', 'Included', 'Excluded')");
             table.HasCheckConstraint("CK_EmployeePayrollLines_SourceTypeAndId",
-                "([SourceType] = 'BasicSalary' AND [SourceId] IS NULL) OR ([SourceType] = 'Manual' AND [SourceId] IS NULL) OR ([SourceType] IN ('Assignment', 'PayrollRule') AND [SourceId] IS NOT NULL)");
+                "([SourceType] = 'BasicSalary' AND [SourceId] IS NULL) OR ([SourceType] = 'Manual' AND [SourceId] IS NULL) OR ([SourceType] IN ('Assignment', 'PayrollRule', 'Statutory') AND [SourceId] IS NOT NULL)");
         });
         builder.HasKey(item => item.EmployeePayrollLineId);
         builder.Property(item => item.ComponentCode).HasMaxLength(50).IsRequired();

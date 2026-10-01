@@ -53,7 +53,8 @@ public sealed record EmployeePayrollDetailDto(
     EmployeePayrollDto Payroll,
     EmployeePayrollEmployeeSummaryDto Employee,
     EmployeePayrollPeriodSummaryDto PayrollPeriod,
-    IReadOnlyList<EmployeePayrollLineDto> Lines);
+    IReadOnlyList<EmployeePayrollLineDto> Lines,
+    IReadOnlyList<EmployeePayrollStatutoryResultDto>? StatutoryResults = null);
 
 [JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
 public sealed class EmployeePayrollCreateRequest

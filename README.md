@@ -104,7 +104,7 @@ publication rules, local migration result, verification evidence and future boun
 
 Employee statutory enrollments and taxpayer profiles now have focused APIs. Tax-year
 declarations use immutable Verified revisions, manual Spouse/Child/Parent claims and
-explicit aggregate opening states. These inputs do not participate in payroll calculations yet.
+explicit aggregate opening states. Section 33 enrollments now participate in D5C payroll calculation; tax declarations remain inputs only.
 No employee inputs are automatically created. See [D4B implementation and verification report](D4B-REPORT.md).
 
 ## D5A SSO contribution wage classification
@@ -114,3 +114,40 @@ historical payroll-line snapshots without changing monetary calculations. Existi
 components remain Unknown. The focused migration is applied to local Development SIAMIS.
 See [D5A implementation and verification report](D5A-REPORT.md) for changed files,
 API semantics, migration/schema verification, live tests, final baseline counts and deferred statutory decisions.
+
+## D5B Section 33 contribution-wage contract
+
+D5B introduced the pure resolver of final Included earning snapshots and explicit
+unresolved-source diagnostics. D5C now uses it in the shared statutory calculator.
+D5B itself created no migration. See [D5B findings, verification and decisions](D5B-REPORT.md).
+
+
+## D5C Section 33 monetary integration
+
+Preview and Generation share the approved SSO-TH-V1 contract. PayrollPeriod.EndDate
+resolves policy and enrollment for the stored YYYY-MM contribution month; it represents
+the month and is not a legal assertion that the final day creates liability.
+Applicable requires explicit Included/Excluded final earnings, a compatible Published
+TH-SSO-33/TH/THB policy and equal percentage-point employee/employer rates. Unknown
+or missing determination fails. Explicit NotApplicable preserves generic payroll behavior.
+
+Positive wage is clamped to policy monthly bounds; zero wage uses zero base/contribution.
+D3 determines partial-month earnings; SSO bounds are not prorated. Raw decimal employee
+contribution is rounded explicitly to whole baht, half up. Employer amount equals the
+rounded employee amount and never affects employee payroll totals.
+
+DEDUCT-001 presents the positive automatic employee deduction, with Statutory provenance
+and result snapshot ID. It is not the formula authority. A final Assignment/PayrollRule
+deduction for that code conflicts for Applicable employees; nothing is silently suppressed.
+Zero contribution stores a result and creates no zero-value line. Result foreign keys use
+NoAction; line SourceId remains historical snapshot data without a foreign key.
+
+Manual earning changes return 409 once an SSO result exists. Manual deductions retain
+existing lifecycle and reconciliation rules. Generated lines remain protected. Forced
+regeneration replaces the entire snapshot, including existing Manual adjustments.
+
+No statutory values or legal component classifications are seeded. Development returns
+to its clean baseline after verification, so real calculation requires reviewed policy,
+explicit enrollment and wage classifications. Geographic relief, PIT, Provident Fund,
+authentication and configurable scheme-to-component binding remain deferred.
+See [D5C implementation and verification report](D5C-REPORT.md).

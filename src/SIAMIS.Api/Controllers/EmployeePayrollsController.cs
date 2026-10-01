@@ -123,6 +123,7 @@ public sealed class EmployeePayrollsController(IEmployeePayrollService service) 
         return result.IsSuccess ? Ok(result.Value) : Failure<EmployeePayrollLineDto>(result.Failure!);
     }
 
+    /// <remarks>Manual earning creation returns 409 after a persisted SSO result. Change underlying inputs and regenerate; regeneration removes Manual adjustments.</remarks>
     /// <summary>Adds a Manual line to Draft/Calculated payroll and atomically reconciles derived totals from stored snapshots, preserving BasicSalary.</summary>
     [HttpPost("{payrollId:guid}/lines")]
     [ProducesResponseType(typeof(EmployeePayrollLineDto), StatusCodes.Status201Created)]
@@ -136,6 +137,7 @@ public sealed class EmployeePayrollsController(IEmployeePayrollService service) 
         return CreatedAtAction(nameof(GetLine), new { payrollId, lineId = result.Value!.EmployeePayrollLineId }, result.Value);
     }
 
+    /// <remarks>After a persisted SSO result, updates involving an existing or proposed earning return 409. Generated Statutory lines are immutable through this endpoint.</remarks>
     /// <summary>Updates only a Manual line in Draft/Calculated payroll and reconciles derived totals. Same-component classification is preserved; a changed component refreshes classification.</summary>
     [HttpPut("{payrollId:guid}/lines/{lineId:guid}")]
     [ProducesResponseType(typeof(EmployeePayrollLineDto), StatusCodes.Status200OK)]
@@ -148,6 +150,7 @@ public sealed class EmployeePayrollsController(IEmployeePayrollService service) 
         return result.IsSuccess ? Ok(result.Value) : Failure<EmployeePayrollLineDto>(result.Failure!);
     }
 
+    /// <remarks>Manual earning deletion returns 409 after a persisted SSO result. Generated Statutory lines cannot be deleted here.</remarks>
     /// <summary>Deletes only a Manual line in Draft/Calculated payroll and atomically reconciles derived totals, preserving BasicSalary.</summary>
     [HttpDelete("{payrollId:guid}/lines/{lineId:guid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
