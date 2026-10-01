@@ -42,6 +42,7 @@ builder.Services.AddScoped<IPayrollSettingsService, PayrollSettingsService>();
 builder.Services.AddScoped<StatutoryPolicyService>();
 builder.Services.AddScoped<IStatutoryPolicyService>(sp => sp.GetRequiredService<StatutoryPolicyService>());
 builder.Services.AddScoped<IStatutoryPolicyResolver>(sp => sp.GetRequiredService<StatutoryPolicyService>());
+builder.Services.AddScoped<IEmployeeStatutoryService, EmployeeStatutoryService>();
 builder.Services.AddScoped<IPayrollGenerationService, PayrollGenerationService>();
 builder.Services.AddScoped<IPayrollCalculationService, PayrollCalculationService>();
 builder.Services.AddScoped<IBasicSalaryEntitlementService, BasicSalaryEntitlementService>();

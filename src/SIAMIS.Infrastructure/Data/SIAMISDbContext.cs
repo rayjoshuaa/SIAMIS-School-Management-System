@@ -40,6 +40,12 @@ public sealed class SIAMISDbContext(DbContextOptions<SIAMISDbContext> options) :
     public DbSet<SocialSecurityPolicyConfiguration> SocialSecurityPolicyConfigurations => Set<SocialSecurityPolicyConfiguration>();
     public DbSet<PitPolicyConfiguration> PitPolicyConfigurations => Set<PitPolicyConfiguration>();
     public DbSet<PitTaxBracket> PitTaxBrackets => Set<PitTaxBracket>();
+    public DbSet<EmployeeStatutoryEnrollment> EmployeeStatutoryEnrollments => Set<EmployeeStatutoryEnrollment>();
+    public DbSet<EmployeeTaxProfile> EmployeeTaxProfiles => Set<EmployeeTaxProfile>();
+    public DbSet<EmployeeTaxDeclaration> EmployeeTaxDeclarations => Set<EmployeeTaxDeclaration>();
+    public DbSet<EmployeeTaxDeclarationSelection> EmployeeTaxDeclarationSelections => Set<EmployeeTaxDeclarationSelection>();
+    public DbSet<EmployeeTaxClaim> EmployeeTaxClaims => Set<EmployeeTaxClaim>();
+    public DbSet<EmployeeTaxOpeningBalance> EmployeeTaxOpeningBalances => Set<EmployeeTaxOpeningBalance>();
 
     public DbSet<Employee> Employees => Set<Employee>();
     public DbSet<EmployeeContact> EmployeeContacts => Set<EmployeeContact>();

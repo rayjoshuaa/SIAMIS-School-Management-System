@@ -99,3 +99,10 @@ payroll monetary calculation. No schemes or legal numeric parameters are seeded.
 
 See [D4A implementation and verification report](D4A-REPORT.md) for the schema, APIs,
 publication rules, local migration result, verification evidence and future boundaries.
+
+## D4B employee statutory inputs
+
+Employee statutory enrollments and taxpayer profiles now have focused APIs. Tax-year
+declarations use immutable Verified revisions, manual Spouse/Child/Parent claims and
+explicit aggregate opening states. These inputs do not participate in payroll calculations yet.
+No employee inputs are automatically created. See [D4B implementation and verification report](D4B-REPORT.md).
