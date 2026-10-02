@@ -27,7 +27,8 @@ public sealed record PayrollCalculatedLine(
     bool IsTaxableSnapshot = false,
     bool IsStatutorySnapshot = false,
     string? ContributionSideSnapshot = null,
-    string SsoWageTreatmentSnapshot = "Unknown");
+    string SsoWageTreatmentSnapshot = "Unknown",
+    string PitIncomeTreatmentSnapshot = "Unknown");
 
 public sealed record PayrollCalculationEmployee(Guid EmployeeId, string EmployeeNumber, string EmployeeName);
 

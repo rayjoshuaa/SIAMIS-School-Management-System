@@ -34,6 +34,9 @@ public sealed class EmployeeTaxDeclaration : IHasTimestamps
     public Guid EmployeeTaxDeclarationId { get; set; } = Guid.NewGuid();
     public Guid EmployeeId { get; set; }
     public int TaxYear { get; set; }
+    // Year-specific treatment shares the declaration's immutable revision/verification lifecycle.
+    public string ResidencyStatus { get; set; } = "Unknown";
+    public string EmploymentTaxTreatment { get; set; } = "Unknown";
     public int RevisionNumber { get; set; }
     public Guid? ReplacesDeclarationId { get; set; }
     public string Status { get; set; } = "Draft";

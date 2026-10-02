@@ -170,6 +170,7 @@ public sealed class PayrollGenerationService(SIAMISDbContext db, IPayrollCalcula
                     IsStatutorySnapshot = line.IsStatutorySnapshot,
                     ContributionSideSnapshot = line.ContributionSideSnapshot,
                     SsoWageTreatmentSnapshot = line.SsoWageTreatmentSnapshot,
+                    PitIncomeTreatmentSnapshot = line.PitIncomeTreatmentSnapshot,
                     Amount = line.Amount,
                     Quantity = line.Quantity,
                     Rate = line.Rate,

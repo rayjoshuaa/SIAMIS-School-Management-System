@@ -36,7 +36,7 @@ ApplicablePayrollRuleDto Rule(PayrollComponent component, string mode, decimal a
     Guid.NewGuid(), "RULE", "Synthetic rule", component.Id, component.Code, component.Name, component.Category,
     mode, component.Category, component.Category, 1, method, baseType, rate,
     method == "FixedAmount" ? amount : null, null, null, "Employee", new(2026, 1, 1), null,
-    "Synthetic", [], component.IsTaxable, component.IsStatutory, component.ContributionSide, component.SsoWageTreatment);
+    "Synthetic", [], component.IsTaxable, component.IsStatutory, component.ContributionSide, component.SsoWageTreatment, component.PitIncomeTreatment);
 var basic = Component("BASIC");
 var earning = Component("EARNING");
 var other = Component("OTHER");
@@ -137,4 +137,22 @@ var roundTrip = JsonSerializer.Deserialize<PayrollCalculatedLine>(JsonSerializer
 Check(roundTrip.SsoWageTreatmentSnapshot == "Unknown" && roundTrip.SourceType == "PayrollRule" && roundTrip.SourceId.HasValue, "snapshot serialization retains classification and provenance");
 Section33WageRegressionTests.Run(Check);
 Section33CalculationRegressionTests.Run(Check);
-Console.WriteLine($"PASS: {checks} focused D5A/D5B/D5C regression assertions. No database connections or writes.");
+D6AContractRegressionTests.Run(Check, model);
+foreach (var treatment in new[] { "Unknown", "Included", "Excluded" })
+{
+    var financialBefore = Calculate();
+    basic.PitIncomeTreatment = earning.PitIncomeTreatment = treatment;
+    var generated = Calculate(Rule(earning, "Supplement", 300));
+    Check(generated.Lines.Single(x => x.SourceType == "BasicSalary").PitIncomeTreatmentSnapshot == treatment, "D6B BasicSalary snapshot " + treatment);
+    Check(generated.Lines.Single(x => x.SourceId == assignments[0].EmployeePayrollComponentAssignmentId).PitIncomeTreatmentSnapshot == treatment, "D6B Assignment snapshot " + treatment);
+    Check(generated.Lines.Single(x => x.SourceType == "PayrollRule").PitIncomeTreatmentSnapshot == treatment, "D6B PayrollRule snapshot " + treatment);
+    var financialAfter = Calculate();
+    Check(financialBefore.GrossPay == financialAfter.GrossPay && financialBefore.TaxableEarnings == financialAfter.TaxableEarnings
+        && financialBefore.TotalDeductions == financialAfter.TotalDeductions && financialBefore.NetPay == financialAfter.NetPay,
+        "D6B classification changes no legacy money " + treatment);
+    basic.PitIncomeTreatment = earning.PitIncomeTreatment = "Unknown";
+    Check(generated.Lines.Where(x => x.SourceType == "BasicSalary" || x.SourceType == "PayrollRule" || x.SourceId == assignments[0].EmployeePayrollComponentAssignmentId)
+        .All(x => x.PitIncomeTreatmentSnapshot == treatment), "D6B live edits preserve value snapshots " + treatment);
+}
+D6BFoundationRegressionTests.Run(Check, model);
+Console.WriteLine($"PASS: {checks} focused D5A/D5B/D5C/D6A/D6B regression assertions. No database connections or writes.");

@@ -44,6 +44,7 @@ builder.Services.AddScoped<IStatutoryPolicyService>(sp => sp.GetRequiredService<
 builder.Services.AddScoped<IStatutoryPolicyResolver>(sp => sp.GetRequiredService<StatutoryPolicyService>());
 builder.Services.AddScoped<IEmployeeStatutoryService, EmployeeStatutoryService>();
 builder.Services.AddScoped<ISection33ContributionWageResolver, Section33ContributionWageResolver>();
+builder.Services.AddScoped<IPitIncomeResolver, PitIncomeResolver>();
 builder.Services.AddScoped<ISection33Calculator, Section33Calculator>();
 builder.Services.AddScoped<ISection33PayrollService, Section33PayrollService>();
 builder.Services.AddScoped<IPayrollGenerationService, PayrollGenerationService>();

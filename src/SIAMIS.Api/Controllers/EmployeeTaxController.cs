@@ -8,6 +8,23 @@ namespace SIAMIS.Api.Controllers;
 [Route("api/employees/{employeeId:guid}")]
 public sealed class EmployeeTaxController(IEmployeeStatutoryService service) : StatutoryConfigurationController
 {
+    /// <summary>Sets year-specific treatment on an owned Draft declaration. Verify using the existing declaration workflow; Verified revisions are immutable.</summary>
+    [HttpPut("tax-declarations/{id:guid}/treatment")]
+    [ProducesResponseType(typeof(EmployeeTaxDeclarationDto), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    [ProducesResponseType(409)]
+    public async Task<ActionResult<EmployeeTaxDeclarationDto>> SetTreatment(Guid employeeId, Guid id, EmployeeTaxTreatmentRequest request, CancellationToken ct)
+        => Respond(await service.SetTaxTreatmentAsync(employeeId, id, request, ct));
+
+    /// <summary>Resolves selected Verified treatment for an explicit Gregorian taxYear. Approved is a future method gate, not a withholding calculation.</summary>
+    [HttpGet("tax-treatment")]
+    [ProducesResponseType(typeof(EmployeeTaxTreatmentResolution), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    public async Task<ActionResult<EmployeeTaxTreatmentResolution>> Treatment(Guid employeeId, [FromQuery, System.ComponentModel.DataAnnotations.Range(1, 9999)] int taxYear, CancellationToken ct)
+        => Respond(await service.ResolveTaxTreatmentAsync(employeeId, taxYear, ct));
+
     /// <summary>Reads the focused taxpayer profile. Returns null when not configured; does not fabricate a profile.</summary>
     [HttpGet("tax-profile")]
     [ProducesResponseType(typeof(EmployeeTaxProfileDto), 200)]

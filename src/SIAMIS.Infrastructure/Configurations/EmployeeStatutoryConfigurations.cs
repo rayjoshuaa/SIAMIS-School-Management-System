@@ -53,6 +53,8 @@ internal sealed class EmployeeTaxDeclarationConfiguration : IEntityTypeConfigura
     public void Configure(EntityTypeBuilder<EmployeeTaxDeclaration> b)
     {
         b.ToTable("EmployeeTaxDeclarations", t => {
+            t.HasCheckConstraint("CK_EmployeeTaxDeclarations_ResidencyStatus", "[ResidencyStatus] IN ('Unknown','Resident','NonResident')");
+            t.HasCheckConstraint("CK_EmployeeTaxDeclarations_EmploymentTaxTreatment", "[EmploymentTaxTreatment] IN ('Unknown','StandardSection40_1','RequiresReview')");
             t.HasCheckConstraint("CK_EmployeeTaxDeclarations_YearRevision", "[TaxYear] BETWEEN 1 AND 9999 AND [RevisionNumber] > 0");
             t.HasCheckConstraint("CK_EmployeeTaxDeclarations_Status", "[Status] IN ('Draft','Verified')");
             t.HasCheckConstraint("CK_EmployeeTaxDeclarations_Verification", "([Status]='Draft' AND [VerifiedAt] IS NULL AND [TaxpayerIdentificationNumberSnapshot] IS NULL) OR ([Status]='Verified' AND [VerifiedAt] IS NOT NULL)");
@@ -64,6 +66,8 @@ internal sealed class EmployeeTaxDeclarationConfiguration : IEntityTypeConfigura
         b.HasIndex(x => new { x.EmployeeId, x.TaxYear }).IsUnique().HasFilter("[Status] = 'Draft'")
             .HasDatabaseName("UX_EmployeeTaxDeclarations_OneDraft");
         b.Property(x => x.Status).HasMaxLength(20).IsRequired();
+        b.Property(x => x.ResidencyStatus).HasMaxLength(20).HasDefaultValue("Unknown").IsRequired();
+        b.Property(x => x.EmploymentTaxTreatment).HasMaxLength(30).HasDefaultValue("Unknown").IsRequired();
         b.Property(x => x.TaxpayerIdentificationNumberSnapshot).HasMaxLength(100);
         b.Property(x => x.Remarks).HasMaxLength(2000);
         b.Property(x => x.VerifiedAt).HasColumnType("datetime2");

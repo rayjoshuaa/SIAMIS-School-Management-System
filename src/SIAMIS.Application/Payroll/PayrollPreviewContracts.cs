@@ -33,7 +33,8 @@ public sealed record PayrollPreviewLineDto(
     bool IsStatutory = false,
     string? ContributionSide = null,
     BasicSalaryCalculationSnapshot? BasicSalaryCalculationSnapshot = null,
-    string SsoWageTreatmentSnapshot = "Unknown");
+    string SsoWageTreatmentSnapshot = "Unknown",
+    string PitIncomeTreatmentSnapshot = "Unknown");
 
 public sealed record PayrollPreviewEmployeeResult(
     Guid EmployeeId,

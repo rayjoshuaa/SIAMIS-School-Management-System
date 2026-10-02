@@ -104,8 +104,10 @@ public sealed record EmployeePayrollLineDto(
     bool IsStatutorySnapshot,
     string? ContributionSideSnapshot,
     string? BasicSalaryCalculationSnapshotJson,
-    string SsoWageTreatmentSnapshot);
+    string SsoWageTreatmentSnapshot,
+    string PitIncomeTreatmentSnapshot = "Unknown");
 
+[JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
 public sealed class EmployeePayrollLineRequest
 {
     [Required] public Guid? PayrollComponentId { get; set; }

@@ -15,7 +15,8 @@ public sealed record PayrollComponentDto(
     bool IsTaxable,
     bool IsStatutory,
     string? ContributionSide,
-    string SsoWageTreatment);
+    string SsoWageTreatment,
+    string PitIncomeTreatment = "Unknown");
 
 public sealed class PayrollComponentRequest
 {
@@ -30,6 +31,8 @@ public sealed class PayrollComponentRequest
     [StringLength(20)] public string? ContributionSide { get; set; }
     /// <summary>Unknown, Included, or Excluded. Omitted/null defaults to Unknown on create and preserves the value on update. No legal treatment is inferred.</summary>
     [StringLength(20), RegularExpression("^(Unknown|Included|Excluded)$")] public string? SsoWageTreatment { get; set; }
+    /// <summary>Future legal PIT classification only. Omitted/null creates Unknown or preserves the update value; does not change legacy IsTaxable totals.</summary>
+    [StringLength(20), RegularExpression("^(Unknown|Included|Excluded)$")] public string? PitIncomeTreatment { get; set; }
 }
 
 public sealed class PayrollComponentStatusRequest

@@ -82,7 +82,7 @@ public sealed record EmployeeTaxDeclarationSummaryDto(Guid EmployeeTaxDeclaratio
     DateTime? VerifiedAt, string? Remarks, DateTime CreatedAt, DateTime UpdatedAt);
 public sealed record EmployeeTaxDeclarationDto(EmployeeTaxDeclarationSummaryDto Declaration,
     string? TaxpayerIdentificationNumberSnapshot, IReadOnlyList<EmployeeTaxClaimDto> Claims,
-    EmployeeTaxOpeningBalanceDto? OpeningBalance);
+    EmployeeTaxOpeningBalanceDto? OpeningBalance, EmployeeTaxTreatmentDto Treatment);
 
 public interface IEmployeeStatutoryService
 {
@@ -91,6 +91,8 @@ public interface IEmployeeStatutoryService
     Task<ServiceResult<StatutoryEnrollmentDto>> CreateEnrollmentAsync(Guid employeeId, StatutoryEnrollmentRequest request, CancellationToken ct);
     Task<ServiceResult<StatutoryEnrollmentDto>> EndEnrollmentAsync(Guid employeeId, Guid id, StatutoryEnrollmentEndRequest request, CancellationToken ct);
     Task<ServiceResult<StatutoryEnrollmentResolution>> ResolveEnrollmentAsync(Guid employeeId, Guid schemeId, DateOnly date, CancellationToken ct);
+    Task<ServiceResult<EmployeeTaxDeclarationDto>> SetTaxTreatmentAsync(Guid employeeId, Guid declarationId, EmployeeTaxTreatmentRequest request, CancellationToken ct);
+    Task<ServiceResult<EmployeeTaxTreatmentResolution>> ResolveTaxTreatmentAsync(Guid employeeId, int taxYear, CancellationToken ct);
     Task<ServiceResult<EmployeeTaxProfileDto?>> GetProfileAsync(Guid employeeId, CancellationToken ct);
     Task<ServiceResult<EmployeeTaxProfileDto>> SetProfileAsync(Guid employeeId, EmployeeTaxProfileRequest request, CancellationToken ct);
     Task<ServiceResult<IReadOnlyList<EmployeeTaxDeclarationSummaryDto>>> ListDeclarationsAsync(Guid employeeId, int? taxYear, CancellationToken ct);

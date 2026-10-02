@@ -48,6 +48,7 @@ public sealed class PayrollComponent : MasterDataEntity
     public bool IsStatutory { get; set; }
     public string? ContributionSide { get; set; }
     public string SsoWageTreatment { get; set; } = "Unknown";
+    public string PitIncomeTreatment { get; set; } = "Unknown";
     /// <summary>For Percentage only: BasicSalary means the applicable salary snapshot, GrossEarnings means earnings before deductions, and GrossPay means the future engine's gross payroll amount. This is configuration only; no calculation occurs here.</summary>
     public string? PercentageBase { get; set; }
     public ICollection<SIAMIS.Domain.Entities.Payroll.EmployeePayrollLine> PayrollLines { get; set; } = new List<SIAMIS.Domain.Entities.Payroll.EmployeePayrollLine>();

@@ -27,7 +27,8 @@ public sealed class PayrollCalculationService : IPayrollCalculationService
                     SourceType: "BasicSalary", IsTaxableSnapshot: basicSalaryComponent.IsTaxable,
                     IsStatutorySnapshot: basicSalaryComponent.IsStatutory,
                     ContributionSideSnapshot: basicSalaryComponent.ContributionSide,
-                    SsoWageTreatmentSnapshot: basicSalaryComponent.SsoWageTreatment)
+                    SsoWageTreatmentSnapshot: basicSalaryComponent.SsoWageTreatment,
+                    PitIncomeTreatmentSnapshot: basicSalaryComponent.PitIncomeTreatment)
             };
             var grossEarnings = roundedBasicSalary;
             var earningRules = applicableRules.Where(rule => rule.CalculationStage == "Earning").ToArray();
@@ -154,7 +155,7 @@ public sealed class PayrollCalculationService : IPayrollCalculationService
             rule.PayrollRuleId, rule.Code, rule.Name, rule.ApplicationMode, rule.BaseType, baseAmount,
             rule.MinimumBase, rule.MaximumBase, "PayrollRule", rule.PayrollRuleId,
             rule.PayrollComponentIsTaxable, rule.PayrollComponentIsStatutory, rule.PayrollComponentContributionSide,
-            rule.PayrollComponentSsoWageTreatment);
+            rule.PayrollComponentSsoWageTreatment, rule.PayrollComponentPitIncomeTreatment);
         return (line, null, null);
     }
 
@@ -210,7 +211,8 @@ public sealed class PayrollCalculationService : IPayrollCalculationService
             IsTaxableSnapshot: assignment.PayrollComponent.IsTaxable,
             IsStatutorySnapshot: assignment.PayrollComponent.IsStatutory,
             ContributionSideSnapshot: assignment.PayrollComponent.ContributionSide,
-            SsoWageTreatmentSnapshot: assignment.PayrollComponent.SsoWageTreatment);
+            SsoWageTreatmentSnapshot: assignment.PayrollComponent.SsoWageTreatment,
+            PitIncomeTreatmentSnapshot: assignment.PayrollComponent.PitIncomeTreatment);
 
     private static string? NormalizePercentageBase(string? value) => value?.Trim() switch
     {

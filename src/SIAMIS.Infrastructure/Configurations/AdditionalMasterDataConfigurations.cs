@@ -32,6 +32,8 @@ internal sealed class PayrollComponentConfiguration : IEntityTypeConfiguration<P
                     "[ContributionSide] IS NULL OR [ContributionSide] IN ('Employee', 'Employer', 'Both')");
                 table.HasCheckConstraint("CK_PayrollComponents_SsoWageTreatment",
                     "[SsoWageTreatment] IN ('Unknown', 'Included', 'Excluded')");
+                table.HasCheckConstraint("CK_PayrollComponents_PitIncomeTreatment",
+                    "[PitIncomeTreatment] IN ('Unknown', 'Included', 'Excluded')");
             });
         builder.Property(item => item.Category).HasMaxLength(30).IsRequired();
         builder.Property(item => item.CalculationMethod).HasMaxLength(30).HasDefaultValue("FixedAmount").IsRequired();
@@ -40,5 +42,6 @@ internal sealed class PayrollComponentConfiguration : IEntityTypeConfiguration<P
         builder.Property(item => item.IsStatutory).HasDefaultValue(false).IsRequired();
         builder.Property(item => item.ContributionSide).HasMaxLength(20).IsRequired(false);
         builder.Property(item => item.SsoWageTreatment).HasMaxLength(20).HasDefaultValue("Unknown").IsRequired();
+        builder.Property(item => item.PitIncomeTreatment).HasMaxLength(20).HasDefaultValue("Unknown").IsRequired();
     }
 }

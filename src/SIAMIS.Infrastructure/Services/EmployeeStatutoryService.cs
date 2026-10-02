@@ -220,6 +220,34 @@ public sealed class EmployeeStatutoryService(SIAMISDbContext db) : IEmployeeStat
             return null;
         }, ct);
 
+    public Task<ServiceResult<EmployeeTaxDeclarationDto>> SetTaxTreatmentAsync(Guid employeeId, Guid id,
+        EmployeeTaxTreatmentRequest request, CancellationToken ct)
+        => DraftMutation(employeeId, id, (x, _) => {
+            if (request.ResidencyStatus is not ("Unknown" or "Resident" or "NonResident")
+                || request.EmploymentTaxTreatment is not ("Unknown" or "StandardSection40_1" or "RequiresReview")
+                || request.Remarks?.Length > 2000)
+                return Task.FromResult<ApiFailure?>(new("validation", "Use an approved ResidencyStatus and EmploymentTaxTreatment; Remarks may contain at most 2000 characters."));
+            x.ResidencyStatus = request.ResidencyStatus;
+            x.EmploymentTaxTreatment = request.EmploymentTaxTreatment;
+            if (request.Remarks is not null) x.Remarks = Clean(request.Remarks);
+            return Task.FromResult<ApiFailure?>(null);
+        }, ct);
+
+    public async Task<ServiceResult<EmployeeTaxTreatmentResolution>> ResolveTaxTreatmentAsync(Guid employeeId, int taxYear, CancellationToken ct)
+    {
+        if (taxYear is < 1 or > 9999) return Invalid<EmployeeTaxTreatmentResolution>("TaxYear must be a Gregorian calendar year from 1 to 9999; no Buddhist-year conversion is performed.");
+        if (!await EmployeeExists(employeeId, ct)) return Missing<EmployeeTaxTreatmentResolution>();
+        var selected = await db.EmployeeTaxDeclarationSelections.AsNoTracking()
+            .Where(x => x.EmployeeId == employeeId && x.TaxYear == taxYear)
+            .Select(x => x.Declaration).SingleOrDefaultAsync(ct);
+        return ServiceResult<EmployeeTaxTreatmentResolution>.Success(
+            EmployeeTaxTreatmentResolver.Resolve(selected is null ? null : TreatmentDto(selected)));
+    }
+
+    private static EmployeeTaxTreatmentDto TreatmentDto(EmployeeTaxDeclaration x)
+        => new(x.EmployeeTaxDeclarationId, x.EmployeeId, x.TaxYear, x.RevisionNumber,
+            x.ResidencyStatus, x.EmploymentTaxTreatment, x.Status, x.VerifiedAt, x.Remarks);
+
     private async Task<ServiceResult<EmployeeTaxDeclarationDto>> DraftMutation(Guid employeeId, Guid id,
         Func<EmployeeTaxDeclaration, CancellationToken, Task<ApiFailure?>> change, CancellationToken ct)
     {
@@ -279,6 +307,7 @@ public sealed class EmployeeStatutoryService(SIAMISDbContext db) : IEmployeeStat
             x.Claims.OrderBy(c => c.ClaimType).ThenBy(c => c.EmployeeTaxClaimId).Select(c => new EmployeeTaxClaimDto(c.EmployeeTaxClaimId,
                 c.ClaimType, c.Amount, c.Quantity, c.Reference, c.Remarks, c.CreatedAt, c.UpdatedAt)).ToArray(),
             o is null ? null : new(o.State, o.Currency, o.PriorTaxableEmploymentIncome, o.PriorTaxWithheld,
-                o.PriorSocialSecurityContribution, o.AsOfDate, o.Remarks, o.VerifiedAt, o.CreatedAt, o.UpdatedAt));
+                o.PriorSocialSecurityContribution, o.AsOfDate, o.Remarks, o.VerifiedAt, o.CreatedAt, o.UpdatedAt),
+            TreatmentDto(x));
     }
 }
