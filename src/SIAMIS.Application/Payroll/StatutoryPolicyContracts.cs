@@ -48,6 +48,12 @@ public sealed class PitPolicyRequest
     public decimal? EmploymentExpenseDeductionRate { get; set; }
     public decimal? EmploymentExpenseDeductionCap { get; set; }
     public decimal? PersonalAllowanceAmount { get; set; }
+    public decimal? SpouseAllowanceAmount { get; set; }
+    public decimal? ChildAllowanceAmount { get; set; }
+    public decimal? AdditionalChildAllowanceAmount { get; set; }
+    public decimal? ParentAllowanceAmount { get; set; }
+    [Range(1, int.MaxValue)] public int? AdoptedChildCombinedCountLimit { get; set; }
+    [Range(1, int.MaxValue)] public int? MaximumEligibleParentCount { get; set; }
     [StringLength(50)] public string? WithholdingMethodIdentifier { get; set; }
     public IReadOnlyList<PitTaxBracketRequest> Brackets { get; set; } = [];
 }
@@ -68,11 +74,19 @@ public sealed record SocialSecurityPolicyDto(decimal? EmployeeContributionRate, 
 public sealed record PitTaxBracketDto(int SortOrder, decimal LowerBoundInclusive, decimal? UpperBoundExclusive, decimal Rate);
 public sealed record PitPolicyDto(int? TaxYear, decimal? EmploymentExpenseDeductionRate,
     decimal? EmploymentExpenseDeductionCap, decimal? PersonalAllowanceAmount, string? WithholdingMethodIdentifier,
-    IReadOnlyList<PitTaxBracketDto> Brackets);
+    IReadOnlyList<PitTaxBracketDto> Brackets, decimal? SpouseAllowanceAmount = null,
+    decimal? ChildAllowanceAmount = null, decimal? AdditionalChildAllowanceAmount = null,
+    decimal? ParentAllowanceAmount = null, int? AdoptedChildCombinedCountLimit = null,
+    int? MaximumEligibleParentCount = null, string RateUnit = "PercentagePoints");
 public sealed record StatutoryPolicyDto(Guid StatutoryPolicyVersionId, Guid StatutorySchemeId, string SchemeType,
     string Version, DateOnly EffectiveFrom, DateOnly? EffectiveTo, string Currency, string Status,
     string? OfficialReference, string? CalculationMethodVersion, DateTime CreatedAt, DateTime UpdatedAt,
-    DateTime? PublishedAt, SocialSecurityPolicyDto? SocialSecurity, PitPolicyDto? PersonalIncomeTax);
+    DateTime? PublishedAt, SocialSecurityPolicyDto? SocialSecurity, PitPolicyDto? PersonalIncomeTax)
+{
+    /// <summary>Method-owned recognition metadata, not a writable policy or proof of remittance.</summary>
+    public PitSsoRecognitionMetadata? PitSsoRecognition => SchemeType == "PersonalIncomeTax"
+        && CalculationMethodVersion == PitSsoRecognitionContract.MethodVersion ? PitSsoRecognitionContract.Metadata : null;
+}
 /// <summary>Resolved, NoApplicablePolicy, Ambiguous, or SchemeNotFound. No rate fallback.</summary>
 public sealed record StatutoryPolicyResolution(string Outcome, string Message, StatutorySchemeDto? Scheme, StatutoryPolicyDto? Policy);
 

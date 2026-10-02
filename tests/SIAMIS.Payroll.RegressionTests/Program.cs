@@ -155,4 +155,6 @@ foreach (var treatment in new[] { "Unknown", "Included", "Excluded" })
         .All(x => x.PitIncomeTreatmentSnapshot == treatment), "D6B live edits preserve value snapshots " + treatment);
 }
 D6BFoundationRegressionTests.Run(Check, model);
-Console.WriteLine($"PASS: {checks} focused D5A/D5B/D5C/D6A/D6B regression assertions. No database connections or writes.");
+D6CContractRegressionTests.Run(Check, model);
+PitSsoRecognitionContractTests.Run(Check);
+Console.WriteLine($"PASS: {checks} focused D5A/D5B/D5C/D6A/D6B/D6C regression assertions. No database connections or writes.");

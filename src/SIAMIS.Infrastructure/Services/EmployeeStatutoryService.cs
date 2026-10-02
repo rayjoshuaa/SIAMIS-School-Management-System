@@ -118,14 +118,14 @@ public sealed class EmployeeStatutoryService(SIAMISDbContext db) : IEmployeeStat
     {
         await using var tx = await db.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct);
         if (await EmploymentIntegrity.LockAsync(db, employeeId, ct) is null) return Missing<EmployeeTaxDeclarationDto>();
-        if (r.TaxYear is null or < 1 or > 9999) return Invalid<EmployeeTaxDeclarationDto>("TaxYear must be between 1 and 9999.");
+        if (r.TaxYear is null or < 1 or > 9999 || r.TotalLivingLawfulChildren is < 0) return Invalid<EmployeeTaxDeclarationDto>("TaxYear must be between 1 and 9999; living lawful-child count must be nonnegative.");
         if (await db.EmployeeTaxDeclarations.AnyAsync(x => x.EmployeeId == employeeId && x.TaxYear == r.TaxYear && x.Status == "Draft", ct))
             return Conflict<EmployeeTaxDeclarationDto>("Only one Draft revision may exist for the employee and tax year.");
         var last = await db.EmployeeTaxDeclarations.Where(x => x.EmployeeId == employeeId && x.TaxYear == r.TaxYear).MaxAsync(x => (int?)x.RevisionNumber, ct) ?? 0;
         if (last == int.MaxValue) return Conflict<EmployeeTaxDeclarationDto>("Revision number range is exhausted.");
         var selection = await db.EmployeeTaxDeclarationSelections.SingleOrDefaultAsync(x => x.EmployeeId == employeeId && x.TaxYear == r.TaxYear, ct);
         var x = new EmployeeTaxDeclaration { EmployeeId = employeeId, TaxYear = r.TaxYear.Value, RevisionNumber = last + 1,
-            ReplacesDeclarationId = selection?.CurrentDeclarationId, Remarks = Clean(r.Remarks) };
+            ReplacesDeclarationId = selection?.CurrentDeclarationId, Remarks = Clean(r.Remarks), TotalLivingLawfulChildren = r.TotalLivingLawfulChildren };
         db.EmployeeTaxDeclarations.Add(x);
         await db.SaveChangesAsync(ct);
         var dto = await DeclarationDto(x, ct);
@@ -135,7 +135,11 @@ public sealed class EmployeeStatutoryService(SIAMISDbContext db) : IEmployeeStat
     }
 
     public Task<ServiceResult<EmployeeTaxDeclarationDto>> UpdateDeclarationAsync(Guid employeeId, Guid id, EmployeeTaxDeclarationUpdateRequest r, CancellationToken ct)
-        => DraftMutation(employeeId, id, (x, _) => { x.Remarks = Clean(r.Remarks); return Task.FromResult<ApiFailure?>(null); }, ct);
+        => DraftMutation(employeeId, id, (x, _) => {
+            if (r.TotalLivingLawfulChildren is < 0) return Task.FromResult<ApiFailure?>(new("validation", "TotalLivingLawfulChildren must be nonnegative."));
+            x.Remarks = Clean(r.Remarks); x.TotalLivingLawfulChildren = r.TotalLivingLawfulChildren;
+            return Task.FromResult<ApiFailure?>(null);
+        }, ct);
 
     public async Task<ServiceResult<bool>> DeleteDeclarationAsync(Guid employeeId, Guid id, CancellationToken ct)
         => BooleanResult(await DraftMutation(employeeId, id, (x, _) => {
@@ -148,12 +152,16 @@ public sealed class EmployeeStatutoryService(SIAMISDbContext db) : IEmployeeStat
     public Task<ServiceResult<EmployeeTaxDeclarationDto>> SetClaimAsync(Guid employeeId, Guid id, Guid? claimId, EmployeeTaxClaimRequest r, CancellationToken ct)
         => DraftMutation(employeeId, id, (x, _) => {
             var type = Canonical(r.ClaimType, "Spouse", "Child", "Parent");
-            if (type is null || Numbers(r.Amount) is not null || r.Quantity is <= 0)
-                return Task.FromResult<ApiFailure?>(new("validation", "ClaimType must be Spouse, Child or Parent; declared Amount must be nonnegative with at most four decimal places, and supplied Quantity must be positive. No allowance is calculated."));
+            var error = ClaimInputError(type, r.Amount, r.Quantity, r.ChildRelationshipType, r.AdditionalChildAllowanceEligible, r.Reference);
+            if (error is not null) return Task.FromResult<ApiFailure?>(new("validation", error));
+            if (type == "Spouse" && x.Claims.Any(c => c.ClaimType == "Spouse" && c.EmployeeTaxClaimId != claimId))
+                return Task.FromResult<ApiFailure?>(new("validation", "Only one Spouse claim is allowed per declaration."));
             var c = claimId.HasValue ? x.Claims.SingleOrDefault(c => c.EmployeeTaxClaimId == claimId) : null;
             if (claimId.HasValue && c is null) return Task.FromResult<ApiFailure?>(new("not_found", "Claim was not found under this declaration."));
             if (c is null) { c = new() { EmployeeTaxDeclarationId = id }; x.Claims.Add(c); db.EmployeeTaxClaims.Add(c); }
-            c.ClaimType = type; c.Amount = r.Amount; c.Quantity = r.Quantity; c.Reference = Clean(r.Reference); c.Remarks = Clean(r.Remarks);
+            c.ClaimType = type!; c.Amount = r.Amount; c.Quantity = r.Quantity; c.Reference = Clean(r.Reference); c.Remarks = Clean(r.Remarks);
+            c.Quantity = type == "Spouse" ? 1 : r.Quantity;
+            c.ChildRelationshipType = r.ChildRelationshipType; c.AdditionalChildAllowanceEligible = r.AdditionalChildAllowanceEligible;
             return Task.FromResult<ApiFailure?>(null);
         }, ct);
 
@@ -169,6 +177,7 @@ public sealed class EmployeeStatutoryService(SIAMISDbContext db) : IEmployeeStat
         => DraftMutation(employeeId, id, (x, _) => {
             var state = Canonical(r.State, "Unknown", "ConfirmedZero", "VerifiedAmount");
             var error = OpeningError(state, r.PriorTaxableEmploymentIncome, r.PriorTaxWithheld, r.PriorSocialSecurityContribution, Clean(r.Remarks));
+            error ??= OpeningScopeError(state, r.OpeningBalanceScope, r.CompletenessAttested);
             if (error is not null || !r.AsOfDate.HasValue || r.Currency.Trim().ToUpperInvariant() != "THB")
                 return Task.FromResult<ApiFailure?>(new("validation", error ?? "Inclusive AsOfDate and THB currency are required."));
             // Cutoff must describe this tax year, or its opening instant (previous Dec 31).
@@ -181,6 +190,8 @@ public sealed class EmployeeStatutoryService(SIAMISDbContext db) : IEmployeeStat
             var o = x.OpeningBalance;
             if (o is null) { o = new() { EmployeeTaxDeclarationId = id }; x.OpeningBalance = o; db.EmployeeTaxOpeningBalances.Add(o); }
             o.State = state!; o.Currency = "THB"; o.AsOfDate = r.AsOfDate.Value; o.Remarks = Clean(r.Remarks);
+            o.OpeningBalanceScope = r.OpeningBalanceScope; o.CompletenessAttested = r.CompletenessAttested;
+            o.InputContractVersion = state == "Unknown" ? null : "PIT-TH-V1";
             o.PriorTaxableEmploymentIncome = state == "ConfirmedZero" ? 0m : r.PriorTaxableEmploymentIncome;
             o.PriorTaxWithheld = state == "ConfirmedZero" ? 0m : r.PriorTaxWithheld;
             o.PriorSocialSecurityContribution = state == "ConfirmedZero" ? 0m : r.PriorSocialSecurityContribution;
@@ -200,10 +211,18 @@ public sealed class EmployeeStatutoryService(SIAMISDbContext db) : IEmployeeStat
             if (x.OpeningBalance is null) return new("validation", "Configure an explicit opening-balance state before verification. Unknown is allowed; absence is not silently zero.");
             var o = x.OpeningBalance;
             var error = OpeningError(o.State, o.PriorTaxableEmploymentIncome, o.PriorTaxWithheld, o.PriorSocialSecurityContribution, o.Remarks);
+            error ??= OpeningScopeError(o.State, o.OpeningBalanceScope, o.CompletenessAttested);
+            if (o.State != "Unknown" && o.InputContractVersion != "PIT-TH-V1") error = "Opening input meaning is unresolved; author a complete current-employer statement.";
             if (error is not null || (o.State == "Unknown" ? o.VerifiedAt.HasValue : !o.VerifiedAt.HasValue))
                 return new("validation", error ?? "Opening verification metadata is inconsistent.");
-            if (x.Claims.Any(c => Canonical(c.ClaimType, "Spouse", "Child", "Parent") != c.ClaimType || Numbers(c.Amount) is not null || c.Quantity is <= 0))
-                return new("validation", "Claim structure is invalid.");
+            if (x.Claims.Any(c => ClaimInputError(c.ClaimType, c.Amount, c.Quantity, c.ChildRelationshipType, c.AdditionalChildAllowanceEligible, c.Reference) is not null)
+                || x.Claims.Count(c => c.ClaimType == "Spouse") > 1)
+                return new("validation", "Claim structure/evidence is incomplete or unsupported for PIT-TH-V1.");
+            if (x.Claims.Any(c => c.ChildRelationshipType == "Adopted") && !x.TotalLivingLawfulChildren.HasValue)
+                return new("validation", "Adopted claims require TotalLivingLawfulChildren including noneligible living lawful children.");
+            if (x.TotalLivingLawfulChildren is < 0 || (x.TotalLivingLawfulChildren.HasValue &&
+                x.Claims.Where(c => c.ChildRelationshipType == "Lawful").Sum(c => (long)(c.Quantity ?? 0)) > x.TotalLivingLawfulChildren))
+                return new("validation", "Lawful-child counts are inconsistent.");
             var selection = await db.EmployeeTaxDeclarationSelections.SingleOrDefaultAsync(s => s.EmployeeId == employeeId && s.TaxYear == x.TaxYear, token);
             if (x.ReplacesDeclarationId != selection?.CurrentDeclarationId)
                 return new("conflict", "Replacement no longer matches the current Verified declaration. Review the revision chain.");
@@ -298,6 +317,25 @@ public sealed class EmployeeStatutoryService(SIAMISDbContext db) : IEmployeeStat
     private static EmployeeTaxProfileDto ProfileDto(EmployeeTaxProfile x) => new(x.EmployeeTaxProfileId, x.EmployeeId, x.TaxpayerIdentificationNumber, x.CreatedAt, x.UpdatedAt);
     private static StatutoryEnrollmentDto EnrollmentDto(EmployeeStatutoryEnrollment x) => new(x.EmployeeStatutoryEnrollmentId, x.EmployeeId,
         x.StatutorySchemeId, x.EffectiveFrom, x.EffectiveTo, x.Applicability, x.MembershipNumber, x.Remarks, x.CreatedAt, x.UpdatedAt);
+    private static string? ClaimInputError(string? type, decimal? amount, int? quantity, string? relationship, bool? additional, string? reference)
+    {
+        if (type is not ("Spouse" or "Child" or "Parent")) return "Unsupported claim requires review; only Spouse, Child and Parent are supported.";
+        if (amount.HasValue) return "Amount is legacy history only; legal allowance amounts belong to Published PIT policy.";
+        if (string.IsNullOrWhiteSpace(reference)) return "Reviewed eligibility evidence Reference is required.";
+        if (type == "Spouse" && quantity is not (null or 1)) return "Spouse is one presence claim, not an allowance multiplier.";
+        if (type != "Spouse" && quantity is null or <= 0) return "Child and Parent require an explicit positive eligible Quantity.";
+        if (type != "Child") return relationship is not null || additional.HasValue ? "Child metadata is valid only on Child claims." : null;
+        if (relationship is not ("Lawful" or "Adopted") || !additional.HasValue) return "Child requires Lawful/Adopted relationship and explicit additional-allowance eligibility.";
+        return relationship == "Adopted" && additional == true ? "Adopted children cannot claim the additional lawful-child allowance." : null;
+    }
+
+    private static string? OpeningScopeError(string? state, string? scope, bool complete)
+    {
+        if (scope is not null && scope != "CurrentEmployer") return "Unsupported payer history requires review; V1 supports CurrentEmployer only.";
+        if (state == "Unknown") return complete ? "Unknown cannot attest complete known opening history." : null;
+        return scope != "CurrentEmployer" || !complete ? "Known opening history requires CurrentEmployer scope and explicit completeness attestation." : null;
+    }
+
     private async Task<EmployeeTaxDeclarationDto> DeclarationDto(EmployeeTaxDeclaration x, CancellationToken ct)
     {
         var current = await db.EmployeeTaxDeclarationSelections.AsNoTracking().AnyAsync(s => s.EmployeeId == x.EmployeeId && s.TaxYear == x.TaxYear && s.CurrentDeclarationId == x.EmployeeTaxDeclarationId, ct);
@@ -305,9 +343,10 @@ public sealed class EmployeeStatutoryService(SIAMISDbContext db) : IEmployeeStat
         return new(new(x.EmployeeTaxDeclarationId, x.EmployeeId, x.TaxYear, x.RevisionNumber, x.ReplacesDeclarationId,
             x.Status, current, x.VerifiedAt, x.Remarks, x.CreatedAt, x.UpdatedAt), x.TaxpayerIdentificationNumberSnapshot,
             x.Claims.OrderBy(c => c.ClaimType).ThenBy(c => c.EmployeeTaxClaimId).Select(c => new EmployeeTaxClaimDto(c.EmployeeTaxClaimId,
-                c.ClaimType, c.Amount, c.Quantity, c.Reference, c.Remarks, c.CreatedAt, c.UpdatedAt)).ToArray(),
+                c.ClaimType, c.Amount, c.Quantity, c.Reference, c.Remarks, c.CreatedAt, c.UpdatedAt, c.ChildRelationshipType, c.AdditionalChildAllowanceEligible)).ToArray(),
             o is null ? null : new(o.State, o.Currency, o.PriorTaxableEmploymentIncome, o.PriorTaxWithheld,
-                o.PriorSocialSecurityContribution, o.AsOfDate, o.Remarks, o.VerifiedAt, o.CreatedAt, o.UpdatedAt),
-            TreatmentDto(x));
+                o.PriorSocialSecurityContribution, o.AsOfDate, o.Remarks, o.VerifiedAt, o.CreatedAt, o.UpdatedAt,
+                o.OpeningBalanceScope, o.CompletenessAttested, o.InputContractVersion),
+            TreatmentDto(x), x.TotalLivingLawfulChildren);
     }
 }

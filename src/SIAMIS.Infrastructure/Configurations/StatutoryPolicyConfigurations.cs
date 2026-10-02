@@ -82,6 +82,7 @@ internal sealed class PitPolicyConfigurationMapping : IEntityTypeConfiguration<P
     {
         b.ToTable("PitPolicyConfigurations", t => {
             t.HasCheckConstraint("CK_PitPolicyConfigurations_Type", "[SchemeType] = 'PersonalIncomeTax'");
+            t.HasCheckConstraint("CK_PitPolicyConfigurations_ClaimValues", "([SpouseAllowanceAmount] IS NULL OR [SpouseAllowanceAmount]>=0) AND ([ChildAllowanceAmount] IS NULL OR [ChildAllowanceAmount]>=0) AND ([AdditionalChildAllowanceAmount] IS NULL OR [AdditionalChildAllowanceAmount]>=0) AND ([ParentAllowanceAmount] IS NULL OR [ParentAllowanceAmount]>=0) AND ([AdoptedChildCombinedCountLimit] IS NULL OR [AdoptedChildCombinedCountLimit]>0) AND ([MaximumEligibleParentCount] IS NULL OR [MaximumEligibleParentCount]>0)");
             t.HasCheckConstraint("CK_PitPolicyConfigurations_TaxYear", "[TaxYear] IS NULL OR [TaxYear] BETWEEN 1 AND 9999");
             t.HasCheckConstraint("CK_PitPolicyConfigurations_Values", "([EmploymentExpenseDeductionRate] IS NULL OR [EmploymentExpenseDeductionRate] >= 0) AND ([EmploymentExpenseDeductionCap] IS NULL OR [EmploymentExpenseDeductionCap] >= 0) AND ([PersonalAllowanceAmount] IS NULL OR [PersonalAllowanceAmount] >= 0)");
         });
@@ -90,6 +91,10 @@ internal sealed class PitPolicyConfigurationMapping : IEntityTypeConfiguration<P
         b.Property(x => x.EmploymentExpenseDeductionRate).HasColumnType("decimal(19,4)");
         b.Property(x => x.EmploymentExpenseDeductionCap).HasColumnType("decimal(19,4)");
         b.Property(x => x.PersonalAllowanceAmount).HasColumnType("decimal(19,4)");
+        b.Property(x => x.SpouseAllowanceAmount).HasColumnType("decimal(19,4)");
+        b.Property(x => x.ChildAllowanceAmount).HasColumnType("decimal(19,4)");
+        b.Property(x => x.AdditionalChildAllowanceAmount).HasColumnType("decimal(19,4)");
+        b.Property(x => x.ParentAllowanceAmount).HasColumnType("decimal(19,4)");
         b.Property(x => x.WithholdingMethodIdentifier).HasMaxLength(50);
         b.HasOne(x => x.Policy).WithOne(x => x.PersonalIncomeTax)
             .HasForeignKey<PitPolicyConfiguration>(x => new { x.StatutoryPolicyVersionId, x.SchemeType })

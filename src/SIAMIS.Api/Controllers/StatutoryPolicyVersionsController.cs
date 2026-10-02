@@ -41,6 +41,7 @@ public sealed class StatutoryPolicyVersionsController(IStatutoryPolicyService se
     public async Task<ActionResult<StatutoryPolicyDto>> SocialSecurity(Guid id, SocialSecurityPolicyRequest request, CancellationToken ct)
         => Respond(await service.SetSocialSecurityAsync(id, request, ct));
     /// <summary>Replaces Draft PIT configuration and brackets. Bounds are lower-inclusive/upper-exclusive; rates are percentage points. Draft gaps are allowed, overlaps are rejected.</summary>
+    /// <remarks>Legal allowance amounts and quantity limits belong to policy. PIT-TH-V1 recognizes actual cumulative employee SSO: prior Paid payroll plus current transaction output; no projection or independent PIT cap. No tax is calculated.</remarks>
     [HttpPut("{id:guid}/personal-income-tax")]
     [ProducesResponseType(typeof(StatutoryPolicyDto), 200)]
     public async Task<ActionResult<StatutoryPolicyDto>> Pit(Guid id, PitPolicyRequest request, CancellationToken ct)

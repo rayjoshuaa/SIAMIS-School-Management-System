@@ -62,7 +62,7 @@ public sealed class EmployeeTaxController(IEmployeeStatutoryService service) : S
             : Failure<EmployeeTaxDeclarationDto>(result.Failure!);
     }
 
-    /// <summary>Updates Draft remarks only; year, revision, replacement identity, status and audit timestamps are server-controlled.</summary>
+    /// <summary>Updates Draft remarks and declared living lawful-child count; identity/status/audit remain server-owned.</summary>
     [HttpPut("tax-declarations/{id:guid}")]
     [ProducesResponseType(typeof(EmployeeTaxDeclarationDto), 200)]
     public async Task<ActionResult<EmployeeTaxDeclarationDto>> Update(Guid employeeId, Guid id, EmployeeTaxDeclarationUpdateRequest request, CancellationToken ct)
@@ -83,7 +83,7 @@ public sealed class EmployeeTaxController(IEmployeeStatutoryService service) : S
         return result.IsSuccess ? Ok(result.Value!.Claims) : Failure<IReadOnlyList<EmployeeTaxClaimDto>>(result.Failure!);
     }
 
-    /// <summary>Adds a Spouse/Child/Parent claim to Draft; Amount/Quantity are declarations, not computed entitlements. Returns the updated declaration.</summary>
+    /// <summary>Adds reviewed eligibility facts to Draft. Legal Amount is rejected; evidence Reference is required. Spouse is presence, Child/Parent use explicit eligible quantities; Child requires typed category/eligibility.</summary>
     [HttpPost("tax-declarations/{id:guid}/claims")]
     [ProducesResponseType(typeof(EmployeeTaxDeclarationDto), 201)]
     public async Task<ActionResult<EmployeeTaxDeclarationDto>> AddClaim(Guid employeeId, Guid id, EmployeeTaxClaimRequest request, CancellationToken ct)
@@ -114,7 +114,7 @@ public sealed class EmployeeTaxController(IEmployeeStatutoryService service) : S
     }
 
     /// <summary>Replaces Draft THB opening inputs through inclusive AsOfDate. Unknown keeps null amounts; ConfirmedZero and VerifiedAmount require Remarks and server verification timestamp.</summary>
-    /// <remarks>PriorTaxableEmploymentIncome is the approved pre-SIAMIS aggregate, not GrossPay or automatically generic TaxableEarnings. D6 interprets it and prevents cutoff double counting.</remarks>
+    /// <remarks>Known history requires CurrentEmployer scope and completeness attestation. Income is same-year pre-expense assessable Section 40(1) income; SSO is recognized employee-side only. Cutoff is inclusive; future SIAMIS history starts strictly after it. Unsupported payer history requires review.</remarks>
     [HttpPut("tax-declarations/{id:guid}/opening-balance")]
     [ProducesResponseType(typeof(EmployeeTaxDeclarationDto), 200)]
     public async Task<ActionResult<EmployeeTaxDeclarationDto>> SetOpening(Guid employeeId, Guid id, EmployeeTaxOpeningBalanceRequest request, CancellationToken ct)

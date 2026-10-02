@@ -104,8 +104,12 @@ public sealed class StatutoryPolicyService(SIAMISDbContext db) : IStatutoryPolic
     public Task<ServiceResult<StatutoryPolicyDto>> SetPitAsync(Guid id, PitPolicyRequest r, CancellationToken ct)
         => MutateDraft(id, async (x, token) => {
             if (x.SchemeType != "PersonalIncomeTax") return new("validation", "PIT configuration requires a PersonalIncomeTax policy.");
-            var error = Numbers(r.EmploymentExpenseDeductionRate, r.EmploymentExpenseDeductionCap, r.PersonalAllowanceAmount)
+            var error = Numbers(r.EmploymentExpenseDeductionRate, r.EmploymentExpenseDeductionCap, r.PersonalAllowanceAmount,
+                r.SpouseAllowanceAmount, r.ChildAllowanceAmount, r.AdditionalChildAllowanceAmount, r.ParentAllowanceAmount)
                 ?? ValidateBrackets(r.Brackets, false);
+            if (r.EmploymentExpenseDeductionRate > 100 || r.Brackets?.Any(b => b is not null && b.Rate > 100) == true) error = "PIT rates use percentage points between 0 and 100.";
+            if (r.EmploymentExpenseDeductionCap is <= 0 || r.AdoptedChildCombinedCountLimit is <= 0 || r.MaximumEligibleParentCount is <= 0)
+                error = "Supplied expense cap and quantity limits must be positive.";
             if (r.TaxYear is < 1 or > 9999) error = "TaxYear must fit the supported date-year range.";
             if (error is not null) return new("validation", error);
             var c = x.PersonalIncomeTax;
@@ -118,7 +122,10 @@ public sealed class StatutoryPolicyService(SIAMISDbContext db) : IStatutoryPolic
             c.TaxYear = r.TaxYear; c.EmploymentExpenseDeductionRate = r.EmploymentExpenseDeductionRate;
             c.EmploymentExpenseDeductionCap = r.EmploymentExpenseDeductionCap; c.PersonalAllowanceAmount = r.PersonalAllowanceAmount;
             c.WithholdingMethodIdentifier = Text(r.WithholdingMethodIdentifier);
-            foreach (var b in r.Brackets) {
+            c.SpouseAllowanceAmount = r.SpouseAllowanceAmount; c.ChildAllowanceAmount = r.ChildAllowanceAmount;
+            c.AdditionalChildAllowanceAmount = r.AdditionalChildAllowanceAmount; c.ParentAllowanceAmount = r.ParentAllowanceAmount;
+            c.AdoptedChildCombinedCountLimit = r.AdoptedChildCombinedCountLimit; c.MaximumEligibleParentCount = r.MaximumEligibleParentCount;
+            foreach (var b in r.Brackets!) {
                 var bracket = new PitTaxBracket { StatutoryPolicyVersionId = id,
                     SortOrder = b.SortOrder!.Value, LowerBoundInclusive = b.LowerBoundInclusive!.Value,
                     UpperBoundExclusive = b.UpperBoundExclusive, Rate = b.Rate!.Value };
@@ -228,9 +235,21 @@ public sealed class StatutoryPolicyService(SIAMISDbContext db) : IStatutoryPolic
             || !p.PersonalAllowanceAmount.HasValue || string.IsNullOrWhiteSpace(p.WithholdingMethodIdentifier))
             return "PIT configuration must include TaxYear, expense rate/cap, personal allowance and withholding-method metadata.";
         if (p.TaxYear is < 1 or > 9999) return "TaxYear is outside the supported date-year range.";
-        return Numbers(p.EmploymentExpenseDeductionRate, p.EmploymentExpenseDeductionCap, p.PersonalAllowanceAmount)
+        var pitError = Numbers(p.EmploymentExpenseDeductionRate, p.EmploymentExpenseDeductionCap, p.PersonalAllowanceAmount,
+            p.SpouseAllowanceAmount, p.ChildAllowanceAmount, p.AdditionalChildAllowanceAmount, p.ParentAllowanceAmount)
             ?? ValidateBrackets(p.Brackets.OrderBy(b => b.SortOrder).Select(b => new PitTaxBracketRequest {
                 SortOrder = b.SortOrder, LowerBoundInclusive = b.LowerBoundInclusive, UpperBoundExclusive = b.UpperBoundExclusive, Rate = b.Rate }).ToArray(), true);
+        if (pitError is not null) return pitError;
+        if (p.SpouseAllowanceAmount is null || p.ChildAllowanceAmount is null || p.AdditionalChildAllowanceAmount is null
+            || p.ParentAllowanceAmount is null || p.AdoptedChildCombinedCountLimit is null or <= 0 || p.MaximumEligibleParentCount is null or <= 0)
+            return "PIT-TH-V1 requires policy-owned spouse/child/additional-child/parent amounts and positive quantity limits.";
+        if (p.EmploymentExpenseDeductionRate > 100 || p.EmploymentExpenseDeductionCap <= 0 || p.Brackets.Any(b => b.Rate > 100))
+            return "PIT-TH-V1 rates use percentage points from 0 to 100; expense cap must be positive.";
+        if (x.EffectiveFrom.Year != p.TaxYear || !x.EffectiveTo.HasValue || x.EffectiveTo.Value.Year != p.TaxYear)
+            return "PIT-TH-V1 requires a bounded effective interval within its declared TaxYear.";
+        // PIT-TH-V1 now includes the approved actual-cumulative recognition contract.
+        // This still does not assert runtime PIT calculator compatibility.
+        return null;
     }
     private static string? ValidateBrackets(IReadOnlyList<PitTaxBracketRequest>? brackets, bool complete)
     {
@@ -271,5 +290,8 @@ public sealed class StatutoryPolicyService(SIAMISDbContext db) : IStatutoryPolic
         x.PersonalIncomeTax is null ? null : new(x.PersonalIncomeTax.TaxYear, x.PersonalIncomeTax.EmploymentExpenseDeductionRate,
             x.PersonalIncomeTax.EmploymentExpenseDeductionCap, x.PersonalIncomeTax.PersonalAllowanceAmount,
             x.PersonalIncomeTax.WithholdingMethodIdentifier, x.PersonalIncomeTax.Brackets.OrderBy(b => b.SortOrder)
-                .Select(b => new PitTaxBracketDto(b.SortOrder, b.LowerBoundInclusive, b.UpperBoundExclusive, b.Rate)).ToArray()));
+                .Select(b => new PitTaxBracketDto(b.SortOrder, b.LowerBoundInclusive, b.UpperBoundExclusive, b.Rate)).ToArray(),
+            x.PersonalIncomeTax.SpouseAllowanceAmount, x.PersonalIncomeTax.ChildAllowanceAmount,
+            x.PersonalIncomeTax.AdditionalChildAllowanceAmount, x.PersonalIncomeTax.ParentAllowanceAmount,
+            x.PersonalIncomeTax.AdoptedChildCombinedCountLimit, x.PersonalIncomeTax.MaximumEligibleParentCount));
 }

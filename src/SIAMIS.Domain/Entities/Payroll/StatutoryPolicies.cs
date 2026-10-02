@@ -55,6 +55,12 @@ public sealed class PitPolicyConfiguration
     public decimal? EmploymentExpenseDeductionRate { get; set; }
     public decimal? EmploymentExpenseDeductionCap { get; set; }
     public decimal? PersonalAllowanceAmount { get; set; }
+    public decimal? SpouseAllowanceAmount { get; set; }
+    public decimal? ChildAllowanceAmount { get; set; }
+    public decimal? AdditionalChildAllowanceAmount { get; set; }
+    public decimal? ParentAllowanceAmount { get; set; }
+    public int? AdoptedChildCombinedCountLimit { get; set; }
+    public int? MaximumEligibleParentCount { get; set; }
     // Audit identifier only; D4A does not assign annualization/cumulative semantics.
     public string? WithholdingMethodIdentifier { get; set; }
     public StatutoryPolicyVersion Policy { get; set; } = null!;

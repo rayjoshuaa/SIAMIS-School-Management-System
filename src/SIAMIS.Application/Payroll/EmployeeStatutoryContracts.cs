@@ -31,12 +31,14 @@ public sealed class EmployeeTaxProfileRequest
 public sealed class EmployeeTaxDeclarationCreateRequest
 {
     [Required, Range(1, 9999)] public int? TaxYear { get; set; }
+    [Range(0, int.MaxValue)] public int? TotalLivingLawfulChildren { get; set; }
     [StringLength(2000)] public string? Remarks { get; set; }
 }
 
 [JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
 public sealed class EmployeeTaxDeclarationUpdateRequest
 {
+    [Range(0, int.MaxValue)] public int? TotalLivingLawfulChildren { get; set; }
     [StringLength(2000)] public string? Remarks { get; set; }
 }
 
@@ -44,7 +46,12 @@ public sealed class EmployeeTaxDeclarationUpdateRequest
 public sealed class EmployeeTaxClaimRequest
 {
     [Required, StringLength(20)] public string ClaimType { get; set; } = string.Empty;
-    [Range(typeof(decimal), "0", "999999999999999.9999")] public decimal? Amount { get; set; }
+    /// <summary>Legacy compatibility input. Any non-null value is rejected; policy owns legal amounts.</summary>
+    public decimal? Amount { get; set; }
+    /// <summary>Required for Child only: Lawful or Adopted.</summary>
+    [StringLength(20)] public string? ChildRelationshipType { get; set; }
+    /// <summary>Required for Child; attested eligibility, never inferred from HR facts. Adopted must be false.</summary>
+    public bool? AdditionalChildAllowanceEligible { get; set; }
     [Range(1, int.MaxValue)] public int? Quantity { get; set; }
     [StringLength(500)] public string? Reference { get; set; }
     [StringLength(2000)] public string? Remarks { get; set; }
@@ -53,6 +60,9 @@ public sealed class EmployeeTaxClaimRequest
 [JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
 public sealed class EmployeeTaxOpeningBalanceRequest
 {
+    /// <summary>CurrentEmployer only. Required for known opening states; previous-employer input requires review.</summary>
+    [StringLength(20)] public string? OpeningBalanceScope { get; set; }
+    public bool CompletenessAttested { get; set; }
     [Required, StringLength(20)] public string State { get; set; } = string.Empty;
     [Required, StringLength(3)] public string Currency { get; set; } = "THB";
     public decimal? PriorTaxableEmploymentIncome { get; set; }
@@ -73,16 +83,18 @@ public sealed record StatutoryEnrollmentResolution(string Applicability, string 
 public sealed record EmployeeTaxProfileDto(Guid EmployeeTaxProfileId, Guid EmployeeId,
     string? TaxpayerIdentificationNumber, DateTime CreatedAt, DateTime UpdatedAt);
 public sealed record EmployeeTaxClaimDto(Guid EmployeeTaxClaimId, string ClaimType, decimal? Amount,
-    int? Quantity, string? Reference, string? Remarks, DateTime CreatedAt, DateTime UpdatedAt);
+    int? Quantity, string? Reference, string? Remarks, DateTime CreatedAt, DateTime UpdatedAt,
+    string? ChildRelationshipType = null, bool? AdditionalChildAllowanceEligible = null);
 public sealed record EmployeeTaxOpeningBalanceDto(string State, string Currency,
     decimal? PriorTaxableEmploymentIncome, decimal? PriorTaxWithheld, decimal? PriorSocialSecurityContribution,
-    DateOnly AsOfDate, string? Remarks, DateTime? VerifiedAt, DateTime CreatedAt, DateTime UpdatedAt);
+    DateOnly AsOfDate, string? Remarks, DateTime? VerifiedAt, DateTime CreatedAt, DateTime UpdatedAt,
+    string? OpeningBalanceScope = null, bool CompletenessAttested = false, string? InputContractVersion = null);
 public sealed record EmployeeTaxDeclarationSummaryDto(Guid EmployeeTaxDeclarationId, Guid EmployeeId,
     int TaxYear, int RevisionNumber, Guid? ReplacesDeclarationId, string Status, bool IsCurrentVerified,
     DateTime? VerifiedAt, string? Remarks, DateTime CreatedAt, DateTime UpdatedAt);
 public sealed record EmployeeTaxDeclarationDto(EmployeeTaxDeclarationSummaryDto Declaration,
     string? TaxpayerIdentificationNumberSnapshot, IReadOnlyList<EmployeeTaxClaimDto> Claims,
-    EmployeeTaxOpeningBalanceDto? OpeningBalance, EmployeeTaxTreatmentDto Treatment);
+    EmployeeTaxOpeningBalanceDto? OpeningBalance, EmployeeTaxTreatmentDto Treatment, int? TotalLivingLawfulChildren = null);
 
 public interface IEmployeeStatutoryService
 {

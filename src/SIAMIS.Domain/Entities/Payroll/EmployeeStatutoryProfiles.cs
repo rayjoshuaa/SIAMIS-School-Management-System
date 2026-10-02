@@ -34,6 +34,8 @@ public sealed class EmployeeTaxDeclaration : IHasTimestamps
     public Guid EmployeeTaxDeclarationId { get; set; } = Guid.NewGuid();
     public Guid EmployeeId { get; set; }
     public int TaxYear { get; set; }
+    // Includes living lawful children not themselves eligible; needed for adopted-child capacity.
+    public int? TotalLivingLawfulChildren { get; set; }
     // Year-specific treatment shares the declaration's immutable revision/verification lifecycle.
     public string ResidencyStatus { get; set; } = "Unknown";
     public string EmploymentTaxTreatment { get; set; } = "Unknown";
@@ -67,6 +69,9 @@ public sealed class EmployeeTaxClaim : IHasTimestamps
     public Guid EmployeeTaxDeclarationId { get; set; }
     public string ClaimType { get; set; } = string.Empty;
     public decimal? Amount { get; set; }
+    // Legacy Amount is preserved for historical compatibility, never a V1 legal allowance.
+    public string? ChildRelationshipType { get; set; }
+    public bool? AdditionalChildAllowanceEligible { get; set; }
     public int? Quantity { get; set; }
     public string? Reference { get; set; }
     public string? Remarks { get; set; }
@@ -80,8 +85,13 @@ public sealed class EmployeeTaxOpeningBalance : IHasTimestamps
     public Guid EmployeeTaxDeclarationId { get; set; }
     public string State { get; set; } = string.Empty;
     public string Currency { get; set; } = "THB";
-    // Aggregate pre-SIAMIS taxable Thai employment income through inclusive AsOfDate.
-    // This is neither GrossPay nor automatically generic TaxableEarnings; D6 interprets it.
+    // Null/false preserve unresolved legacy statements rather than fabricating attestation.
+    public string? OpeningBalanceScope { get; set; }
+    public bool CompletenessAttested { get; set; }
+    public string? InputContractVersion { get; set; }
+    // PIT-TH-V1: same-year CurrentEmployer pre-expense assessable Section 40(1) income
+    // through inclusive AsOfDate. Legacy null InputContractVersion is not reinterpreted.
+    // Future SIAMIS history begins strictly after cutoff; same-day ambiguity must fail.
     public decimal? PriorTaxableEmploymentIncome { get; set; }
     public decimal? PriorTaxWithheld { get; set; }
     public decimal? PriorSocialSecurityContribution { get; set; }

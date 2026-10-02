@@ -56,6 +56,7 @@ internal sealed class EmployeeTaxDeclarationConfiguration : IEntityTypeConfigura
             t.HasCheckConstraint("CK_EmployeeTaxDeclarations_ResidencyStatus", "[ResidencyStatus] IN ('Unknown','Resident','NonResident')");
             t.HasCheckConstraint("CK_EmployeeTaxDeclarations_EmploymentTaxTreatment", "[EmploymentTaxTreatment] IN ('Unknown','StandardSection40_1','RequiresReview')");
             t.HasCheckConstraint("CK_EmployeeTaxDeclarations_YearRevision", "[TaxYear] BETWEEN 1 AND 9999 AND [RevisionNumber] > 0");
+            t.HasCheckConstraint("CK_EmployeeTaxDeclarations_LivingChildren", "[TotalLivingLawfulChildren] IS NULL OR [TotalLivingLawfulChildren]>=0");
             t.HasCheckConstraint("CK_EmployeeTaxDeclarations_Status", "[Status] IN ('Draft','Verified')");
             t.HasCheckConstraint("CK_EmployeeTaxDeclarations_Verification", "([Status]='Draft' AND [VerifiedAt] IS NULL AND [TaxpayerIdentificationNumberSnapshot] IS NULL) OR ([Status]='Verified' AND [VerifiedAt] IS NOT NULL)");
             t.HasCheckConstraint("CK_EmployeeTaxDeclarations_Replacement", "[ReplacesDeclarationId] IS NULL OR [ReplacesDeclarationId] <> [EmployeeTaxDeclarationId]");
@@ -98,10 +99,13 @@ internal sealed class EmployeeTaxClaimConfiguration : IEntityTypeConfiguration<E
     {
         b.ToTable("EmployeeTaxClaims", t => {
             t.HasCheckConstraint("CK_EmployeeTaxClaims_Type", "[ClaimType] IN ('Spouse','Child','Parent')");
+            // Null/null preserves legacy records; V1 service verification requires typed child inputs.
+            t.HasCheckConstraint("CK_EmployeeTaxClaims_ChildMetadata", "([ChildRelationshipType] IS NULL AND [AdditionalChildAllowanceEligible] IS NULL) OR ([ClaimType]='Child' AND [ChildRelationshipType] IS NOT NULL AND [ChildRelationshipType] IN ('Lawful','Adopted') AND [AdditionalChildAllowanceEligible] IS NOT NULL AND ([ChildRelationshipType]='Lawful' OR [AdditionalChildAllowanceEligible]=0))");
             t.HasCheckConstraint("CK_EmployeeTaxClaims_Values", "([Amount] IS NULL OR [Amount]>=0) AND ([Quantity] IS NULL OR [Quantity]>0)");
         });
         b.HasKey(x => x.EmployeeTaxClaimId);
         b.Property(x => x.ClaimType).HasMaxLength(20).IsRequired();
+        b.Property(x => x.ChildRelationshipType).HasMaxLength(20);
         b.Property(x => x.Amount).HasColumnType("decimal(19,4)");
         b.Property(x => x.Reference).HasMaxLength(500);
         b.Property(x => x.Remarks).HasMaxLength(2000);
@@ -116,6 +120,7 @@ internal sealed class EmployeeTaxOpeningBalanceConfiguration : IEntityTypeConfig
     {
         b.ToTable("EmployeeTaxOpeningBalances", t => {
             t.HasCheckConstraint("CK_EmployeeTaxOpeningBalances_Currency", "[Currency]='THB'");
+            t.HasCheckConstraint("CK_EmployeeTaxOpeningBalances_Scope", "([OpeningBalanceScope] IS NULL OR [OpeningBalanceScope]='CurrentEmployer') AND ([InputContractVersion] IS NULL OR ([InputContractVersion]='PIT-TH-V1' AND [OpeningBalanceScope] IS NOT NULL AND [CompletenessAttested]=1 AND [State] IN ('ConfirmedZero','VerifiedAmount')))");
             t.HasCheckConstraint("CK_EmployeeTaxOpeningBalances_State", "[State] IN ('Unknown','ConfirmedZero','VerifiedAmount')");
             t.HasCheckConstraint("CK_EmployeeTaxOpeningBalances_Values", "([PriorTaxableEmploymentIncome] IS NULL OR [PriorTaxableEmploymentIncome]>=0) AND ([PriorTaxWithheld] IS NULL OR [PriorTaxWithheld]>=0) AND ([PriorSocialSecurityContribution] IS NULL OR [PriorSocialSecurityContribution]>=0)");
             t.HasCheckConstraint("CK_EmployeeTaxOpeningBalances_Consistency",
@@ -126,6 +131,8 @@ internal sealed class EmployeeTaxOpeningBalanceConfiguration : IEntityTypeConfig
         b.HasKey(x => x.EmployeeTaxDeclarationId);
         b.Property(x => x.State).HasMaxLength(20).IsRequired();
         b.Property(x => x.Currency).HasMaxLength(3).IsRequired();
+        b.Property(x => x.OpeningBalanceScope).HasMaxLength(20);
+        b.Property(x => x.InputContractVersion).HasMaxLength(50);
         b.Property(x => x.PriorTaxableEmploymentIncome).HasColumnType("decimal(19,4)");
         b.Property(x => x.PriorTaxWithheld).HasColumnType("decimal(19,4)");
         b.Property(x => x.PriorSocialSecurityContribution).HasColumnType("decimal(19,4)");
