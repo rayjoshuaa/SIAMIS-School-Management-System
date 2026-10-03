@@ -87,15 +87,18 @@ public static class LeaveRequestCalculator
             if (p.CertificateOnFridayWorkingDate && date.Date.DayOfWeek == DayOfWeek.Friday) reasons.Add("FridayWorkingDate");
         }
         var allocations = dates.Where(x => x.ChargeableMinutes > 0).GroupBy(x => x.Date.Year).OrderBy(x => x.Key).Select(x => new LeaveAllocationDto(x.Key, x.Sum(y => y.ChargeableMinutes))).ToArray();
-        return ServiceResult<LeaveCalculationSnapshot>.Success(new(1, c.EmployeeId, c.LeaveType.Id, c.LeaveType.Code, c.LeaveType.Name, c.LeaveType.IsPaid,
+        var snapshot = new LeaveCalculationSnapshot(1, c.EmployeeId, c.LeaveType.Id, c.LeaveType.Code, c.LeaveType.Name, c.LeaveType.IsPaid,
             r.RequestMode!.Value.ToString(), r.StartDate.Value, r.EndDate.Value, r.RequestedStartTime, r.RequestedEndTime,
             r.NoticeCategory!.Value.ToString(), requestedAtUtc, BusinessTimeZone, local, utc, notice, hours, true, sudden,
-            dates[0].Policy.BalanceTracked, dates, (int)total, allocations, longest, reasons.Count > 0, reasons.OrderBy(x => x).ToArray()));
+            dates[0].Policy.BalanceTracked, dates, (int)total, allocations, longest, reasons.Count > 0, reasons.OrderBy(x => x).ToArray());
+        var types = LeaveEvidenceRules.RequiredTypes(snapshot);
+        if (!types.IsSuccess) return Conflict(types.Failure!.Message);
+        return ServiceResult<LeaveCalculationSnapshot>.Success(snapshot with { RequiredDocumentTypeIds = types.Value });
     }
     public static bool WholeMinute(TimeOnly value) => value.Ticks % TimeSpan.TicksPerMinute == 0;
     public static int Minutes(WorkIntervalDto x) => (int)(x.EndTime.ToTimeSpan() - x.StartTime.ToTimeSpan()).TotalMinutes;
-    private static LeavePolicyEvidence Evidence(LeavePolicy p) => new(p.Id, p.Version, p.BalanceTracked, p.ForeseeableNoticeHours, p.AllowsSuddenRequest,
-        p.SupportingDocumentPolicy, p.DocumentTypeId, p.CertificateAfterConsecutiveDays, p.CertificateOnMondayWorkingDate, p.CertificateOnFridayWorkingDate, p.SandwichParticipation);
+    internal static LeavePolicyEvidence Evidence(LeavePolicy p) => new(p.Id, p.Version, p.BalanceTracked, p.ForeseeableNoticeHours, p.AllowsSuddenRequest,
+        p.SupportingDocumentPolicy, p.DocumentTypeId, p.CertificateAfterConsecutiveDays, p.CertificateOnMondayWorkingDate, p.CertificateOnFridayWorkingDate, p.SandwichParticipation, p.SandwichEquivalentDayMinutes);
     public static bool Overlap(LeaveCalculationSnapshot a, LeaveCalculationSnapshot b)
         => a.Dates.Any(x => b.Dates.Any(y => y.Date == x.Date && x.ChargedIntervals.Any(i => y.ChargedIntervals.Any(j => i.StartTime < j.EndTime && j.StartTime < i.EndTime))));
 }

@@ -12,6 +12,7 @@ internal sealed class LeaveRequestConfiguration : IEntityTypeConfiguration<Emplo
         b.Property(x => x.RequestMode).HasMaxLength(20); b.Property(x => x.NoticeCategory).HasMaxLength(20);
         b.Property(x => x.RequestedAt).HasColumnType("datetime2"); b.Property(x => x.ReviewedAt).HasColumnType("datetime2"); b.Property(x => x.CancelledAt).HasColumnType("datetime2");
         b.Property(x => x.ReviewRemarks).HasMaxLength(2000); b.Property(x => x.CancellationRemarks).HasMaxLength(2000);
+        b.HasAlternateKey(x => new { x.EmployeeId, x.LeaveId });
         b.HasIndex(x => new { x.EmployeeId, x.Status, x.StartDate }); b.HasIndex(x => new { x.Status, x.RequestedAt });
         b.ToTable("EmployeeLeave", t =>
         {

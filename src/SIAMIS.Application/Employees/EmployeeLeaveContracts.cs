@@ -47,7 +47,7 @@ public sealed class LeaveHistoryQuery
 public sealed record LeaveAllocationDto(int LeaveYear, int ChargeableMinutes);
 public sealed record LeavePolicyEvidence(Guid Id, string Version, bool BalanceTracked, int? ForeseeableNoticeHours, bool AllowsSuddenRequest,
     string SupportingDocumentPolicy, Guid? DocumentTypeId, int? CertificateAfterConsecutiveDays,
-    bool CertificateOnMondayWorkingDate, bool CertificateOnFridayWorkingDate, bool SandwichParticipation);
+    bool CertificateOnMondayWorkingDate, bool CertificateOnFridayWorkingDate, bool SandwichParticipation, int? SandwichEquivalentDayMinutes = null);
 public sealed record ScheduledLeaveInterval(Guid Id, TimeOnly StartTime, TimeOnly EndTime);
 public sealed record LeaveDateCalculation(DateOnly Date, Guid EmploymentRecordId, Guid AssignmentId, Guid WorkCalendarId,
     string WorkCalendarCode, string WorkCalendarName, string ScheduleSource, Guid? OverrideId, LeavePolicyEvidence Policy,
@@ -57,7 +57,10 @@ public sealed record LeaveCalculationSnapshot(int Version, Guid EmployeeId, Guid
     string NoticeCategory, DateTime RequestedAt, string BusinessTimeZone, DateTime FirstChargeableLocalStart, DateTime FirstChargeableUtcStart,
     int? EffectiveNoticeHours, double ActualNoticeHours, bool NoticeSatisfied, bool SuddenRequestUsed, bool BalanceTracked,
     IReadOnlyList<LeaveDateCalculation> Dates, int ChargeableMinutes, IReadOnlyList<LeaveAllocationDto> Allocations,
-    int LongestConsecutiveQualifyingDays, bool SupportingDocumentRequired, IReadOnlyList<string> CertificateRequirementReasons);
+    int LongestConsecutiveQualifyingDays, bool SupportingDocumentRequired, IReadOnlyList<string> CertificateRequirementReasons)
+{
+    public IReadOnlyList<Guid>? RequiredDocumentTypeIds { get; init; }
+}
 public sealed class EmployeeLeaveDto
 {
     public Guid LeaveId { get; init; }
@@ -89,13 +92,21 @@ public sealed class EmployeeLeaveDto
     public IReadOnlyList<string> CertificateRequirementReasons { get; init; } = [];
     public IReadOnlyList<LeaveAllocationDto> Allocations { get; init; } = [];
     public LeaveCalculationSnapshot? Calculation { get; init; }
+    public LeaveEvidenceSummary? Evidence { get; set; }
+    public IReadOnlyList<LeaveSandwichDto> SandwichCases { get; set; } = [];
+    public long SandwichDebitMinutes { get; set; }
 }
 public sealed record LeaveHistoryItemDto(Guid LeaveId, Guid EmployeeId, string EmployeeNumber, string EmployeeName, Guid LeaveTypeId,
     string? LeaveTypeCode, string LeaveTypeName, bool? IsPaid, DateOnly StartDate, DateOnly EndDate, string? RequestMode,
     TimeOnly? RequestedStartTime, TimeOnly? RequestedEndTime, int? ChargeableMinutes, string Status, DateTime? RequestedAt,
-    string? NoticeCategory, bool? SupportingDocumentRequired, string? Reason);
+    string? NoticeCategory, bool? SupportingDocumentRequired, string? Reason)
+{
+    public LeaveEvidenceSummary? Evidence { get; set; }
+    public IReadOnlyList<LeaveSandwichDto> SandwichCases { get; set; } = [];
+    public long SandwichDebitMinutes { get; set; }
+}
 public sealed record LeaveBalanceDto(Guid LeaveTypeId, string? Code, string Name, bool? BalanceTracked, string PolicyCoverage,
-    int? EntitledMinutes, long? AdjustmentMinutes, long? AdjustedEntitledMinutes, long PendingMinutes, long UsedMinutes, long? AvailableMinutes);
+    int? EntitledMinutes, long? AdjustmentMinutes, long? AdjustedEntitledMinutes, long PendingMinutes, long UsedMinutes, long? AvailableMinutes, long SandwichPendingMinutes = 0, long SandwichUsedMinutes = 0);
 public interface IEmployeeLeaveService
 {
     Task<ServiceResult<IReadOnlyList<EmployeeLeaveDto>>> GetLeavesAsync(Guid employeeId, DateOnly? fromDate, DateOnly? toDate, CancellationToken cancellationToken);

@@ -68,6 +68,7 @@ public sealed class LeavePolicy : LeaveFoundationRecord
     public bool CertificateOnMondayWorkingDate { get; set; }
     public bool CertificateOnFridayWorkingDate { get; set; }
     public bool SandwichParticipation { get; set; }
+    public int? SandwichEquivalentDayMinutes { get; set; }
 }
 
 public sealed class EmployeeLeaveEntitlement : LeaveFoundationRecord

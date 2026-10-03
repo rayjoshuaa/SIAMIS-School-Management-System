@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SIAMIS.Infrastructure.Data;
 
@@ -11,9 +12,11 @@ using SIAMIS.Infrastructure.Data;
 namespace SIAMIS.Infrastructure.Migrations
 {
     [DbContext(typeof(SIAMISDbContext))]
-    partial class SIAMISDbContextModelSnapshot : ModelSnapshot
+    [Migration("20261003132846_AddLeaveSandwichReviewLifecycle")]
+    partial class AddLeaveSandwichReviewLifecycle
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -971,9 +974,6 @@ namespace SIAMIS.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<int?>("AppliedDebitMinutes")
-                        .HasColumnType("int");
-
                     b.Property<Guid>("CaseId")
                         .HasColumnType("uniqueidentifier");
 
@@ -990,8 +990,6 @@ namespace SIAMIS.Infrastructure.Migrations
 
                     b.ToTable("EmployeeLeaveSandwichAllocations", null, t =>
                         {
-                            t.HasCheckConstraint("CK_LeaveSandwichAllocation_Applied", "[AppliedDebitMinutes] IS NULL OR ([AppliedDebitMinutes] >= 0 AND [AppliedDebitMinutes] <= [SandwichDebitMinutes])");
-
                             t.HasCheckConstraint("CK_LeaveSandwichAllocation_Debit", "[LeaveYear] BETWEEN 1 AND 9999 AND [SandwichDebitMinutes] > 0");
                         });
                 });

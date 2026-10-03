@@ -39,14 +39,31 @@ public sealed partial class EmployeeLeaveService
             .OrderByDescending(x => x.StartDate).ThenByDescending(x => x.LeaveId).Select(x => new { Leave = x, x.LeaveType.Code, x.LeaveType.Name }).ToListAsync(ct);
         var ids = records.Select(x => x.Leave.LeaveId).ToArray();
         var allocations = await db.Set<EmployeeLeaveAllocation>().AsNoTracking().Where(x => ids.Contains(x.EmployeeLeaveId)).ToListAsync(ct);
-        return ServiceResult<IReadOnlyList<EmployeeLeaveDto>>.Success(records.Select(x => Dto(x.Leave, x.Code, x.Name, allocations.Where(a => a.EmployeeLeaveId == x.Leave.LeaveId).ToArray())).ToArray());
+        var result = new List<EmployeeLeaveDto>();
+        foreach (var x in records)
+        {
+            var dto = Dto(x.Leave, x.Code, x.Name, allocations.Where(a => a.EmployeeLeaveId == x.Leave.LeaveId).ToArray());
+            var enriched = await EnrichLeave(dto, ct);
+            if (!enriched.IsSuccess) return Fail<IReadOnlyList<EmployeeLeaveDto>>("conflict", enriched.Failure!.Message);
+            result.Add(dto);
+        }
+        return ServiceResult<IReadOnlyList<EmployeeLeaveDto>>.Success(result);
     }
     public async Task<ServiceResult<EmployeeLeaveDto>> GetLeaveAsync(Guid employeeId, Guid leaveId, CancellationToken ct)
     {
         if (!await Exists(employeeId, ct)) return Fail<EmployeeLeaveDto>("not_found", "Employee was not found.");
         var x = await db.EmployeeLeaves.AsNoTracking().Where(x => x.EmployeeId == employeeId && x.LeaveId == leaveId).Select(x => new { Leave = x, x.LeaveType.Code, x.LeaveType.Name }).SingleOrDefaultAsync(ct);
-        return x is null ? Fail<EmployeeLeaveDto>("not_found", "Leave request was not found for this employee.")
-            : ServiceResult<EmployeeLeaveDto>.Success(Dto(x.Leave, x.Code, x.Name, await Allocations(leaveId, ct)));
+        if (x is null) return Fail<EmployeeLeaveDto>("not_found", "Leave request was not found for this employee.");
+        var dto = Dto(x.Leave, x.Code, x.Name, await Allocations(leaveId, ct));
+        return await EnrichLeave(dto, ct);
+    }
+    private async Task<ServiceResult<EmployeeLeaveDto>> EnrichLeave(EmployeeLeaveDto dto, CancellationToken ct)
+    {
+        if (dto.Calculation is not null) { var evidence = await EvidenceAsync(dto.EmployeeId, dto.LeaveId, ct); if (!evidence.IsSuccess) return Fail<EmployeeLeaveDto>("conflict", evidence.Failure!.Message); dto.Evidence = evidence.Value; }
+        var cases = await SandwichesAsync(dto.EmployeeId, dto.LeaveId, ct);
+        if (!cases.IsSuccess) return Fail<EmployeeLeaveDto>("conflict", cases.Failure!.Message);
+        dto.SandwichCases = cases.Value!; dto.SandwichDebitMinutes = cases.Value!.Where(c => c.State == "Reserved" || c.State == "ReasonNotAccepted" || c.State == "Charged").Sum(c => c.AppliedDebitMinutes);
+        return ServiceResult<EmployeeLeaveDto>.Success(dto);
     }
     public async Task<ServiceResult<PagedResult<LeaveHistoryItemDto>>> HistoryAsync(LeaveHistoryQuery r, bool pendingOnly, CancellationToken ct)
     {
@@ -67,6 +84,13 @@ public sealed partial class EmployeeLeaveService
             return new LeaveHistoryItemDto(l.LeaveId, l.EmployeeId, x.EmployeeNumber, x.EmployeeName, l.LeaveTypeId, s?.LeaveTypeCode ?? x.Code, s?.LeaveTypeName ?? x.Name,
                 s?.IsPaid, l.StartDate, l.EndDate, l.RequestMode, l.RequestedStartTime, l.RequestedEndTime, l.ChargeableMinutes, l.Status, Utc(l.RequestedAt), l.NoticeCategory, s?.SupportingDocumentRequired, l.Reason);
         }).ToArray();
+        foreach (var item in items)
+        {
+            var detail = await GetLeaveAsync(item.EmployeeId, item.LeaveId, ct);
+            if (!detail.IsSuccess) return Fail<PagedResult<LeaveHistoryItemDto>>("conflict", detail.Failure!.Message);
+            item.Evidence = detail.Value!.Evidence; item.SandwichCases = detail.Value.SandwichCases;
+            item.SandwichDebitMinutes = detail.Value.SandwichDebitMinutes;
+        }
         return ServiceResult<PagedResult<LeaveHistoryItemDto>>.Success(new(items, r.Page, r.PageSize, count));
     }
     public async Task<ServiceResult<IReadOnlyList<LeaveBalanceDto>>> BalancesAsync(Guid employeeId, int year, CancellationToken ct)
@@ -83,6 +107,9 @@ public sealed partial class EmployeeLeaveService
         var amounts = await (from a in db.Set<EmployeeLeaveAllocation>().AsNoTracking() join l in db.EmployeeLeaves.AsNoTracking() on a.EmployeeLeaveId equals l.LeaveId
             where l.EmployeeId == employeeId && l.BalanceTracked == true && a.LeaveYear == year && (l.Status == "Pending" || l.Status == "Approved")
             select new { l.LeaveTypeId, l.Status, a.ChargeableMinutes }).ToListAsync(ct);
+        var sandwich = await (from a in db.Set<EmployeeLeaveSandwichAllocation>().AsNoTracking() join c in db.Set<EmployeeLeaveSandwichCase>().AsNoTracking() on a.CaseId equals c.Id
+            where c.EmployeeId == employeeId && c.BalanceTracked && a.LeaveYear == year && (c.State == LeaveSandwichState.Reserved || c.State == LeaveSandwichState.ReasonNotAccepted || c.State == LeaveSandwichState.Charged)
+            select new { c.LeaveTypeId, c.State, SandwichDebitMinutes = a.AppliedDebitMinutes ?? a.SandwichDebitMinutes }).ToListAsync(ct);
         var result = types.Select(t =>
         {
             var flags = policies.Where(p => p.LeaveTypeId == t.Id).Select(p => p.BalanceTracked).Distinct().ToArray();
@@ -91,9 +118,11 @@ public sealed partial class EmployeeLeaveService
             var e = entitlements.SingleOrDefault(x => x.LeaveTypeId == t.Id);
             var pending = amounts.Where(x => x.LeaveTypeId == t.Id && x.Status == "Pending").Sum(x => (long)x.ChargeableMinutes);
             var used = amounts.Where(x => x.LeaveTypeId == t.Id && x.Status == "Approved").Sum(x => (long)x.ChargeableMinutes);
+            var sp = sandwich.Where(c => c.LeaveTypeId == t.Id && (c.State == LeaveSandwichState.Reserved || c.State == LeaveSandwichState.ReasonNotAccepted)).Sum(c => (long)c.SandwichDebitMinutes);
+            var su = sandwich.Where(c => c.LeaveTypeId == t.Id && c.State == LeaveSandwichState.Charged).Sum(c => (long)c.SandwichDebitMinutes);
             var expose = tracked != false && e is not null;
             return new LeaveBalanceDto(t.Id, t.Code, t.Name, tracked, coverage, expose ? e!.EntitledMinutes : null, expose ? e!.Adjustment : null,
-                expose ? e!.EntitledMinutes + e.Adjustment : null, pending, used, expose ? e!.EntitledMinutes + e.Adjustment - pending - used : null);
+                expose ? e!.EntitledMinutes + e.Adjustment : null, pending, used, expose ? e!.EntitledMinutes + e.Adjustment - pending - used - sp - su : null, sp, su);
         }).ToArray();
         await tx.CommitAsync(ct);
         return ServiceResult<IReadOnlyList<LeaveBalanceDto>>.Success(result);

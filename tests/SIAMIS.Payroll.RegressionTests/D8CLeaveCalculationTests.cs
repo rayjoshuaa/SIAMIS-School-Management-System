@@ -103,6 +103,7 @@ internal static class D8CLeaveCalculationTests
         check(LeaveRequestCalculator.Calculate(context, Request(), midnightNow).IsSuccess, "D8C inclusive exact notice boundary");
         policy.ForeseeableNoticeHours = 8;
         check(!LeaveRequestCalculator.Calculate(context, Request(), midnightNow).IsSuccess, "D8C first working interval notice failure"); policy.ForeseeableNoticeHours = null;
+        policy.DocumentTypeId = Guid.NewGuid();
         policy.SupportingDocumentPolicy = "Conditional"; policy.CertificateAfterConsecutiveDays = 1; policy.CertificateOnMondayWorkingDate = true; policy.CertificateOnFridayWorkingDate = true; policy.SandwichParticipation = true;
         var cert = Good(Request(end: from.AddDays(1)), 840, "conditional certificate");
         check(cert.CertificateRequirementReasons.SequenceEqual(new[] { "ConsecutiveDaysThreshold", "MondayWorkingDate" }), "D8C certificate reasons and exclusive threshold");

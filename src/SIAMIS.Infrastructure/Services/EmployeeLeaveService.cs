@@ -9,7 +9,7 @@ using SIAMIS.Infrastructure.Data;
 
 namespace SIAMIS.Infrastructure.Services;
 
-public sealed partial class EmployeeLeaveService(SIAMISDbContext db) : IEmployeeLeaveService
+public sealed partial class EmployeeLeaveService(SIAMISDbContext db) : IEmployeeLeaveService, SIAMIS.Application.Leave.ILeaveEvidenceSandwichService
 {
     internal static readonly JsonSerializerOptions SnapshotJson = new(JsonSerializerDefaults.Web);
     private static ServiceResult<T> Fail<T>(string code, string message) => ServiceResult<T>.Fail(code, message);
@@ -27,7 +27,7 @@ public sealed partial class EmployeeLeaveService(SIAMISDbContext db) : IEmployee
             // Shared with D1, assignments and entitlement writers: employee first, sorted calendars, then leave type.
             if (await EmploymentIntegrity.LockAsync(db, employeeId, ct) is null) return Fail<EmployeeLeaveDto>("not_found", "Employee was not found.");
             var start = request.StartDate!.Value; var end = request.EndDate!.Value;
-            var assignments = await db.Set<EmployeeWorkCalendarAssignment>().AsNoTracking().Where(x => x.EmployeeId == employeeId && x.EffectiveFrom <= end && (!x.EffectiveTo.HasValue || x.EffectiveTo >= start)).ToListAsync(ct);
+            var assignments = await db.Set<EmployeeWorkCalendarAssignment>().AsNoTracking().Where(x => x.EmployeeId == employeeId).ToListAsync(ct);
             var calendars = new List<WorkCalendar>();
             foreach (var id in assignments.Select(x => x.WorkCalendarId).Distinct().OrderBy(x => x))
             {
@@ -74,7 +74,10 @@ public sealed partial class EmployeeLeaveService(SIAMISDbContext db) : IEmployee
             };
             db.Add(leave);
             foreach (var allocation in snapshot.Allocations) db.Add(new EmployeeLeaveAllocation { EmployeeLeaveId = leave.LeaveId, LeaveYear = allocation.LeaveYear, ChargeableMinutes = allocation.ChargeableMinutes });
-            await db.SaveChangesAsync(ct); await tx.CommitAsync(ct);
+            await db.SaveChangesAsync(ct);
+            var formed = await FormSandwiches(employeeId, leave.LeaveId, ct);
+            if (!formed.IsSuccess) return Fail<EmployeeLeaveDto>("conflict", formed.Failure!.Message);
+            await tx.CommitAsync(ct);
             return await GetLeaveAsync(employeeId, leave.LeaveId, ct);
         }
         catch (Exception e) when (Concurrent(e)) { return Fail<EmployeeLeaveDto>("conflict", "Concurrent leave configuration or reservation changed. Retry the request."); }
@@ -109,6 +112,13 @@ public sealed partial class EmployeeLeaveService(SIAMISDbContext db) : IEmployee
                     if (!balance.IsSuccess) return Fail<EmployeeLeaveDto>("conflict", balance.Failure!.Message);
                     if (balance.Value < 0) return Fail<EmployeeLeaveDto>("conflict", "The stored reservation is inconsistent with the entitlement.");
                 }
+            if (target == "Approved")
+            {
+                var evidence = await FreezeApprovalEvidence(employeeId, leaveId, ct);
+                if (!evidence.IsSuccess) return Fail<EmployeeLeaveDto>("conflict", evidence.Failure!.Message);
+            }
+            var reconciled = await ReconcileSandwiches(employeeId, leaveId, target, ct);
+            if (!reconciled.IsSuccess) return Fail<EmployeeLeaveDto>("conflict", reconciled.Failure!.Message);
             leave.Status = target;
             if (target == "Cancelled") { leave.CancelledAt = DateTime.UtcNow; leave.CancellationRemarks = Clean(remarks); }
             else { leave.ReviewedAt = DateTime.UtcNow; leave.ReviewRemarks = Clean(remarks); }
@@ -125,6 +135,6 @@ public sealed partial class EmployeeLeaveService(SIAMISDbContext db) : IEmployee
         var adjustment = await db.Set<EmployeeLeaveEntitlementAdjustment>().Where(x => x.EmployeeLeaveEntitlementId == entitlement.Id).SumAsync(x => (long)x.AdjustmentMinutes, ct);
         var reserved = await (from a in db.Set<EmployeeLeaveAllocation>() join l in db.EmployeeLeaves on a.EmployeeLeaveId equals l.LeaveId
             where l.EmployeeId == employee && l.LeaveTypeId == type && l.BalanceTracked == true && a.LeaveYear == year && (l.Status == "Pending" || l.Status == "Approved") select (long)a.ChargeableMinutes).SumAsync(ct);
-        return ServiceResult<long>.Success(entitlement.EntitledMinutes + adjustment - reserved);
+        return ServiceResult<long>.Success(entitlement.EntitledMinutes + adjustment - reserved - await SandwichCommitted(employee, type, year, ct));
     }
 }

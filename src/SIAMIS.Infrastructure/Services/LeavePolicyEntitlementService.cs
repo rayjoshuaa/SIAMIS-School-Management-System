@@ -11,7 +11,7 @@ public sealed partial class LeaveFoundationService
 {
     private static LeavePolicyDto PolicyDto(LeavePolicy x) => new(x.Id, x.LeaveTypeId, x.Version, x.EffectiveFrom, x.EffectiveTo, x.Status,
         x.PublishedAt.HasValue ? Utc(x.PublishedAt.Value) : null, x.BalanceTracked, x.ForeseeableNoticeHours, x.AllowsSuddenRequest, x.SupportingDocumentPolicy, x.DocumentTypeId,
-        x.CertificateAfterConsecutiveDays, x.CertificateOnMondayWorkingDate, x.CertificateOnFridayWorkingDate, x.SandwichParticipation);
+        x.CertificateAfterConsecutiveDays, x.CertificateOnMondayWorkingDate, x.CertificateOnFridayWorkingDate, x.SandwichParticipation, x.SandwichEquivalentDayMinutes);
     public async Task<IReadOnlyList<LeavePolicyDto>> PoliciesAsync(Guid? leaveTypeId, CancellationToken ct)
         => (await db.Set<LeavePolicy>().AsNoTracking().Where(x => !leaveTypeId.HasValue || x.LeaveTypeId == leaveTypeId)
             .OrderBy(x => x.LeaveTypeId).ThenBy(x => x.EffectiveFrom).ThenBy(x => x.Version).ToListAsync(ct)).Select(PolicyDto).ToArray();
@@ -27,6 +27,7 @@ public sealed partial class LeaveFoundationService
         if (string.IsNullOrWhiteSpace(r.Version) || r.Version.Length > 50 || !r.EffectiveFrom.HasValue || r.EffectiveTo < r.EffectiveFrom) return "Version and valid inclusive effective dates are required.";
         if (r.ForeseeableNoticeHours < 0 || r.CertificateAfterConsecutiveDays < 0) return "Notice hours and certificate threshold must be nonnegative.";
         if (r.SupportingDocumentPolicy is not ("None" or "AlwaysRequired" or "Conditional")) return "SupportingDocumentPolicy must be None, AlwaysRequired, or Conditional.";
+        if (r.SandwichParticipation ? r.SandwichEquivalentDayMinutes is null or <= 0 : r.SandwichEquivalentDayMinutes.HasValue) return "Participating policies require positive explicit SandwichEquivalentDayMinutes; nonparticipating policies cannot configure a debit.";
         var triggers = r.CertificateAfterConsecutiveDays.HasValue || r.CertificateOnMondayWorkingDate || r.CertificateOnFridayWorkingDate;
         if (r.SupportingDocumentPolicy == "None" && (r.DocumentTypeId.HasValue || triggers)) return "None cannot configure a document type or certificate triggers.";
         if (r.SupportingDocumentPolicy != "None" && (!r.DocumentTypeId.HasValue || !await db.DocumentTypes.AnyAsync(x => x.Id == r.DocumentTypeId && x.IsActive, ct))) return "Document policy requires an active DocumentTypeId.";
@@ -48,7 +49,7 @@ public sealed partial class LeaveFoundationService
         x.BalanceTracked = r.BalanceTracked; x.ForeseeableNoticeHours = r.ForeseeableNoticeHours; x.AllowsSuddenRequest = r.AllowsSuddenRequest;
         x.SupportingDocumentPolicy = r.SupportingDocumentPolicy; x.DocumentTypeId = r.DocumentTypeId;
         x.CertificateAfterConsecutiveDays = r.CertificateAfterConsecutiveDays; x.CertificateOnMondayWorkingDate = r.CertificateOnMondayWorkingDate;
-        x.CertificateOnFridayWorkingDate = r.CertificateOnFridayWorkingDate; x.SandwichParticipation = r.SandwichParticipation;
+        x.CertificateOnFridayWorkingDate = r.CertificateOnFridayWorkingDate; x.SandwichParticipation = r.SandwichParticipation; x.SandwichEquivalentDayMinutes = r.SandwichEquivalentDayMinutes;
         if (!id.HasValue) db.Add(x);
         try { await db.SaveChangesAsync(ct); await tx.CommitAsync(ct); }
         catch (DbUpdateException e) when (Unique(e)) { return Conflict<LeavePolicyDto>("Leave type/version already exists."); }
@@ -63,6 +64,7 @@ public sealed partial class LeaveFoundationService
         var x = await db.Set<LeavePolicy>().SingleOrDefaultAsync(x => x.Id == id, ct);
         if (x is null) return Missing<LeavePolicyDto>("Leave policy was not found.");
         if (x.Status != "Draft") return Conflict<LeavePolicyDto>("Published leave policies are immutable.");
+        if (x.SandwichParticipation && x.SandwichEquivalentDayMinutes is null or <= 0) return Conflict<LeavePolicyDto>("Participating policy requires explicit equivalent minutes before publication.");
         if (!await db.LeaveTypes.AnyAsync(y => y.Id == parent && y.IsActive, ct) || (x.DocumentTypeId.HasValue && !await db.DocumentTypes.AnyAsync(y => y.Id == x.DocumentTypeId && y.IsActive, ct)))
             return Invalid<LeavePolicyDto>("Publication requires active referenced master data.");
         if (await db.Set<LeavePolicy>().AnyAsync(y => y.LeaveTypeId == x.LeaveTypeId && y.Status == "Published" && (!y.EffectiveTo.HasValue || y.EffectiveTo >= x.EffectiveFrom) && (!x.EffectiveTo.HasValue || y.EffectiveFrom <= x.EffectiveTo), ct))
@@ -121,6 +123,9 @@ public sealed partial class LeaveFoundationService
         var committed = await (from a in db.Set<EmployeeLeaveAllocation>() join l in db.EmployeeLeaves on a.EmployeeLeaveId equals l.LeaveId
             where l.EmployeeId == employee && l.LeaveTypeId == x.LeaveTypeId && l.BalanceTracked == true && a.LeaveYear == x.LeaveYear
                 && (l.Status == "Pending" || l.Status == "Approved") select (long)a.ChargeableMinutes).SumAsync(ct);
+        committed += await (from a in db.Set<EmployeeLeaveSandwichAllocation>() join c in db.Set<EmployeeLeaveSandwichCase>() on a.CaseId equals c.Id
+            where c.EmployeeId == employee && c.LeaveTypeId == x.LeaveTypeId && c.BalanceTracked && a.LeaveYear == x.LeaveYear
+                && (c.State == LeaveSandwichState.Reserved || c.State == LeaveSandwichState.ReasonNotAccepted || c.State == LeaveSandwichState.Charged) select (long)(a.AppliedDebitMinutes ?? a.SandwichDebitMinutes)).SumAsync(ct);
         if (before.AdjustedEntitledMinutes + r.AdjustmentMinutes < committed)
             return Conflict<EntitlementDto>("Adjusted entitlement cannot fall below Approved usage plus Pending reservations.");
         db.Add(new EmployeeLeaveEntitlementAdjustment { EmployeeLeaveEntitlementId = id, AdjustmentMinutes = r.AdjustmentMinutes, Reason = r.Reason.Trim(), CreatedAt = DateTime.UtcNow });

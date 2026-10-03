@@ -58,6 +58,7 @@ internal static class LeaveFoundationConfiguration
             t.HasCheckConstraint("CK_LeavePolicy_Status", "([Status] = 'Draft' AND [PublishedAt] IS NULL) OR ([Status] = 'Published' AND [PublishedAt] IS NOT NULL)");
             t.HasCheckConstraint("CK_LeavePolicy_Notice", "[ForeseeableNoticeHours] IS NULL OR [ForeseeableNoticeHours] >= 0");
             t.HasCheckConstraint("CK_LeavePolicy_Document", "([SupportingDocumentPolicy] = 'None' AND [DocumentTypeId] IS NULL AND [CertificateAfterConsecutiveDays] IS NULL AND [CertificateOnMondayWorkingDate] = 0 AND [CertificateOnFridayWorkingDate] = 0) OR ([SupportingDocumentPolicy] IN ('AlwaysRequired','Conditional') AND [DocumentTypeId] IS NOT NULL)");
+            t.HasCheckConstraint("CK_LeavePolicy_SandwichMinutes", "([SandwichEquivalentDayMinutes] IS NULL OR [SandwichEquivalentDayMinutes] > 0) AND ([SandwichParticipation] = 1 OR [SandwichEquivalentDayMinutes] IS NULL)");
             t.HasCheckConstraint("CK_LeavePolicy_Threshold", "[CertificateAfterConsecutiveDays] IS NULL OR [CertificateAfterConsecutiveDays] >= 0");
         });
         p.HasOne<LeaveType>().WithMany().HasForeignKey(x => x.LeaveTypeId).OnDelete(DeleteBehavior.NoAction);

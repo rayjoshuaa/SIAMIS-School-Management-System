@@ -16,7 +16,7 @@ public sealed record CalendarAssignmentDto(Guid Id, Guid EmployeeId, Guid WorkCa
 public sealed record CalendarResolutionDto(Guid AssignmentId, Guid WorkCalendarId, DateOnly Date, string? OverrideType, IReadOnlyList<WorkIntervalDto> Intervals, int ScheduledMinutes);
 public sealed record LeavePolicyDto(Guid Id, Guid LeaveTypeId, string Version, DateOnly EffectiveFrom, DateOnly? EffectiveTo, string Status, DateTime? PublishedAt,
     bool BalanceTracked, int? ForeseeableNoticeHours, bool AllowsSuddenRequest, string SupportingDocumentPolicy, Guid? DocumentTypeId,
-    int? CertificateAfterConsecutiveDays, bool CertificateOnMondayWorkingDate, bool CertificateOnFridayWorkingDate, bool SandwichParticipation);
+    int? CertificateAfterConsecutiveDays, bool CertificateOnMondayWorkingDate, bool CertificateOnFridayWorkingDate, bool SandwichParticipation, int? SandwichEquivalentDayMinutes = null);
 public sealed record EntitlementDto(Guid Id, Guid EmployeeId, Guid LeaveTypeId, int LeaveYear, int EntitledMinutes, long AdjustmentMinutes, long AdjustedEntitledMinutes);
 public sealed record EntitlementAdjustmentDto(Guid Id, int AdjustmentMinutes, string Reason, DateTime CreatedAt);
 
@@ -74,6 +74,7 @@ public sealed class LeavePolicyRequest
     public bool CertificateOnMondayWorkingDate { get; set; }
     public bool CertificateOnFridayWorkingDate { get; set; }
     public bool SandwichParticipation { get; set; }
+    [Range(1, int.MaxValue)] public int? SandwichEquivalentDayMinutes { get; set; }
 }
 [JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
 public sealed class EntitlementRequest

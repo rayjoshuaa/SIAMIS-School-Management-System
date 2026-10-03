@@ -69,6 +69,8 @@ public static class LeaveSnapshotIntegrity
                 if (p.CertificateOnFridayWorkingDate && d.Date.DayOfWeek == DayOfWeek.Friday) reasons.Add("FridayWorkingDate");
             }
             if (s.LongestConsecutiveQualifyingDays != longest || s.SupportingDocumentRequired != (reasons.Count > 0) || !reasons.SetEquals(s.CertificateRequirementReasons)) return Invalid();
+            var required = LeaveEvidenceRules.RequiredTypes(s);
+            if (!required.IsSuccess || s.RequiredDocumentTypeIds is not null && !s.RequiredDocumentTypeIds.SequenceEqual(required.Value!)) return Invalid();
             return ServiceResult<LeaveCalculationSnapshot>.Success(s);
         }
         catch (Exception e) when (e is JsonException or ArgumentException or InvalidOperationException or NullReferenceException or OverflowException) { return Invalid(); }

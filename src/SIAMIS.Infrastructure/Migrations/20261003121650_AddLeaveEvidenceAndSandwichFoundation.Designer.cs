@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SIAMIS.Infrastructure.Data;
 
@@ -11,9 +12,11 @@ using SIAMIS.Infrastructure.Data;
 namespace SIAMIS.Infrastructure.Migrations
 {
     [DbContext(typeof(SIAMISDbContext))]
-    partial class SIAMISDbContextModelSnapshot : ModelSnapshot
+    [Migration("20261003121650_AddLeaveEvidenceAndSandwichFoundation")]
+    partial class AddLeaveEvidenceAndSandwichFoundation
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -971,9 +974,6 @@ namespace SIAMIS.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<int?>("AppliedDebitMinutes")
-                        .HasColumnType("int");
-
                     b.Property<Guid>("CaseId")
                         .HasColumnType("uniqueidentifier");
 
@@ -990,8 +990,6 @@ namespace SIAMIS.Infrastructure.Migrations
 
                     b.ToTable("EmployeeLeaveSandwichAllocations", null, t =>
                         {
-                            t.HasCheckConstraint("CK_LeaveSandwichAllocation_Applied", "[AppliedDebitMinutes] IS NULL OR ([AppliedDebitMinutes] >= 0 AND [AppliedDebitMinutes] <= [SandwichDebitMinutes])");
-
                             t.HasCheckConstraint("CK_LeaveSandwichAllocation_Debit", "[LeaveYear] BETWEEN 1 AND 9999 AND [SandwichDebitMinutes] > 0");
                         });
                 });
@@ -1067,7 +1065,7 @@ namespace SIAMIS.Infrastructure.Migrations
 
                             t.HasCheckConstraint("CK_LeaveSandwich_Span", "[GapStart] <= [GapEnd] AND [Revision] > 0");
 
-                            t.HasCheckConstraint("CK_LeaveSandwich_State", "[State] IN ('Reserved','Charged','Exempted','Released','ReviewPending','ReasonAccepted','ReasonNotAccepted')");
+                            t.HasCheckConstraint("CK_LeaveSandwich_State", "[State] IN ('Reserved','Charged','Exempted','Released')");
                         });
                 });
 
@@ -1135,7 +1133,7 @@ namespace SIAMIS.Infrastructure.Migrations
 
                     b.ToTable("EmployeeLeaveSandwichEvents", null, t =>
                         {
-                            t.HasCheckConstraint("CK_LeaveSandwichEvent_State", "[State] IN ('Reserved','Charged','Exempted','Released','ReviewPending','ReasonAccepted','ReasonNotAccepted')");
+                            t.HasCheckConstraint("CK_LeaveSandwichEvent_State", "[State] IN ('Reserved','Charged','Exempted','Released')");
                         });
                 });
 
