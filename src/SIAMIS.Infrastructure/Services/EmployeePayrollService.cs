@@ -8,7 +8,7 @@ using SIAMIS.Infrastructure.Data;
 
 namespace SIAMIS.Infrastructure.Services;
 
-public sealed class EmployeePayrollService(SIAMISDbContext db) : IEmployeePayrollService
+public sealed class EmployeePayrollService(SIAMISDbContext db, PayrollOperationsService operations) : IEmployeePayrollService
 {
     private const decimal MaximumAmount = 999_999_999_999_999.9999m;
     private static readonly string[] PayrollStatuses = ["Draft", "Calculated", "Approved", "Paid", "Cancelled"];
@@ -26,6 +26,9 @@ public sealed class EmployeePayrollService(SIAMISDbContext db) : IEmployeePayrol
         if (query.PayrollPeriodId.HasValue) source = source.Where(item => item.PayrollPeriodId == query.PayrollPeriodId.Value);
         if (query.EmployeeId.HasValue) source = source.Where(item => item.EmployeeId == query.EmployeeId.Value);
         if (status is not null) source = source.Where(item => item.Status == status);
+        var parentIds = await source.Select(x => x.PayrollPeriodId).Distinct().OrderBy(x => x).ToListAsync(ct);
+        await using var readTransaction = await db.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct);
+        foreach (var parentId in parentIds) await PayrollPeriodLock.GetAsync(db, parentId, ct);
         var total = await source.CountAsync(ct);
         var items = await source.OrderByDescending(item => item.PayrollPeriod.StartDate)
             .ThenBy(item => item.Employee.EmployeeNumber).ThenBy(item => item.EmployeePayrollId)
@@ -39,11 +42,23 @@ public sealed class EmployeePayrollService(SIAMISDbContext db) : IEmployeePayrol
                 item.PayrollPeriod.Code,
                 item.PayrollPeriod.Name))
             .ToListAsync(ct);
+        for (var i = 0; i < items.Count; i++)
+        {
+            var frozen = await operations.FrozenAsync(items[i].Payroll.EmployeePayrollId, ct);
+            if (frozen is not null) items[i] = items[i] with { EmployeeNumber = frozen.Employee.EmployeeCode, EmployeeName = frozen.Employee.DisplayName, PayrollPeriodCode = frozen.Period.Code, PayrollPeriodName = frozen.Period.Name };
+            else
+            {
+                var employee = await db.Employees.AsNoTracking().SingleAsync(x => x.EmployeeId == items[i].Payroll.EmployeeId, ct);
+                items[i] = items[i] with { EmployeeName = EmployeeName(employee) };
+            }
+        }
+        await readTransaction.CommitAsync(ct);
         return ServiceResult<PagedResult<EmployeePayrollListItemDto>>.Success(new(items, query.Page, query.PageSize, total));
     }
 
     public async Task<ServiceResult<EmployeePayrollDetailDto>> GetPayrollAsync(Guid id, CancellationToken ct)
     {
+        await using var readTransaction = await operations.BeginPayrollReadAsync(id, ct);
         var payroll = await db.EmployeePayrolls.AsNoTracking()
             .Include(item => item.Employee).Include(item => item.PayrollPeriod)
             .SingleOrDefaultAsync(item => item.EmployeePayrollId == id, ct);
@@ -60,11 +75,15 @@ public sealed class EmployeePayrollService(SIAMISDbContext db) : IEmployeePayrol
             .Where(x => x.EmployeePayrollId == id).OrderBy(x => x.StatutorySchemeId).ToListAsync(ct);
         var employee = payroll.Employee;
         var period = payroll.PayrollPeriod;
-        return ServiceResult<EmployeePayrollDetailDto>.Success(new(
+        var operational = await operations.OperationalAsync(payroll, ct);
+        var frozen = operational.Snapshot;
+        var response = new EmployeePayrollDetailDto(
             ToDto(payroll),
-            new(employee.EmployeeId, employee.EmployeeNumber, EmployeeName(employee), employee.IsActive),
-            new(period.PayrollPeriodId, period.Code, period.Name, period.StartDate, period.EndDate, period.PayDate, period.Status),
-            lines, statutoryResults.Select(Section33PayrollService.ToDto).ToArray()));
+            new(employee.EmployeeId, frozen?.Employee.EmployeeCode ?? employee.EmployeeNumber, frozen?.Employee.DisplayName ?? EmployeeName(employee), employee.IsActive),
+            new(period.PayrollPeriodId, frozen?.Period.Code ?? period.Code, frozen?.Period.Name ?? period.Name, period.StartDate, period.EndDate, period.PayDate, period.Status),
+            lines, statutoryResults.Select(Section33PayrollService.ToDto).ToArray(), operational);
+        await readTransaction.CommitAsync(ct);
+        return ServiceResult<EmployeePayrollDetailDto>.Success(response);
     }
 
     public async Task<ServiceResult<EmployeePayrollDetailDto>> CreatePayrollAsync(EmployeePayrollCreateRequest request, CancellationToken ct)
@@ -360,7 +379,7 @@ public sealed class EmployeePayrollService(SIAMISDbContext db) : IEmployeePayrol
         payroll.TotalDeductions = totalDeductions;
         payroll.NetPay = grossPay - totalDeductions;
         await db.SaveChangesAsync(ct);
-        return null;
+        return await operations.RefreshAsync(payroll, ct);
     }
 
     // Discover the parent before starting the transaction; no child lock is held while acquiring parents.
@@ -398,6 +417,8 @@ public sealed class EmployeePayrollService(SIAMISDbContext db) : IEmployeePayrol
 
     private async Task<string?> ValidateStoredSnapshotAsync(EmployeePayroll payroll, CancellationToken ct)
     {
+        var operationalFindings = await operations.InspectAsync(payroll, true, ct);
+        if (operationalFindings.Count != 0) return operationalFindings[0].Message;
         var pitResult = await db.EmployeePayrollPitResults.AsNoTracking().SingleOrDefaultAsync(x => x.EmployeePayrollId == payroll.EmployeePayrollId, ct);
         var pitLines = await db.EmployeePayrollLines.AsNoTracking().Where(x => x.EmployeePayrollId == payroll.EmployeePayrollId
             && (x.PayrollComponentId == PitPayrollService.ComponentId || x.ComponentCode == "DEDUCT-002")).ToListAsync(ct);
@@ -468,7 +489,8 @@ public sealed class EmployeePayrollService(SIAMISDbContext db) : IEmployeePayrol
     private static bool HasScaleFour(decimal value) => decimal.Round(value, 4) == value;
     private static bool IsActivePeriod(string status) => ActivePeriodStatuses.Contains(status, StringComparer.Ordinal);
     private static string? NormalizeStatus(string? status) => PayrollStatuses.FirstOrDefault(value => value.Equals(status?.Trim(), StringComparison.OrdinalIgnoreCase));
-    private static string EmployeeName(Domain.Entities.Employees.Employee employee) => $"{employee.PreferredName ?? employee.FirstName} {employee.LastName}";
+    private static string EmployeeName(Domain.Entities.Employees.Employee employee)
+        => PayrollDisplayName.Format(employee.PreferredName, employee.FirstName, employee.MiddleName, employee.LastName);
     private static string? Clean(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 
     private static EmployeePayrollDto ToDto(EmployeePayroll item) => new(item.EmployeePayrollId, item.PayrollPeriodId, item.EmployeeId,

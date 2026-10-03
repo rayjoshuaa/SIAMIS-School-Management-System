@@ -73,7 +73,7 @@ def parity(p,force=True):
 
 try:
     expected=json.loads(PRE.read_text());expected.update({t:[] for t in ['EmployeePitPaymentSchedules','EmployeePitPaymentScheduleEntries','EmployeePitPaymentScheduleSelections','EmployeePayrollPitResults']})
-    check(baseline==expected and len(baseline)==55,'Migration added four empty tables; original rows/timestamps untouched')
+    check(baseline==expected and len(baseline)==57,'Migration added four empty tables; original rows/timestamps untouched')
     check(rows("SELECT MigrationId FROM __EFMigrationsHistory WHERE MigrationId LIKE '%AddPitPayrollIntegration'")!=[],'D6E migration recorded')
     fks=rows("SELECT name,delete_referential_action_desc FROM sys.foreign_keys WHERE OBJECT_NAME(parent_object_id) IN ('EmployeePayrollPitResults','EmployeePitPaymentSchedules','EmployeePitPaymentScheduleEntries','EmployeePitPaymentScheduleSelections')")
     check(len(fks)==12 and all(x['delete_referential_action_desc']=='NO_ACTION' for x in fks),'All twelve new FKs NoAction')
@@ -195,7 +195,7 @@ except Exception as exc:error=str(exc);traceback.print_exc()
 finally:
     try:
         for c in saved_components:restore_component(c)
-        cleanup();final=snapshot();check(final==baseline,'Exact contents and timestamps of all 55 Development tables restored')
+        cleanup();final=snapshot();check(final==baseline,'Exact contents and timestamps of all 57 Development tables restored')
         check(rows('SELECT IsActive FROM Employees WHERE EmployeeId='+ident(EMP))[0]['IsActive']==False,'TEST-EMP-001 remains unchanged/inactive')
     except Exception as exc:error=(error or '')+' CLEANUP: '+str(exc);traceback.print_exc()
     OUT.write_text(json.dumps({'checks':results,'error':error,'finalCounts':{t:len(v) for t,v in locals().get('final',{}).items()}},indent=2),encoding='utf-8')

@@ -12,7 +12,7 @@ namespace SIAMIS.Infrastructure.Services;
 /// <summary>Builds immutable payroll snapshots, committing each employee independently.</summary>
 public sealed class PayrollGenerationService(SIAMISDbContext db, IPayrollCalculationService calculator,
     IPayrollRuleEvaluator ruleEvaluator, IPayrollEmploymentContextService employmentContexts,
-    IBasicSalaryEntitlementService salaryEntitlements, ISection33PayrollService section33, IPitPayrollService pit) : IPayrollGenerationService
+    IBasicSalaryEntitlementService salaryEntitlements, ISection33PayrollService section33, IPitPayrollService pit, PayrollOperationsService operations) : IPayrollGenerationService
 {
     public async Task<ServiceResult<PayrollGenerationSummary>> GenerateAsync(
         Guid payrollPeriodId, PayrollGenerationRequest request, CancellationToken cancellationToken)
@@ -145,6 +145,7 @@ public sealed class PayrollGenerationService(SIAMISDbContext db, IPayrollCalcula
                 db.EmployeePayrollPitResults.RemoveRange(await db.EmployeePayrollPitResults
                     .Where(x => x.EmployeePayrollId == existing.EmployeePayrollId).ToListAsync(cancellationToken));
                 db.EmployeePayrollLines.RemoveRange(existing.Lines);
+                db.EmployeePayslips.RemoveRange(await db.EmployeePayslips.Where(x => x.EmployeePayrollId == existing.EmployeePayrollId).ToListAsync(cancellationToken));
                 db.EmployeePayrolls.Remove(existing);
                 await db.SaveChangesAsync(cancellationToken);
             }
@@ -204,6 +205,7 @@ public sealed class PayrollGenerationService(SIAMISDbContext db, IPayrollCalcula
                 db.EmployeePayrollStatutoryResults.Add(statutoryResult);
             }
             await db.SaveChangesAsync(cancellationToken);
+            await operations.CaptureAsync(payroll, employee, period, employment.Value, entitlement.Snapshot.Currency, cancellationToken);
             await transaction.CommitAsync(cancellationToken);
             return new PayrollGenerationEmployeeResult(employee.EmployeeId, employee.EmployeeNumber, "Generated",
                 payroll.EmployeePayrollId, payroll.GrossPay, payroll.TotalDeductions, payroll.NetPay,
@@ -235,7 +237,7 @@ public sealed class PayrollGenerationService(SIAMISDbContext db, IPayrollCalcula
         => new(e.EmployeeId, e.EmployeeNumber, "Failed", p?.EmployeePayrollId, p?.GrossPay, p?.TotalDeductions, p?.NetPay, m, p?.TaxableEarnings);
     private static string WithExistingPayroll(string m, EmployeePayroll? p) => p is null ? m : $"{m} The previous payroll snapshot was left unchanged.";
     private static PayrollCalculationEmployee ToCalculationEmployee(Domain.Entities.Employees.Employee employee)
-        => new(employee.EmployeeId, employee.EmployeeNumber, string.Join(' ', new[] { string.IsNullOrWhiteSpace(employee.PreferredName) ? employee.FirstName : employee.PreferredName, employee.MiddleName, employee.LastName }.Where(item => !string.IsNullOrWhiteSpace(item))));
+        => new(employee.EmployeeId, employee.EmployeeNumber, PayrollDisplayName.Format(employee.PreferredName, employee.FirstName, employee.MiddleName, employee.LastName));
     private static ServiceResult<PayrollGenerationSummary> Invalid(string m) => ServiceResult<PayrollGenerationSummary>.Fail("validation", m);
     private static ServiceResult<PayrollGenerationSummary> NotFound(string m) => ServiceResult<PayrollGenerationSummary>.Fail("not_found", m);
     private static ServiceResult<PayrollGenerationSummary> Conflict(string m) => ServiceResult<PayrollGenerationSummary>.Fail("conflict", m);

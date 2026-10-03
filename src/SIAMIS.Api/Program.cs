@@ -56,6 +56,9 @@ builder.Services.AddScoped<IPayrollCalculationService, PayrollCalculationService
 builder.Services.AddScoped<IBasicSalaryEntitlementService, BasicSalaryEntitlementService>();
 builder.Services.AddScoped<IPayrollPreviewService, PayrollPreviewService>();
 builder.Services.AddScoped<IEmployeePayrollService, EmployeePayrollService>();
+builder.Services.AddScoped<IOrganizationProfileService, OrganizationProfileService>();
+builder.Services.AddScoped<PayrollOperationsService>();
+builder.Services.AddScoped<IPayrollOperationsService>(sp => sp.GetRequiredService<PayrollOperationsService>());
 builder.Services.AddScoped<IEmployeePayrollComponentAssignmentService, EmployeePayrollComponentAssignmentService>();
 
 var app = builder.Build();

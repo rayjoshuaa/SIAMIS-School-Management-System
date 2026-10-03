@@ -154,8 +154,7 @@ public sealed class PayrollPreviewService(SIAMISDbContext db, IPayrollCalculatio
         => new(employee.EmployeeId, employee.EmployeeNumber, name, status, null, null, null, null, null, message, []);
 
     private static string FormatName(EmployeeCandidate employee)
-        => string.Join(' ', new[] { string.IsNullOrWhiteSpace(employee.PreferredName) ? employee.FirstName : employee.PreferredName, employee.MiddleName, employee.LastName }
-            .Where(item => !string.IsNullOrWhiteSpace(item)));
+        => PayrollDisplayName.Format(employee.PreferredName, employee.FirstName, employee.MiddleName, employee.LastName);
 
     private static ServiceResult<PayrollPreviewSummary> Fail(string code, string message) => ServiceResult<PayrollPreviewSummary>.Fail(code, message);
     private sealed record EmployeeCandidate(Guid EmployeeId, string EmployeeNumber, string FirstName, string? MiddleName, string LastName, string? PreferredName);

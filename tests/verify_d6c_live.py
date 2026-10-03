@@ -1,5 +1,5 @@
 """D6C safe-foundation live checks. Synthetic values are not legal policy values.
-Every fixture is tracked; all 55 application tables are compared after cleanup.
+Every fixture is tracked; all 57 application tables are compared after cleanup.
 """
 import pathlib
 exec(pathlib.Path(__file__).with_name('verify_d5a_live.py').read_text().split('baseline=snapshot()')[0])
@@ -18,7 +18,7 @@ def opening(d,state='Unknown',scope=None,complete=False,date='2025-12-31',value=
     if state!='Unknown':b.update(priorTaxableEmploymentIncome=value,priorTaxWithheld=0,priorSocialSecurityContribution=0,remarks=PREFIX+'Current employer complete history')
     return api('PUT',path(d)+'/opening-balance',b,status)
 try:
-    check(len(baseline)==55 and len(baseline['Employees'])==1 and len(baseline['PayrollComponents'])==17,'baseline checked')
+    check(len(baseline)==57 and len(baseline['Employees'])==1 and len(baseline['PayrollComponents'])==17,'baseline checked')
     checks=rows("SELECT name,is_disabled,is_not_trusted FROM sys.check_constraints WHERE name IN ('CK_PitPolicyConfigurations_ClaimValues','CK_EmployeeTaxOpeningBalances_Scope','CK_EmployeeTaxDeclarations_LivingChildren','CK_EmployeeTaxClaims_ChildMetadata')")
     check(len(checks)==4 and all(not x['is_disabled'] and not x['is_not_trusted'] for x in checks),'four new checks enabled/trusted')
     scheme=api('POST','statutory-schemes',{'code':'TH-PIT','name':PREFIX+'Synthetic','jurisdiction':'TH','schemeType':'PersonalIncomeTax'},201)['statutorySchemeId'];fixtures['schemes'].append(scheme)
@@ -91,7 +91,7 @@ finally:
         for p in policies:
             sql('DELETE PitTaxBrackets WHERE StatutoryPolicyVersionId='+ident(p)+'; DELETE PitPolicyConfigurations WHERE StatutoryPolicyVersionId='+ident(p))
         cleanup()
-        final=snapshot();check(final==baseline,'exact contents/timestamps of all 55 application tables restored')
+        final=snapshot();check(final==baseline,'exact contents/timestamps of all 57 application tables restored')
     except Exception as exc:error=(error or '')+' CLEANUP: '+str(exc);traceback.print_exc()
     OUT.write_text(json.dumps({'checks':results,'error':error,'finalCounts':{t:len(v) for t,v in locals().get('final',{}).items()}},indent=2),encoding='utf-8')
 if error:raise SystemExit(error)

@@ -19,7 +19,7 @@ try:
     expected={t:sorted(json.dumps({**json.loads(r),**({'PitPaymentTreatment':'Unknown'} if t=='PayrollComponents' else {})},sort_keys=True) for r in v) for t,v in before.items()}
     expected.update({t:[] for t in ['EmployeePitPaymentSchedules','EmployeePitPaymentScheduleEntries','EmployeePitPaymentScheduleSelections','EmployeePayrollPitResults']})
     check(baseline==expected,'migration changes only approved Unknown component column; all other rows/timestamps unchanged')
-    check(len(baseline)==55 and len(baseline['Employees'])==1 and len(baseline['PayrollComponents'])==17,'exact expected baseline')
+    check(len(baseline)==57 and len(baseline['Employees'])==1 and len(baseline['PayrollComponents'])==17,'exact expected baseline')
     pit_opt_out()
     constraints=rows("SELECT name,is_disabled,is_not_trusted FROM sys.check_constraints WHERE name IN ('CK_PayrollComponents_PitPaymentTreatment','CK_EmployeePayrollLines_PitPaymentTreatmentSnapshot')")
     check(len(constraints)==2 and all(not x['is_disabled'] and not x['is_not_trusted'] for x in constraints),'two trusted enabled SQL checks')

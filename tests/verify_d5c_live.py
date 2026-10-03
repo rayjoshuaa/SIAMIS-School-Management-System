@@ -58,7 +58,7 @@ def parity(p, force=True):
 try:
     # This suite deliberately moves a fixture PayDate into 2027 while SSO still resolves on EndDate.
     pit_opt_out('2027-12-31')
-    check(len(baseline)==55 and len(baseline['Employees'])==1 and len(baseline['PayrollComponents'])==17,'55-table clean baseline')
+    check(len(baseline)==57 and len(baseline['Employees'])==1 and len(baseline['PayrollComponents'])==17,'57-table clean baseline')
     migration=rows("SELECT MigrationId FROM __EFMigrationsHistory WHERE MigrationId LIKE '%_AddSection33PayrollResults'")
     check(len(migration)==1,'D5C migration applied once')
     schema=rows("SELECT OBJECT_NAME(object_id) AS [Table],name,TYPE_NAME(user_type_id) AS TypeName,precision,scale,is_nullable FROM sys.columns WHERE OBJECT_NAME(object_id) IN ('EmployeePayrollStatutoryResults','EmployeePayrollSocialSecurityResults')")
@@ -247,7 +247,7 @@ finally:
         for row in original_employment: restore_row('EmploymentRecords','EmploymentRecordId',row)
         for row in original_components: restore_row('PayrollComponents','Id',row)
         final=snapshot()
-        check(final==baseline,'Exact contents of all 55 application tables restored, including timestamps')
+        check(final==baseline,'Exact contents of all 57 application tables restored, including timestamps')
         check(rows('SELECT IsActive FROM Employees WHERE EmployeeId='+ident(EMP))[0]['IsActive']==False,'TEST-EMP-001 inactive')
     except Exception as exc:
         error=(error or '')+' CLEANUP: '+str(exc);traceback.print_exc()

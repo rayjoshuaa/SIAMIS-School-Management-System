@@ -34,6 +34,7 @@ def cleanup():
     clauses=[]
     if fixtures['periods']:
         ids=','.join(map(ident,fixtures['periods']))
+        clauses.append(f'DELETE FROM EmployeePayslips WHERE EmployeePayrollId IN (SELECT EmployeePayrollId FROM EmployeePayrolls WHERE PayrollPeriodId IN ({ids}))')
         clauses.append(f'DELETE FROM EmployeePayrollPitResults WHERE PayrollPeriodId IN ({ids})')
         clauses += [f'DELETE FROM EmployeePayrollSocialSecurityResults WHERE EmployeePayrollStatutoryResultId IN (SELECT EmployeePayrollStatutoryResultId FROM EmployeePayrollStatutoryResults WHERE EmployeePayrollId IN (SELECT EmployeePayrollId FROM EmployeePayrolls WHERE PayrollPeriodId IN ({ids})))', f'DELETE FROM EmployeePayrollStatutoryResults WHERE EmployeePayrollId IN (SELECT EmployeePayrollId FROM EmployeePayrolls WHERE PayrollPeriodId IN ({ids}))',f'DELETE FROM EmployeePayrollLines WHERE EmployeePayrollId IN (SELECT EmployeePayrollId FROM EmployeePayrolls WHERE PayrollPeriodId IN ({ids}))',f'DELETE FROM EmployeePayrolls WHERE PayrollPeriodId IN ({ids})',f'DELETE FROM PayrollPeriods WHERE PayrollPeriodId IN ({ids})']
     for table,key,group in [('PayrollRuleTargets','PayrollRuleId','rules'),('PayrollRules','PayrollRuleId','rules'),('EmployeePayrollComponentAssignments','EmployeePayrollComponentAssignmentId','assignments'),('EmployeeCompensations','EmployeeCompensationId','compensations'),('EmployeeStatutoryEnrollments','EmployeeStatutoryEnrollmentId','enrollments')]:

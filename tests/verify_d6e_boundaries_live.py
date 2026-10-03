@@ -17,7 +17,7 @@ def revision():
 def simultaneous(actions):
     with ThreadPoolExecutor(len(actions)) as pool:return list(pool.map(lambda a:a(),actions))
 try:
-    check(len(baseline)==55 and not baseline['EmployeePayrollPitResults'],'Clean D6E boundary baseline')
+    check(len(baseline)==57 and not baseline['EmployeePayrollPitResults'],'Clean D6E boundary baseline')
     sso=scheme('TH-SSO-33','SocialSecurity');enroll(sso,'NotApplicable')
     thpit=scheme('TH-PIT','PersonalIncomeTax');en=enroll(thpit)
     paytype=rows("SELECT Id FROM PayTypes WHERE Name='Monthly'")[0]['Id']
@@ -195,7 +195,7 @@ finally:
     try:
         restore_row('Employees','EmployeeId',saved_employee)
         for c in saved_components:restore_component(c)
-        cleanup();final=snapshot();check(final==baseline,'Exact 55-table boundary baseline restored')
+        cleanup();final=snapshot();check(final==baseline,'Exact 57-table boundary baseline restored')
     except Exception as exc:error=(error or '')+' CLEANUP: '+str(exc);traceback.print_exc()
     OUT.write_text(json.dumps({'checks':results,'error':error,'finalCounts':{t:len(v) for t,v in locals().get('final',{}).items()}},indent=2),encoding='utf-8')
 if error:raise SystemExit(error)
