@@ -9,6 +9,10 @@ namespace SIAMIS.Infrastructure.Data;
 
 public sealed class SIAMISDbContext(DbContextOptions<SIAMISDbContext> options) : DbContext(options)
 {
+    public DbSet<EmployeePitPaymentSchedule> EmployeePitPaymentSchedules => Set<EmployeePitPaymentSchedule>();
+    public DbSet<EmployeePayrollPitResult> EmployeePayrollPitResults => Set<EmployeePayrollPitResult>();
+    public DbSet<EmployeePitPaymentScheduleEntry> EmployeePitPaymentScheduleEntries => Set<EmployeePitPaymentScheduleEntry>();
+    public DbSet<EmployeePitPaymentScheduleSelection> EmployeePitPaymentScheduleSelections => Set<EmployeePitPaymentScheduleSelection>();
     public DbSet<Department> Departments => Set<Department>();
     public DbSet<Designation> Designations => Set<Designation>();
     public DbSet<EmploymentType> EmploymentTypes => Set<EmploymentType>();

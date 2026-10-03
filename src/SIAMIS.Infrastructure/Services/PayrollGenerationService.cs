@@ -12,7 +12,7 @@ namespace SIAMIS.Infrastructure.Services;
 /// <summary>Builds immutable payroll snapshots, committing each employee independently.</summary>
 public sealed class PayrollGenerationService(SIAMISDbContext db, IPayrollCalculationService calculator,
     IPayrollRuleEvaluator ruleEvaluator, IPayrollEmploymentContextService employmentContexts,
-    IBasicSalaryEntitlementService salaryEntitlements, ISection33PayrollService section33) : IPayrollGenerationService
+    IBasicSalaryEntitlementService salaryEntitlements, ISection33PayrollService section33, IPitPayrollService pit) : IPayrollGenerationService
 {
     public async Task<ServiceResult<PayrollGenerationSummary>> GenerateAsync(
         Guid payrollPeriodId, PayrollGenerationRequest request, CancellationToken cancellationToken)
@@ -130,6 +130,11 @@ public sealed class PayrollGenerationService(SIAMISDbContext db, IPayrollCalcula
             var statutory = await section33.CalculateAsync(employee.EmployeeId, period, entitlement.Snapshot.Currency, calculated, cancellationToken);
             if (!statutory.IsSuccess) return Failed(candidate, WithExistingPayroll(statutory.Failure!.Message, existing), existing);
             calculated = statutory.Value!.Calculation;
+            var intendedPayrollId = Guid.NewGuid();
+            var pitOutcome = await pit.CalculateAsync(employee.EmployeeId, period, intendedPayrollId, existing?.EmployeePayrollId,
+                entitlement.Snapshot, calculated, statutory.Value.Result, cancellationToken);
+            if (!pitOutcome.IsSuccess) return Failed(candidate, WithExistingPayroll(pitOutcome.Failure!.Message, existing), existing);
+            calculated = pitOutcome.Value!.Calculation;
 
             if (existing is not null)
             {
@@ -137,6 +142,8 @@ public sealed class PayrollGenerationService(SIAMISDbContext db, IPayrollCalcula
                     .Where(x => x.EmployeePayrollId == existing.EmployeePayrollId).ToListAsync(cancellationToken);
                 db.EmployeePayrollSocialSecurityResults.RemoveRange(previousResults.Select(x => x.SocialSecurity));
                 db.EmployeePayrollStatutoryResults.RemoveRange(previousResults);
+                db.EmployeePayrollPitResults.RemoveRange(await db.EmployeePayrollPitResults
+                    .Where(x => x.EmployeePayrollId == existing.EmployeePayrollId).ToListAsync(cancellationToken));
                 db.EmployeePayrollLines.RemoveRange(existing.Lines);
                 db.EmployeePayrolls.Remove(existing);
                 await db.SaveChangesAsync(cancellationToken);
@@ -144,6 +151,7 @@ public sealed class PayrollGenerationService(SIAMISDbContext db, IPayrollCalcula
 
             var payroll = new EmployeePayroll
             {
+                EmployeePayrollId = intendedPayrollId,
                 PayrollPeriodId = period.PayrollPeriodId,
                 EmployeeId = employee.EmployeeId,
                 BasicSalary = calculated.BasicSalary,
@@ -188,6 +196,7 @@ public sealed class PayrollGenerationService(SIAMISDbContext db, IPayrollCalcula
                 }).ToList()
             };
             db.EmployeePayrolls.Add(payroll);
+            if (pitOutcome.Value.Result is { } pitResult) db.EmployeePayrollPitResults.Add(pitResult);
             if (statutory.Value.Result is { } statutoryResult)
             {
                 statutoryResult.EmployeePayrollId = payroll.EmployeePayrollId;

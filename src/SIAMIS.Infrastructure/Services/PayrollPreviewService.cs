@@ -9,7 +9,7 @@ namespace SIAMIS.Infrastructure.Services;
 /// <summary>Calculates payroll previews from current inputs without changing persisted data.</summary>
 public sealed class PayrollPreviewService(SIAMISDbContext db, IPayrollCalculationService calculator,
     IPayrollRuleEvaluator ruleEvaluator, IPayrollEmploymentContextService employmentContexts,
-    IBasicSalaryEntitlementService salaryEntitlements, ISection33PayrollService section33) : IPayrollPreviewService
+    IBasicSalaryEntitlementService salaryEntitlements, ISection33PayrollService section33, IPitPayrollService pit) : IPayrollPreviewService
 {
     public async Task<ServiceResult<PayrollPreviewSummary>> PreviewAsync(
         Guid payrollPeriodId, PayrollPreviewRequest request, CancellationToken cancellationToken)
@@ -119,6 +119,17 @@ public sealed class PayrollPreviewService(SIAMISDbContext db, IPayrollCalculatio
                 continue;
             }
             calculation = statutory.Value!.Calculation;
+            var existingId = await db.EmployeePayrolls.AsNoTracking().Where(x => x.EmployeeId == employee.EmployeeId && x.PayrollPeriodId == payrollPeriodId)
+                .Select(x => (Guid?)x.EmployeePayrollId).SingleOrDefaultAsync(cancellationToken);
+            var pitOutcome = await pit.CalculateAsync(employee.EmployeeId, period, existingId ?? Guid.NewGuid(), existingId,
+                entitlement.Snapshot, calculation, statutory.Value.Result, cancellationToken);
+            if (!pitOutcome.IsSuccess)
+            {
+                results.Add(Result(employee, name, "Failed", pitOutcome.Failure!.Message) with
+                    { Pit = new("RequiresReview", [pitOutcome.Failure.Message]) });
+                continue;
+            }
+            calculation = pitOutcome.Value!.Calculation;
             results.Add(new PayrollPreviewEmployeeResult(employee.EmployeeId, employee.EmployeeNumber, name, "Calculated",
                 calculation.BasicSalary, calculation.GrossPay, calculation.TotalDeductions, calculation.NetPay, calculation.TaxableEarnings,
                 calculation.SkippedRuleExplanations is { Count: > 0 }
@@ -128,9 +139,10 @@ public sealed class PayrollPreviewService(SIAMISDbContext db, IPayrollCalculatio
                     line.ComponentName, line.ComponentType, line.CalculationMethod, line.PercentageBase,
                     line.Quantity, line.Rate, line.Amount, line.Remarks, line.PayrollRuleId, line.RuleCode,
                     line.RuleName, line.ApplicationMode, line.BaseType, line.BaseAmount,
-                    line.MinimumBase, line.MaximumBase, line.SourceType, line.SourceId,
+                    line.MinimumBase, line.MaximumBase, line.SourceType, line.PayrollComponentId == PitPayrollService.ComponentId ? null : line.SourceId,
                     line.IsTaxableSnapshot, line.IsStatutorySnapshot, line.ContributionSideSnapshot, line.SourceType == "BasicSalary" ? entitlement.Snapshot : null, line.SsoWageTreatmentSnapshot, line.PitIncomeTreatmentSnapshot, line.PitPaymentTreatmentSnapshot)).ToArray(),
-                statutory.Value.Result is { } statutoryResult ? Section33PayrollService.ToDto(statutoryResult) : null));
+                statutory.Value.Result is { } statutoryResult ? Section33PayrollService.ToDto(statutoryResult) : null,
+                pitOutcome.Value.Preview));
         }
 
         return ServiceResult<PayrollPreviewSummary>.Success(new PayrollPreviewSummary(payrollPeriodId, results.Count,

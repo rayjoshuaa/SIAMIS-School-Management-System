@@ -10,14 +10,17 @@ baseline=snapshot(); error=None; PREFIX='D6D-VERIFY-'
 if '--verify-final' in sys.argv:
     before=json.loads(PRE.read_text(encoding='utf-8'))
     expected={t:sorted(json.dumps({**json.loads(r),**({'PitPaymentTreatment':'Unknown'} if t=='PayrollComponents' else {})},sort_keys=True) for r in v) for t,v in before.items()}
+    expected.update({t:[] for t in ['EmployeePitPaymentSchedules','EmployeePitPaymentScheduleEntries','EmployeePitPaymentScheduleSelections','EmployeePayrollPitResults']})
     check(baseline==expected,'final exact baseline including original timestamps, apart from approved Unknown column')
     check(rows('SELECT IsActive FROM Employees WHERE EmployeeId='+ident(EMP))[0]['IsActive']==False,'TEST-EMP-001 remains inactive')
     print(json.dumps({'finalCounts':{t:len(v) for t,v in baseline.items()},'migration':rows('SELECT TOP (1) MigrationId FROM __EFMigrationsHistory ORDER BY MigrationId DESC')},indent=2));raise SystemExit(0)
 try:
     before=json.loads(PRE.read_text(encoding='utf-8'))
     expected={t:sorted(json.dumps({**json.loads(r),**({'PitPaymentTreatment':'Unknown'} if t=='PayrollComponents' else {})},sort_keys=True) for r in v) for t,v in before.items()}
+    expected.update({t:[] for t in ['EmployeePitPaymentSchedules','EmployeePitPaymentScheduleEntries','EmployeePitPaymentScheduleSelections','EmployeePayrollPitResults']})
     check(baseline==expected,'migration changes only approved Unknown component column; all other rows/timestamps unchanged')
-    check(len(baseline)==51 and len(baseline['Employees'])==1 and len(baseline['PayrollComponents'])==17,'exact expected baseline')
+    check(len(baseline)==55 and len(baseline['Employees'])==1 and len(baseline['PayrollComponents'])==17,'exact expected baseline')
+    pit_opt_out()
     constraints=rows("SELECT name,is_disabled,is_not_trusted FROM sys.check_constraints WHERE name IN ('CK_PayrollComponents_PitPaymentTreatment','CK_EmployeePayrollLines_PitPaymentTreatmentSnapshot')")
     check(len(constraints)==2 and all(not x['is_disabled'] and not x['is_not_trusted'] for x in constraints),'two trusted enabled SQL checks')
     for treatment in [None,'Unknown','Regular','Special']:
@@ -65,12 +68,12 @@ try:
     check(edited['pitPaymentTreatmentSnapshot']=='Special','manual amount update preserves snapshot')
     current_before=snapshot()
     advisory=api('GET',f'employees/{EMP}/payroll-periods/{p}/pit-preview')
-    check(advisory['status']=='RequiresReview' and any('schedule' in z.lower() for z in advisory['reasons']),'advisory cannot invent annual schedule')
+    check(advisory['status']=='NotApplicable','explicit NotApplicable PIT enrollment skips advisory calculator')
     check(snapshot()==current_before,'advisory performs zero writes across all application tables')
     swagger=json.loads(urllib.request.urlopen(BASE+'/swagger/v1/swagger.json').read())
     check('/api/employees/{employeeId}/payroll-periods/{payrollPeriodId}/pit-preview' in swagger['paths'],'Swagger documents PIT advisory endpoint')
     check('pitPaymentTreatment' in swagger['components']['schemas']['PayrollComponentDto']['properties'],'Swagger exposes payment classification')
-    check(not rows("SELECT name FROM sys.tables WHERE name='EmployeePayrollPitResult'"),'no PIT result table')
+    check(not rows('SELECT EmployeePayrollPitResultId FROM EmployeePayrollPitResults'),'NotApplicable creates no PIT results')
     check(not rows("SELECT EmployeePayrollLineId FROM EmployeePayrollLines WHERE ComponentCode='DEDUCT-002'"),'no PIT deduction line')
     for table,col,key,value in [('PayrollComponents','PitPaymentTreatment','Id',c['payrollComponentId']),('EmployeePayrollLines','PitPaymentTreatmentSnapshot','EmployeePayrollLineId',manual['employeePayrollLineId'])]:
         rejected=sql(f"BEGIN TRANSACTION; BEGIN TRY UPDATE [{table}] SET [{col}]='invalid' WHERE [{key}]={ident(value)}; ROLLBACK; THROW 51000,'Invalid classification accepted',1; END TRY BEGIN CATCH IF @@TRANCOUNT>0 ROLLBACK; IF ERROR_NUMBER()<>547 THROW; SELECT 'Rejected547' AS Result; END CATCH;")

@@ -30,7 +30,8 @@ def verify(d,year):
 def resolution(year): return api('GET',f'employees/{EMP}/tax-treatment?taxYear={year}')
 baseline=snapshot(); original_components=rows('SELECT * FROM PayrollComponents'); original_employee=rows('SELECT * FROM Employees WHERE EmployeeId='+ident(EMP))[0]; profile_id=None; error=None
 try:
-    check(len(baseline)==51 and len(baseline['Employees'])==1 and len(baseline['PayrollComponents'])==17 and not baseline['EmployeePayrolls'],'51-table baseline checked before fixtures')
+    pit_opt_out()
+    check(len(baseline)==55 and len(baseline['Employees'])==1 and len(baseline['PayrollComponents'])==17 and not baseline['EmployeePayrolls'],'55-table baseline checked before fixtures')
     check(all(c['PitIncomeTreatment']=='Unknown' for c in original_components),'all 17 existing components migrated conservatively Unknown')
     migration=rows("SELECT MigrationId FROM __EFMigrationsHistory WHERE MigrationId LIKE '%AddPitIncomeClassificationAndTaxTreatment'")
     check(len(migration)==1,'focused migration applied once')
@@ -141,7 +142,7 @@ finally:
         if profile_id:sql('DELETE EmployeeTaxProfiles WHERE EmployeeTaxProfileId='+ident(profile_id))
         restore('Employees','EmployeeId',original_employee)
         for row in original_components:restore('PayrollComponents','Id',row)
-        final=snapshot();check(final==baseline,'exact contents/timestamps of all 51 tables restored')
+        final=snapshot();check(final==baseline,'exact contents/timestamps of all 55 tables restored')
         check(rows('SELECT IsActive FROM Employees WHERE EmployeeId='+ident(EMP))[0]['IsActive']==False,'TEST-EMP-001 remains inactive')
         check(all(c['PitIncomeTreatment']=='Unknown' for c in rows('SELECT PitIncomeTreatment FROM PayrollComponents')),'all baseline PIT classifications restored Unknown')
     except Exception as exc:error=(error or '')+' CLEANUP: '+str(exc);traceback.print_exc()

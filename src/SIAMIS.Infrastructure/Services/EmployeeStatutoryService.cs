@@ -38,8 +38,9 @@ public sealed class EmployeeStatutoryService(SIAMISDbContext db) : IEmployeeStat
         if (status is null) return Invalid<StatutoryEnrollmentDto>("Applicability must be Applicable or NotApplicable. Absence represents Unknown.");
         var scheme = await db.StatutorySchemes.AsNoTracking().SingleOrDefaultAsync(x => x.StatutorySchemeId == r.StatutorySchemeId, ct);
         if (scheme is null) return Missing<StatutoryEnrollmentDto>();
-        if (!scheme.IsActive || scheme.Jurisdiction != "TH" || scheme.SchemeType != "SocialSecurity")
-            return Invalid<StatutoryEnrollmentDto>("Enrollment requires an active Thai SocialSecurity scheme.");
+        if (!scheme.IsActive || scheme.Jurisdiction != "TH" || !(scheme.SchemeType == "SocialSecurity"
+            || (scheme.SchemeType == "PersonalIncomeTax" && scheme.Code == "TH-PIT")))
+            return Invalid<StatutoryEnrollmentDto>("Enrollment requires an active Thai SocialSecurity scheme or TH-PIT PersonalIncomeTax scheme.");
         if (await db.EmployeeStatutoryEnrollments.AnyAsync(x => x.EmployeeId == employeeId && x.StatutorySchemeId == r.StatutorySchemeId
             && (!x.EffectiveTo.HasValue || x.EffectiveTo >= r.EffectiveFrom) && (!r.EffectiveTo.HasValue || x.EffectiveFrom <= r.EffectiveTo), ct))
             return Conflict<StatutoryEnrollmentDto>("Enrollment intervals for the employee and scheme overlap. Inclusive boundaries cannot share a date.");

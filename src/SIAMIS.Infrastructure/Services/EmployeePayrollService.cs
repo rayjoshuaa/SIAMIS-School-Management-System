@@ -266,8 +266,10 @@ public sealed class EmployeePayrollService(SIAMISDbContext db) : IEmployeePayrol
         if (component is null) return NotFound<EmployeePayrollLineDto>("Payroll component was not found.");
         if (!component.IsActive) return Invalid<EmployeePayrollLineDto>("Payroll component must be active.");
         if (component.Code is null) return Invalid<EmployeePayrollLineDto>("Payroll component must have a code before it can be added to payroll.");
+        if (component.Id == PitPayrollService.ComponentId || component.Code == "DEDUCT-002")
+            return Conflict<EmployeePayrollLineDto>("DEDUCT-002 is statutory-owned; manual PIT lines are prohibited.");
 
-        if (component.Category == "Earning" && await HasSsoResultAsync(payrollId, ct))
+        if (component.Category == "Earning" && await HasStatutoryResultAsync(payrollId, ct))
             return Conflict<EmployeePayrollLineDto>(SsoManualConflict);
         var line = new EmployeePayrollLine { EmployeePayrollId = payrollId, SourceType = "Manual", SourceId = null };
         ApplyLine(line, request, component);
@@ -298,7 +300,10 @@ public sealed class EmployeePayrollService(SIAMISDbContext db) : IEmployeePayrol
         if (component is null) return NotFound<EmployeePayrollLineDto>("Payroll component was not found.");
         if (!component.IsActive) return Invalid<EmployeePayrollLineDto>("Payroll component must be active.");
         if (component.Code is null) return Invalid<EmployeePayrollLineDto>("Payroll component must have a code before it can be added to payroll.");
-        if ((line.ComponentType == "Earning" || component.Category == "Earning") && await HasSsoResultAsync(payrollId, ct))
+        if (component.Id == PitPayrollService.ComponentId || component.Code == "DEDUCT-002"
+            || line.PayrollComponentId == PitPayrollService.ComponentId || line.ComponentCode == "DEDUCT-002")
+            return Conflict<EmployeePayrollLineDto>("DEDUCT-002 is statutory-owned; manual PIT lines are prohibited.");
+        if ((line.ComponentType == "Earning" || component.Category == "Earning") && await HasStatutoryResultAsync(payrollId, ct))
             return Conflict<EmployeePayrollLineDto>(SsoManualConflict);
         ApplyLine(line, request, component);
         await db.SaveChangesAsync(ct);
@@ -321,7 +326,9 @@ public sealed class EmployeePayrollService(SIAMISDbContext db) : IEmployeePayrol
         if (!IsEditable(payroll.Status)) return Conflict<bool>($"{payroll.Status} payroll lines cannot be deleted.");
         if (line.SourceType != "Manual")
             return Conflict<bool>("Generated payroll lines cannot be manually deleted. Use a separate Manual adjustment or payroll regeneration.");
-        if (line.ComponentType == "Earning" && await HasSsoResultAsync(payrollId, ct))
+        if (line.PayrollComponentId == PitPayrollService.ComponentId || line.ComponentCode == "DEDUCT-002")
+            return Conflict<bool>("DEDUCT-002 is statutory-owned; manual PIT lines are prohibited.");
+        if (line.ComponentType == "Earning" && await HasStatutoryResultAsync(payrollId, ct))
             return Conflict<bool>(SsoManualConflict);
         db.EmployeePayrollLines.Remove(line);
         await db.SaveChangesAsync(ct);
@@ -331,9 +338,10 @@ public sealed class EmployeePayrollService(SIAMISDbContext db) : IEmployeePayrol
         return ServiceResult<bool>.Success(true);
     }
 
-    private const string SsoManualConflict = "A persisted SSO statutory result exists. Change earnings through the underlying payroll inputs and regenerate payroll; regeneration also removes existing Manual adjustments.";
-    private Task<bool> HasSsoResultAsync(Guid payrollId, CancellationToken ct)
-        => db.EmployeePayrollStatutoryResults.AnyAsync(x => x.EmployeePayrollId == payrollId && x.CalculationMethodVersion == "SSO-TH-V1", ct);
+    private const string SsoManualConflict = "A persisted SSO or PIT statutory result exists. Change earnings through the underlying payroll inputs and regenerate payroll; regeneration also removes existing Manual adjustments.";
+    private async Task<bool> HasStatutoryResultAsync(Guid payrollId, CancellationToken ct)
+        => await db.EmployeePayrollStatutoryResults.AnyAsync(x => x.EmployeePayrollId == payrollId && x.CalculationMethodVersion == "SSO-TH-V1", ct)
+            || await db.EmployeePayrollPitResults.AnyAsync(x => x.EmployeePayrollId == payrollId, ct);
 
     private async Task<string?> ReconcileTotalsAsync(EmployeePayroll payroll, CancellationToken ct)
     {
@@ -390,6 +398,15 @@ public sealed class EmployeePayrollService(SIAMISDbContext db) : IEmployeePayrol
 
     private async Task<string?> ValidateStoredSnapshotAsync(EmployeePayroll payroll, CancellationToken ct)
     {
+        var pitResult = await db.EmployeePayrollPitResults.AsNoTracking().SingleOrDefaultAsync(x => x.EmployeePayrollId == payroll.EmployeePayrollId, ct);
+        var pitLines = await db.EmployeePayrollLines.AsNoTracking().Where(x => x.EmployeePayrollId == payroll.EmployeePayrollId
+            && (x.PayrollComponentId == PitPayrollService.ComponentId || x.ComponentCode == "DEDUCT-002")).ToListAsync(ct);
+        if (pitResult is null && pitLines.Count != 0) return "Stored PIT integrity failed: deduction has no authoritative PIT result.";
+        if (pitResult is not null && (pitResult.EmployeeId != payroll.EmployeeId || pitResult.PayrollPeriodId != payroll.PayrollPeriodId
+            || (pitResult.CurrentWithholding == 0 ? pitLines.Count != 0 : pitLines.Count != 1
+                || pitLines[0].SourceType != "Statutory" || pitLines[0].SourceId != pitResult.EmployeePayrollPitResultId
+                || pitLines[0].Amount != pitResult.CurrentWithholding)))
+            return "Stored PIT integrity failed: result owner, amount or line provenance is inconsistent.";
         var totals = await GetStoredTotalsAsync(payroll.EmployeePayrollId, ct);
         if (totals is null) return "Stored payroll integrity failed: payroll has no lines.";
         if (!ValidAmount(totals.GrossPay) || !ValidAmount(totals.TaxableEarnings) || !ValidAmount(totals.TotalDeductions))

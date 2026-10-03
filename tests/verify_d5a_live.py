@@ -1,11 +1,11 @@
-import json, urllib.request, urllib.error, subprocess, uuid, pathlib, hashlib, traceback
+import json, urllib.request, urllib.error, subprocess, uuid, pathlib, hashlib, traceback, tempfile
 ROOT=pathlib.Path(__file__).resolve().parents[1]
 OUT=ROOT/'tests/SIAMIS.Payroll.RegressionTests/bin/d5a-live-results.json'
 BASE='http://localhost:5155'
 EMP='433f2c1a-6222-494f-a64f-cd0c31126dc4'
 PREFIX='D5A-VERIFY-'
 results=[]
-fixtures={'components':[], 'periods':[], 'rules':[], 'assignments':[], 'compensations':[], 'schemes':[], 'enrollments':[], 'declarations':[]}
+fixtures={'components':[], 'periods':[], 'rules':[], 'assignments':[], 'compensations':[], 'schemes':[], 'enrollments':[], 'declarations':[], 'schedules':[]}
 def check(ok,name):
     if not ok: raise AssertionError(name)
     results.append(name)
@@ -19,7 +19,12 @@ def api(method,path,body=None,status=200):
     return json.loads(data) if data else None
 
 def sql(query):
-    p=subprocess.run(['sqlcmd','-S','localhost','-d','SIAMIS','-E','-C','-I','-b','-y','0','-w','65535','-Q','SET NOCOUNT ON; '+query],capture_output=True,text=True)
+    # A file preserves long JSON snapshots and quotes across Windows command-line parsing.
+    with tempfile.NamedTemporaryFile(mode='w',encoding='utf-8-sig',suffix='.sql',dir=ROOT/'tests/SIAMIS.Payroll.RegressionTests/bin',delete=False) as script:
+        script.write('SET NOCOUNT ON; '+query); script_path=pathlib.Path(script.name)
+    try:
+        p=subprocess.run(['sqlcmd','-S','localhost','-d','SIAMIS','-E','-C','-I','-b','-x','-y','0','-w','65535','-i',str(script_path)],capture_output=True,text=True)
+    finally:script_path.unlink(missing_ok=True)
     if p.returncode: raise AssertionError(p.stdout+p.stderr)
     return p.stdout.strip()
 def rows(query): return json.loads(''.join(sql(query+' FOR JSON PATH').splitlines()) or '[]')
@@ -29,6 +34,7 @@ def cleanup():
     clauses=[]
     if fixtures['periods']:
         ids=','.join(map(ident,fixtures['periods']))
+        clauses.append(f'DELETE FROM EmployeePayrollPitResults WHERE PayrollPeriodId IN ({ids})')
         clauses += [f'DELETE FROM EmployeePayrollSocialSecurityResults WHERE EmployeePayrollStatutoryResultId IN (SELECT EmployeePayrollStatutoryResultId FROM EmployeePayrollStatutoryResults WHERE EmployeePayrollId IN (SELECT EmployeePayrollId FROM EmployeePayrolls WHERE PayrollPeriodId IN ({ids})))', f'DELETE FROM EmployeePayrollStatutoryResults WHERE EmployeePayrollId IN (SELECT EmployeePayrollId FROM EmployeePayrolls WHERE PayrollPeriodId IN ({ids}))',f'DELETE FROM EmployeePayrollLines WHERE EmployeePayrollId IN (SELECT EmployeePayrollId FROM EmployeePayrolls WHERE PayrollPeriodId IN ({ids}))',f'DELETE FROM EmployeePayrolls WHERE PayrollPeriodId IN ({ids})',f'DELETE FROM PayrollPeriods WHERE PayrollPeriodId IN ({ids})']
     for table,key,group in [('PayrollRuleTargets','PayrollRuleId','rules'),('PayrollRules','PayrollRuleId','rules'),('EmployeePayrollComponentAssignments','EmployeePayrollComponentAssignmentId','assignments'),('EmployeeCompensations','EmployeeCompensationId','compensations'),('EmployeeStatutoryEnrollments','EmployeeStatutoryEnrollmentId','enrollments')]:
         if fixtures[group]: clauses.append(f'DELETE FROM [{table}] WHERE [{key}] IN ('+','.join(map(ident,fixtures[group]))+')')
@@ -36,8 +42,14 @@ def cleanup():
         ids=','.join(map(ident,fixtures['declarations']))
         for table,key in [('EmployeeTaxDeclarationSelections','CurrentDeclarationId'),('EmployeeTaxClaims','EmployeeTaxDeclarationId'),('EmployeeTaxOpeningBalances','EmployeeTaxDeclarationId'),('EmployeeTaxDeclarations','EmployeeTaxDeclarationId')]:
             clauses.append(f'DELETE FROM [{table}] WHERE [{key}] IN ({ids})')
+    if fixtures['schedules']:
+        ids=','.join(map(ident,fixtures['schedules']))
+        clauses += [f'DELETE FROM EmployeePitPaymentScheduleSelections WHERE CurrentScheduleId IN ({ids})', f'DELETE FROM EmployeePitPaymentScheduleEntries WHERE EmployeePitPaymentScheduleId IN ({ids})']
+        # Remove replacement revisions newest first to preserve NoAction predecessor relationships.
+        clauses += [f'DELETE FROM EmployeePitPaymentSchedules WHERE EmployeePitPaymentScheduleId={ident(x)}' for x in reversed(fixtures['schedules'])]
     if fixtures['schemes']:
         ids=','.join(map(ident,fixtures['schemes']))
+        clauses += [f'DELETE FROM PitTaxBrackets WHERE StatutoryPolicyVersionId IN (SELECT StatutoryPolicyVersionId FROM StatutoryPolicyVersions WHERE StatutorySchemeId IN ({ids}))', f'DELETE FROM PitPolicyConfigurations WHERE StatutoryPolicyVersionId IN (SELECT StatutoryPolicyVersionId FROM StatutoryPolicyVersions WHERE StatutorySchemeId IN ({ids}))']
         clauses += [f'DELETE FROM SocialSecurityPolicyConfigurations WHERE StatutoryPolicyVersionId IN (SELECT StatutoryPolicyVersionId FROM StatutoryPolicyVersions WHERE StatutorySchemeId IN ({ids}))',f'DELETE FROM StatutoryPolicyVersions WHERE StatutorySchemeId IN ({ids})',f'DELETE FROM StatutorySchemes WHERE StatutorySchemeId IN ({ids})']
     if fixtures['components']: clauses.append('DELETE FROM PayrollComponents WHERE Id IN ('+','.join(map(ident,fixtures['components']))+')')
     if clauses: sql('SET XACT_ABORT ON; BEGIN TRANSACTION; '+'; '.join(clauses)+'; COMMIT;')
@@ -67,11 +79,17 @@ def delete_rule(r): api('DELETE','payroll-rules/'+r['payrollRuleId'],status=204)
 def preview(p): return api('POST',f'payroll-periods/{p}/preview',{'employeeIds':[EMP]})['results'][0]
 def generate(p,force=False): return api('POST',f'payroll-periods/{p}/generate',{'employeeIds':[EMP],'forceRegenerate':force})['results'][0]
 def detail(pid):return api('GET','employee-payrolls/'+pid)
+def pit_opt_out(effective_to='2026-12-31'):
+    scheme=api('POST','statutory-schemes',{'code':'TH-PIT','name':PREFIX+'Synthetic explicit PIT opt-out','jurisdiction':'TH','schemeType':'PersonalIncomeTax'},201)
+    fixtures['schemes'].append(scheme['statutorySchemeId'])
+    enrollment=api('POST',f'employees/{EMP}/statutory-enrollments',{'statutorySchemeId':scheme['statutorySchemeId'],'effectiveFrom':'2026-01-01','effectiveTo':effective_to,'applicability':'NotApplicable'},201)
+    fixtures['enrollments'].append(enrollment['employeeStatutoryEnrollmentId'])
 def totals(d):return tuple(d[k] for k in ('basicSalary','grossPay','taxableEarnings','totalDeductions','netPay'))
 
 baseline=snapshot()
 error=None
 try:
+    pit_opt_out()
     check(len(baseline['Employees'])==1 and len(baseline['PayrollComponents'])==17 and not baseline['EmployeePayrolls'] and not baseline['PayrollRules'],'baseline verified before fixtures')
     check(rows("SELECT MigrationId FROM __EFMigrationsHistory WHERE MigrationId='20261001032904_AddSsoWageTreatmentClassification'")!=[], 'D5A migration recorded')
     schema=rows("SELECT OBJECT_NAME(c.object_id) AS [Table], c.name, TYPE_NAME(c.user_type_id) AS TypeName, c.max_length, c.is_nullable, d.definition AS DefaultValue FROM sys.columns c LEFT JOIN sys.default_constraints d ON d.object_id=c.default_object_id WHERE (OBJECT_NAME(c.object_id)='PayrollComponents' AND c.name='SsoWageTreatment') OR (OBJECT_NAME(c.object_id)='EmployeePayrollLines' AND c.name='SsoWageTreatmentSnapshot')")

@@ -4,7 +4,7 @@ using SIAMIS.Application.Payroll;
 
 namespace SIAMIS.Api.Controllers;
 
-/// <summary>Explicit employee Social Security applicability inputs; no contribution calculation or inferred eligibility.</summary>
+/// <summary>Explicit employee Social Security or TH-PIT applicability inputs; no inferred eligibility.</summary>
 /// <remarks>Production requires authentication/RBAC. Membership identifiers are omitted from lists and resolution summaries.</remarks>
 [Route("api/employees/{employeeId:guid}/statutory-enrollments")]
 public sealed class EmployeeStatutoryEnrollmentsController(IEmployeeStatutoryService service) : StatutoryConfigurationController

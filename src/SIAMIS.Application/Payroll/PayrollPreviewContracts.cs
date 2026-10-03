@@ -49,7 +49,8 @@ public sealed record PayrollPreviewEmployeeResult(
     decimal? TaxableEarnings,
     string Message,
     IReadOnlyList<PayrollPreviewLineDto> Lines,
-    EmployeePayrollStatutoryResultDto? SocialSecurity = null);
+    EmployeePayrollStatutoryResultDto? SocialSecurity = null,
+    PitPayrollPreviewDto? Pit = null);
 
 public sealed record PayrollPreviewSummary(
     Guid PayrollPeriodId,

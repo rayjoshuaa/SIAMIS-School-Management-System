@@ -158,6 +158,7 @@ D6BFoundationRegressionTests.Run(Check, model);
 D6CContractRegressionTests.Run(Check, model);
 PitSsoRecognitionContractTests.Run(Check);
 D6DCalculatorTests.Run(Check, model);
+D6EIntegrationContractTests.Run(Check, model);
 foreach (var payment in new[] { "Unknown", "Regular", "Special" })
 {
     basic.PitPaymentTreatment = earning.PitPaymentTreatment = payment;
@@ -177,4 +178,4 @@ manualComponent.PitPaymentTreatment = "Special";
 applyLine.Invoke(null, [newManual, manualRequest, manualComponent]);
 Check(newManual.PitPaymentTreatmentSnapshot == "Regular", "D6D manual amount edit preserves payment snapshot");
 Check(typeof(EmployeePayrollLineRequest).GetProperty("PitPaymentTreatmentSnapshot") == null, "D6D manual caller cannot forge payment snapshot");
-Console.WriteLine($"PASS: {checks} focused D5A/D5B/D5C/D6A/D6B/D6C/D6D regression assertions. No database connections or writes.");
+Console.WriteLine($"PASS: {checks} focused D5A/D5B/D5C/D6A/D6B/D6C/D6D/D6E regression assertions. No database connections or writes.");

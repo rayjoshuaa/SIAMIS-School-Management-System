@@ -114,7 +114,7 @@ internal static class D6DCalculatorTests
         check(entity.GetSeedData().All(z=>(string?)z["PitPaymentTreatment"]=="Unknown"), "D6D all component seeds Unknown");
         foreach(var (type,name) in new[] {(typeof(PayrollComponent),"PitPaymentTreatment"),(typeof(EmployeePayrollLine),"PitPaymentTreatmentSnapshot")})
         {var e=model.FindEntityType(type)!; check((string?)e.FindProperty(name)!.GetDefaultValue()=="Unknown" && e.GetCheckConstraints().Any(z=>z.Sql.Contains("'Regular'")), "D6D schema default/check " + name);}
-        check(model.GetEntityTypes().All(z=>z.ClrType.Name!="EmployeePayrollPitResult"), "D6D no PIT result table");
+        check(model.FindEntityType(typeof(EmployeePayrollPitResult)) != null, "D6E dedicated PIT ledger added after D6D");
         check(typeof(PitPriorWithholding).GetProperty("PitResultId")!=null && typeof(PitSsoSource).GetProperty("EmployerAmount")==null, "D6D typed historical/PIT/employee-only SSO authority");
     }
 }
