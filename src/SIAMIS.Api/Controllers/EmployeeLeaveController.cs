@@ -3,7 +3,7 @@ using SIAMIS.Application.Employees;
 
 namespace SIAMIS.Api.Controllers;
 
-/// <summary>Manages employee leave requests without leave balance or approval processing.</summary>
+/// <summary>Authoritative scheduled-minute leave requests and controlled lifecycle commands.</summary>
 [ApiController]
 [Route("api/employees/{employeeId:guid}/leave")]
 [Produces("application/json")]
@@ -31,7 +31,7 @@ public sealed class EmployeeLeaveController(IEmployeeLeaveService service) : Con
         return result.IsSuccess ? Ok(result.Value) : Failure<EmployeeLeaveDto>(result.Failure!);
     }
 
-    /// <summary>Creates a leave request with inclusive calendar-day count and Pending status by default.</summary>
+    /// <summary>Calculates FullDay/Timed scheduled minutes, freezes evidence and reserves tracked entitlement. Always creates Pending.</summary>
     [HttpPost]
     [ProducesResponseType(typeof(EmployeeLeaveDto), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
@@ -44,26 +44,40 @@ public sealed class EmployeeLeaveController(IEmployeeLeaveService service) : Con
         return CreatedAtAction(nameof(GetLeave), new { employeeId, leaveId = result.Value!.LeaveId }, result.Value);
     }
 
-    /// <summary>Updates a leave record, recalculating inclusive days and checking for overlap.</summary>
-    [HttpPut("{leaveId:guid}")]
+    /// <summary>Approves Pending leave using its frozen calculation and existing reservation, without recalculation.</summary>
+    [HttpPost("{leaveId:guid}/approve")]
     [ProducesResponseType(typeof(EmployeeLeaveDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
-    public async Task<ActionResult<EmployeeLeaveDto>> UpdateLeave(Guid employeeId, Guid leaveId, [FromBody] EmployeeLeaveRequest request, CancellationToken ct)
+    public async Task<ActionResult<EmployeeLeaveDto>> Approve(Guid employeeId, Guid leaveId, [FromBody] LeaveReviewRequest request, CancellationToken ct)
     {
-        var result = await service.UpdateLeaveAsync(employeeId, leaveId, request, ct);
+        var result = await service.ApproveAsync(employeeId, leaveId, request, ct);
         return result.IsSuccess ? Ok(result.Value) : Failure<EmployeeLeaveDto>(result.Failure!);
     }
 
-    /// <summary>Deletes a leave record without changing employee or leave type data.</summary>
-    [HttpDelete("{leaveId:guid}")]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    /// <summary>Rejects Pending leave, releases its reservation and preserves its evidence.</summary>
+    [HttpPost("{leaveId:guid}/reject")]
+    [ProducesResponseType(typeof(EmployeeLeaveDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> DeleteLeave(Guid employeeId, Guid leaveId, CancellationToken ct)
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
+    public async Task<ActionResult<EmployeeLeaveDto>> Reject(Guid employeeId, Guid leaveId, [FromBody] LeaveReviewRequest request, CancellationToken ct)
     {
-        var result = await service.DeleteLeaveAsync(employeeId, leaveId, ct);
-        return result.IsSuccess ? NoContent() : Failure<bool>(result.Failure!).Result!;
+        var result = await service.RejectAsync(employeeId, leaveId, request, ct);
+        return result.IsSuccess ? Ok(result.Value) : Failure<EmployeeLeaveDto>(result.Failure!);
+    }
+
+    /// <summary>Cancels only when locked status matches the required ExpectedStatus (Pending/Approved); stale state returns 409. Approved cancellation requires remarks.</summary>
+    [HttpPost("{leaveId:guid}/cancel")]
+    [ProducesResponseType(typeof(EmployeeLeaveDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
+    public async Task<ActionResult<EmployeeLeaveDto>> Cancel(Guid employeeId, Guid leaveId, [FromBody] LeaveCancellationRequest request, CancellationToken ct)
+    {
+        var result = await service.CancelAsync(employeeId, leaveId, request, ct);
+        return result.IsSuccess ? Ok(result.Value) : Failure<EmployeeLeaveDto>(result.Failure!);
     }
 
     private ActionResult<T> Failure<T>(ApiFailure failure) => failure.Code switch

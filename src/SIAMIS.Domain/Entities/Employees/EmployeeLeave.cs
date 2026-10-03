@@ -16,6 +16,15 @@ public sealed class EmployeeLeave
     public int? ChargeableMinutes { get; set; }
     public int? CalculationSnapshotVersion { get; set; }
     public string? CalculationSnapshotJson { get; set; }
+    // Nullable only for pre-D8C legacy rows. Authoritative D8C requests always populate these fields.
+    public string? RequestMode { get; set; }
+    public string? NoticeCategory { get; set; }
+    public bool? BalanceTracked { get; set; }
+    public DateTime? RequestedAt { get; set; }
+    public DateTime? ReviewedAt { get; set; }
+    public DateTime? CancelledAt { get; set; }
+    public string? ReviewRemarks { get; set; }
+    public string? CancellationRemarks { get; set; }
     public int Days { get; set; }
     public string? Reason { get; set; }
     public string Status { get; set; } = "Pending";

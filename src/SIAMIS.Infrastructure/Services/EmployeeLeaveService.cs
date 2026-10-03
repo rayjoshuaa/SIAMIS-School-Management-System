@@ -1,165 +1,130 @@
 using System.Data;
+using System.Text.Json;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using SIAMIS.Application.Employees;
 using SIAMIS.Domain.Entities.Employees;
+using SIAMIS.Domain.Entities.Leave;
 using SIAMIS.Infrastructure.Data;
 
 namespace SIAMIS.Infrastructure.Services;
 
-public sealed class EmployeeLeaveService(SIAMISDbContext db) : IEmployeeLeaveService
+public sealed partial class EmployeeLeaveService(SIAMISDbContext db) : IEmployeeLeaveService
 {
-    private static readonly IReadOnlyDictionary<string, string> AllowedStatuses = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
-    {
-        ["Pending"] = "Pending",
-        ["Approved"] = "Approved",
-        ["Rejected"] = "Rejected",
-        ["Cancelled"] = "Cancelled"
-    };
-
-    public async Task<ServiceResult<IReadOnlyList<EmployeeLeaveDto>>> GetLeavesAsync(Guid employeeId, DateOnly? fromDate, DateOnly? toDate, CancellationToken ct)
-    {
-        if (!await EmployeeExists(employeeId, ct)) return NotFound<IReadOnlyList<EmployeeLeaveDto>>("Employee was not found.");
-        if (fromDate.HasValue && toDate.HasValue && fromDate.Value > toDate.Value)
-            return Invalid<IReadOnlyList<EmployeeLeaveDto>>("fromDate cannot be after toDate.");
-
-        var query = LeaveQuery().Where(x => x.EmployeeId == employeeId);
-        if (fromDate.HasValue) query = query.Where(x => x.EndDate >= fromDate.Value);
-        if (toDate.HasValue) query = query.Where(x => x.StartDate <= toDate.Value);
-        var leaves = await query.OrderByDescending(x => x.StartDate).ThenByDescending(x => x.LeaveId).ToListAsync(ct);
-        return ServiceResult<IReadOnlyList<EmployeeLeaveDto>>.Success(leaves);
-    }
-
-    public async Task<ServiceResult<EmployeeLeaveDto>> GetLeaveAsync(Guid employeeId, Guid leaveId, CancellationToken ct)
-    {
-        if (!await EmployeeExists(employeeId, ct)) return NotFound<EmployeeLeaveDto>("Employee was not found.");
-        var leave = await LeaveQuery().SingleOrDefaultAsync(x => x.EmployeeId == employeeId && x.LeaveId == leaveId, ct);
-        return leave is null
-            ? NotFound<EmployeeLeaveDto>("Leave record was not found for this employee.")
-            : ServiceResult<EmployeeLeaveDto>.Success(leave);
-    }
+    internal static readonly JsonSerializerOptions SnapshotJson = new(JsonSerializerDefaults.Web);
+    private static ServiceResult<T> Fail<T>(string code, string message) => ServiceResult<T>.Fail(code, message);
+    private static string? Clean(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+    private static bool Concurrent(Exception e) => e is SqlException { Number: 1205 or 2601 or 2627 }
+        || e.InnerException is not null && Concurrent(e.InnerException);
 
     public async Task<ServiceResult<EmployeeLeaveDto>> CreateLeaveAsync(Guid employeeId, EmployeeLeaveRequest request, CancellationToken ct)
     {
-        await using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct);
-        if (!await EmployeeExists(employeeId, ct)) return NotFound<EmployeeLeaveDto>("Employee was not found.");
-        var validation = await ValidateRequest(request, ct);
-        if (validation is not null) return Invalid<EmployeeLeaveDto>(validation);
-        var status = GetStatus(request.Status, useDefault: true, out var statusError);
-        if (statusError is not null) return Invalid<EmployeeLeaveDto>(statusError);
-
-        var start = request.StartDate!.Value;
-        var end = request.EndDate!.Value;
-        if (BlocksOtherLeaves(status!) && await HasOverlap(employeeId, start, end, null, ct))
-            return Conflict<EmployeeLeaveDto>("The requested dates overlap another active or pending leave record.");
-
-        var leave = new EmployeeLeave
+        var error = LeaveRequestCalculator.Shape(request);
+        if (error is not null) return Fail<EmployeeLeaveDto>("validation", error);
+        try
         {
-            EmployeeId = employeeId,
-            LeaveTypeId = request.LeaveTypeId!.Value,
-            StartDate = start,
-            EndDate = end,
-            Days = InclusiveDays(start, end),
-            Reason = Clean(request.Reason),
-            Status = status!,
-            Remarks = Clean(request.Remarks)
-        };
-        db.EmployeeLeaves.Add(leave);
-        await db.SaveChangesAsync(ct);
-        await transaction.CommitAsync(ct);
-        return await GetLeaveAsync(employeeId, leave.LeaveId, ct);
-    }
-
-    public async Task<ServiceResult<EmployeeLeaveDto>> UpdateLeaveAsync(Guid employeeId, Guid leaveId, EmployeeLeaveRequest request, CancellationToken ct)
-    {
-        await using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct);
-        if (!await EmployeeExists(employeeId, ct)) return NotFound<EmployeeLeaveDto>("Employee was not found.");
-        var leave = await db.EmployeeLeaves.SingleOrDefaultAsync(x => x.EmployeeId == employeeId && x.LeaveId == leaveId, ct);
-        if (leave is null) return NotFound<EmployeeLeaveDto>("Leave record was not found for this employee.");
-        var validation = await ValidateRequest(request, ct);
-        if (validation is not null) return Invalid<EmployeeLeaveDto>(validation);
-        string? statusError = null;
-        var status = request.Status is null ? leave.Status : GetStatus(request.Status, useDefault: false, out statusError);
-        if (request.Status is not null && statusError is not null) return Invalid<EmployeeLeaveDto>(statusError);
-
-        var start = request.StartDate!.Value;
-        var end = request.EndDate!.Value;
-        if (BlocksOtherLeaves(status!) && await HasOverlap(employeeId, start, end, leaveId, ct))
-            return Conflict<EmployeeLeaveDto>("The requested dates overlap another active or pending leave record.");
-
-        leave.LeaveTypeId = request.LeaveTypeId!.Value;
-        leave.StartDate = start;
-        leave.EndDate = end;
-        leave.Days = InclusiveDays(start, end);
-        leave.Reason = Clean(request.Reason);
-        leave.Status = status!;
-        leave.Remarks = Clean(request.Remarks);
-        await db.SaveChangesAsync(ct);
-        await transaction.CommitAsync(ct);
-        return await GetLeaveAsync(employeeId, leaveId, ct);
-    }
-
-    public async Task<ServiceResult<bool>> DeleteLeaveAsync(Guid employeeId, Guid leaveId, CancellationToken ct)
-    {
-        if (!await EmployeeExists(employeeId, ct)) return NotFound<bool>("Employee was not found.");
-        var leave = await db.EmployeeLeaves.SingleOrDefaultAsync(x => x.EmployeeId == employeeId && x.LeaveId == leaveId, ct);
-        if (leave is null) return NotFound<bool>("Leave record was not found for this employee.");
-        db.EmployeeLeaves.Remove(leave);
-        await db.SaveChangesAsync(ct);
-        return ServiceResult<bool>.Success(true);
-    }
-
-    private async Task<string?> ValidateRequest(EmployeeLeaveRequest request, CancellationToken ct)
-    {
-        if (!request.LeaveTypeId.HasValue || !await db.LeaveTypes.AsNoTracking().AnyAsync(x => x.Id == request.LeaveTypeId && x.IsActive, ct))
-            return "LeaveTypeId must reference an active leave type.";
-        if (!request.StartDate.HasValue) return "StartDate is required.";
-        if (!request.EndDate.HasValue) return "EndDate is required.";
-        if (request.EndDate.Value < request.StartDate.Value) return "EndDate cannot be before StartDate.";
-        if (request.Reason?.Length > 1000) return "Reason cannot exceed 1000 characters.";
-        if (request.Remarks?.Length > 2000) return "Remarks cannot exceed 2000 characters.";
-        return null;
-    }
-
-    private Task<bool> HasOverlap(Guid employeeId, DateOnly start, DateOnly end, Guid? excludedLeaveId, CancellationToken ct)
-        => db.EmployeeLeaves.AsNoTracking().AnyAsync(x => x.EmployeeId == employeeId
-            && x.Status != "Rejected" && x.Status != "Cancelled"
-            && x.StartDate <= end && x.EndDate >= start
-            && (!excludedLeaveId.HasValue || x.LeaveId != excludedLeaveId.Value), ct);
-
-    private IQueryable<EmployeeLeaveDto> LeaveQuery() => db.EmployeeLeaves.AsNoTracking().Select(x => new EmployeeLeaveDto
-    {
-        LeaveId = x.LeaveId,
-        EmployeeId = x.EmployeeId,
-        LeaveTypeId = x.LeaveTypeId,
-        LeaveTypeCode = x.LeaveType.Code,
-        LeaveTypeName = x.LeaveType.Name,
-        StartDate = x.StartDate,
-        EndDate = x.EndDate,
-        Days = x.Days,
-        Reason = x.Reason,
-        Status = x.Status,
-        Remarks = x.Remarks
-    });
-
-    private static int InclusiveDays(DateOnly start, DateOnly end) => end.DayNumber - start.DayNumber + 1;
-    private static bool BlocksOtherLeaves(string status)
-        => !string.Equals(status, "Rejected", StringComparison.OrdinalIgnoreCase)
-            && !string.Equals(status, "Cancelled", StringComparison.OrdinalIgnoreCase);
-    private static string? GetStatus(string? supplied, bool useDefault, out string? error)
-    {
-        error = null;
-        if (supplied is null && useDefault) return "Pending";
-        if (string.IsNullOrWhiteSpace(supplied) || !AllowedStatuses.TryGetValue(supplied.Trim(), out var canonical))
-        {
-            error = "Status must be Pending, Approved, Rejected, or Cancelled.";
-            return null;
+            await using var tx = await db.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct);
+            // Shared with D1, assignments and entitlement writers: employee first, sorted calendars, then leave type.
+            if (await EmploymentIntegrity.LockAsync(db, employeeId, ct) is null) return Fail<EmployeeLeaveDto>("not_found", "Employee was not found.");
+            var start = request.StartDate!.Value; var end = request.EndDate!.Value;
+            var assignments = await db.Set<EmployeeWorkCalendarAssignment>().AsNoTracking().Where(x => x.EmployeeId == employeeId && x.EffectiveFrom <= end && (!x.EffectiveTo.HasValue || x.EffectiveTo >= start)).ToListAsync(ct);
+            var calendars = new List<WorkCalendar>();
+            foreach (var id in assignments.Select(x => x.WorkCalendarId).Distinct().OrderBy(x => x))
+            {
+                var calendar = await db.Set<WorkCalendar>().FromSqlInterpolated($"SELECT * FROM [WorkCalendars] WITH (UPDLOCK) WHERE [Id] = {id}").AsNoTracking().SingleOrDefaultAsync(ct);
+                if (calendar is not null) calendars.Add(calendar);
+            }
+            var typeId = request.LeaveTypeId!.Value;
+            await db.Database.ExecuteSqlInterpolatedAsync($"SELECT [Id] FROM [LeaveTypes] WITH (UPDLOCK) WHERE [Id] = {typeId}", ct);
+            var type = await db.LeaveTypes.AsNoTracking().SingleOrDefaultAsync(x => x.Id == typeId, ct);
+            if (type is null) return Fail<EmployeeLeaveDto>("not_found", "Leave type was not found.");
+            if (!type.IsActive) return Fail<EmployeeLeaveDto>("validation", "Leave type must be active.");
+            var ids = calendars.Select(x => x.Id).ToArray();
+            var overrides = await db.Set<WorkCalendarDateOverride>().AsNoTracking().Where(x => ids.Contains(x.WorkCalendarId) && x.Date >= start && x.Date <= end).ToListAsync(ct);
+            var overrideIds = overrides.Select(x => x.Id).ToArray();
+            var context = new LeaveCalculationContext(employeeId, type,
+                await db.EmploymentRecords.AsNoTracking().Where(x => x.EmployeeId == employeeId).Where(EmploymentIntegrity.Overlapping(start, end)).ToListAsync(ct), assignments, calendars,
+                await db.Set<WorkCalendarWeeklyInterval>().AsNoTracking().Where(x => ids.Contains(x.WorkCalendarId)).ToListAsync(ct), overrides,
+                await db.Set<WorkCalendarOverrideInterval>().AsNoTracking().Where(x => overrideIds.Contains(x.WorkCalendarDateOverrideId)).ToListAsync(ct),
+                await db.Set<LeavePolicy>().AsNoTracking().Where(x => x.LeaveTypeId == typeId && x.Status == "Published" && x.EffectiveFrom <= end && (!x.EffectiveTo.HasValue || x.EffectiveTo >= start)).ToListAsync(ct));
+            var calculation = LeaveRequestCalculator.Calculate(context, request, DateTime.UtcNow);
+            if (!calculation.IsSuccess) return Fail<EmployeeLeaveDto>(calculation.Failure!.Code, calculation.Failure.Message);
+            var snapshot = calculation.Value!;
+            var candidates = await db.EmployeeLeaves.AsNoTracking().Where(x => x.EmployeeId == employeeId && (x.Status == "Pending" || x.Status == "Approved") && x.StartDate <= end && x.EndDate >= start).ToListAsync(ct);
+            foreach (var candidate in candidates)
+            {
+                var existing = LeaveSnapshotIntegrity.Read(candidate, await Allocations(candidate.LeaveId, ct));
+                if (!existing.IsSuccess) return Fail<EmployeeLeaveDto>("conflict", existing.Failure!.Message);
+                if (LeaveRequestCalculator.Overlap(snapshot, existing.Value!)) return Fail<EmployeeLeaveDto>("conflict", "The requested chargeable intervals overlap Pending or Approved leave.");
+            }
+            if (snapshot.BalanceTracked)
+                foreach (var allocation in snapshot.Allocations)
+                {
+                    var balance = await AvailableAsync(employeeId, typeId, allocation.LeaveYear, ct);
+                    if (!balance.IsSuccess) return Fail<EmployeeLeaveDto>("conflict", balance.Failure!.Message);
+                    if (balance.Value < allocation.ChargeableMinutes) return Fail<EmployeeLeaveDto>("conflict", "Insufficient available leave balance.");
+                }
+            var leave = new EmployeeLeave
+            {
+                EmployeeId = employeeId, LeaveTypeId = typeId, StartDate = start, EndDate = end,
+                RequestMode = snapshot.RequestMode, NoticeCategory = snapshot.NoticeCategory, RequestedStartTime = snapshot.RequestedStartTime, RequestedEndTime = snapshot.RequestedEndTime,
+                BalanceTracked = snapshot.BalanceTracked, ChargeableMinutes = snapshot.ChargeableMinutes, RequestedAt = snapshot.RequestedAt,
+                CalculationSnapshotVersion = 1, CalculationSnapshotJson = JsonSerializer.Serialize(snapshot, SnapshotJson),
+                Days = snapshot.Dates.Count(x => x.ChargeableMinutes > 0), Reason = Clean(request.Reason), Status = "Pending"
+            };
+            db.Add(leave);
+            foreach (var allocation in snapshot.Allocations) db.Add(new EmployeeLeaveAllocation { EmployeeLeaveId = leave.LeaveId, LeaveYear = allocation.LeaveYear, ChargeableMinutes = allocation.ChargeableMinutes });
+            await db.SaveChangesAsync(ct); await tx.CommitAsync(ct);
+            return await GetLeaveAsync(employeeId, leave.LeaveId, ct);
         }
-        return canonical;
+        catch (Exception e) when (Concurrent(e)) { return Fail<EmployeeLeaveDto>("conflict", "Concurrent leave configuration or reservation changed. Retry the request."); }
     }
 
-    private Task<bool> EmployeeExists(Guid employeeId, CancellationToken ct) => db.Employees.AsNoTracking().AnyAsync(x => x.EmployeeId == employeeId, ct);
-    private static string? Clean(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
-    private static ServiceResult<T> Invalid<T>(string message) => ServiceResult<T>.Fail("validation", message);
-    private static ServiceResult<T> NotFound<T>(string message) => ServiceResult<T>.Fail("not_found", message);
-    private static ServiceResult<T> Conflict<T>(string message) => ServiceResult<T>.Fail("conflict", message);
+    public Task<ServiceResult<EmployeeLeaveDto>> ApproveAsync(Guid employeeId, Guid leaveId, LeaveReviewRequest r, CancellationToken ct) => Transition(employeeId, leaveId, "Approved", r.ReviewRemarks, ct);
+    public Task<ServiceResult<EmployeeLeaveDto>> RejectAsync(Guid employeeId, Guid leaveId, LeaveReviewRequest r, CancellationToken ct) => Transition(employeeId, leaveId, "Rejected", r.ReviewRemarks, ct);
+    public Task<ServiceResult<EmployeeLeaveDto>> CancelAsync(Guid employeeId, Guid leaveId, LeaveCancellationRequest r, CancellationToken ct)
+        => !r.ExpectedStatus.HasValue || !Enum.IsDefined(r.ExpectedStatus.Value)
+            ? Task.FromResult(Fail<EmployeeLeaveDto>("validation", "ExpectedStatus must be explicitly Pending or Approved."))
+            : Transition(employeeId, leaveId, "Cancelled", r.CancellationRemarks, ct, r.ExpectedStatus.Value.ToString());
+
+    private async Task<ServiceResult<EmployeeLeaveDto>> Transition(Guid employeeId, Guid leaveId, string target, string? remarks, CancellationToken ct, string? expectedStatus = null)
+    {
+        if (remarks?.Length > 2000) return Fail<EmployeeLeaveDto>("validation", "Remarks cannot exceed 2000 characters.");
+        try
+        {
+            await using var tx = await db.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct);
+            if (await EmploymentIntegrity.LockAsync(db, employeeId, ct) is null) return Fail<EmployeeLeaveDto>("not_found", "Employee was not found.");
+            var leave = await db.EmployeeLeaves.FromSqlInterpolated($"SELECT * FROM [EmployeeLeave] WITH (UPDLOCK) WHERE [LeaveId] = {leaveId} AND [EmployeeId] = {employeeId}").SingleOrDefaultAsync(ct);
+            if (leave is null) return Fail<EmployeeLeaveDto>("not_found", "Leave request was not found for this employee.");
+            // Caller-observed source state is compared only after authoritative reload, under the mutation locks.
+            if (target == "Cancelled" && leave.Status != expectedStatus) return Fail<EmployeeLeaveDto>("conflict", "Leave status no longer matches ExpectedStatus.");
+            if (leave.Status != "Pending" && !(leave.Status == "Approved" && target == "Cancelled")) return Fail<EmployeeLeaveDto>("conflict", "This lifecycle transition is not permitted.");
+            if (leave.Status == "Approved" && string.IsNullOrWhiteSpace(remarks)) return Fail<EmployeeLeaveDto>("validation", "Approved cancellation requires CancellationRemarks.");
+            var integrity = LeaveSnapshotIntegrity.Read(leave, await Allocations(leaveId, ct));
+            if (!integrity.IsSuccess) return Fail<EmployeeLeaveDto>("conflict", integrity.Failure!.Message);
+            if (target == "Approved" && leave.BalanceTracked == true)
+                foreach (var allocation in integrity.Value!.Allocations)
+                {
+                    var balance = await AvailableAsync(employeeId, leave.LeaveTypeId, allocation.LeaveYear, ct);
+                    if (!balance.IsSuccess) return Fail<EmployeeLeaveDto>("conflict", balance.Failure!.Message);
+                    if (balance.Value < 0) return Fail<EmployeeLeaveDto>("conflict", "The stored reservation is inconsistent with the entitlement.");
+                }
+            leave.Status = target;
+            if (target == "Cancelled") { leave.CancelledAt = DateTime.UtcNow; leave.CancellationRemarks = Clean(remarks); }
+            else { leave.ReviewedAt = DateTime.UtcNow; leave.ReviewRemarks = Clean(remarks); }
+            await db.SaveChangesAsync(ct); await tx.CommitAsync(ct);
+            return await GetLeaveAsync(employeeId, leaveId, ct);
+        }
+        catch (Exception e) when (Concurrent(e)) { return Fail<EmployeeLeaveDto>("conflict", "Concurrent leave transition changed. Retry the request."); }
+    }
+    private Task<List<EmployeeLeaveAllocation>> Allocations(Guid id, CancellationToken ct) => db.Set<EmployeeLeaveAllocation>().AsNoTracking().Where(x => x.EmployeeLeaveId == id).OrderBy(x => x.LeaveYear).ToListAsync(ct);
+    private async Task<ServiceResult<long>> AvailableAsync(Guid employee, Guid type, int year, CancellationToken ct)
+    {
+        var entitlement = await db.Set<EmployeeLeaveEntitlement>().SingleOrDefaultAsync(x => x.EmployeeId == employee && x.LeaveTypeId == type && x.LeaveYear == year, ct);
+        if (entitlement is null) return Fail<long>("conflict", "Leave entitlement not configured.");
+        var adjustment = await db.Set<EmployeeLeaveEntitlementAdjustment>().Where(x => x.EmployeeLeaveEntitlementId == entitlement.Id).SumAsync(x => (long)x.AdjustmentMinutes, ct);
+        var reserved = await (from a in db.Set<EmployeeLeaveAllocation>() join l in db.EmployeeLeaves on a.EmployeeLeaveId equals l.LeaveId
+            where l.EmployeeId == employee && l.LeaveTypeId == type && l.BalanceTracked == true && a.LeaveYear == year && (l.Status == "Pending" || l.Status == "Approved") select (long)a.ChargeableMinutes).SumAsync(ct);
+        return ServiceResult<long>.Success(entitlement.EntitledMinutes + adjustment - reserved);
+    }
 }

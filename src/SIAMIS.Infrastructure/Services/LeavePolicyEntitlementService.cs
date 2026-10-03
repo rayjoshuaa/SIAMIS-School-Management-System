@@ -118,6 +118,11 @@ public sealed partial class LeaveFoundationService
         var before = await EntitlementDtoAsync(x, ct);
         if (before.AdjustedEntitledMinutes + r.AdjustmentMinutes < 0 || before.AdjustedEntitledMinutes + r.AdjustmentMinutes > int.MaxValue)
             return Invalid<EntitlementDto>("Adjusted entitlement must remain between zero and Int32.MaxValue minutes.");
+        var committed = await (from a in db.Set<EmployeeLeaveAllocation>() join l in db.EmployeeLeaves on a.EmployeeLeaveId equals l.LeaveId
+            where l.EmployeeId == employee && l.LeaveTypeId == x.LeaveTypeId && l.BalanceTracked == true && a.LeaveYear == x.LeaveYear
+                && (l.Status == "Pending" || l.Status == "Approved") select (long)a.ChargeableMinutes).SumAsync(ct);
+        if (before.AdjustedEntitledMinutes + r.AdjustmentMinutes < committed)
+            return Conflict<EntitlementDto>("Adjusted entitlement cannot fall below Approved usage plus Pending reservations.");
         db.Add(new EmployeeLeaveEntitlementAdjustment { EmployeeLeaveEntitlementId = id, AdjustmentMinutes = r.AdjustmentMinutes, Reason = r.Reason.Trim(), CreatedAt = DateTime.UtcNow });
         await db.SaveChangesAsync(ct);
         var result = await EntitlementDtoAsync(x, ct); await tx.CommitAsync(ct);

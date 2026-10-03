@@ -4,6 +4,7 @@ using SIAMIS.Application.Employees;
 
 namespace SIAMIS.Application.Leave;
 
+[JsonConverter(typeof(JsonStringEnumConverter<LeaveNoticeCategory>))]
 public enum LeaveNoticeCategory { Foreseeable, SuddenIllness }
 // Future request boundaries describe a continuous range; resolved work intervals are snapshotted by D8C.
 public sealed record LeaveRequestedRange(DateOnly StartDate, DateOnly EndDate, TimeOnly? StartTime, TimeOnly? EndTime);
