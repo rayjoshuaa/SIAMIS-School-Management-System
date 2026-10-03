@@ -9,6 +9,8 @@ namespace SIAMIS.Infrastructure.Data;
 
 public sealed class SIAMISDbContext(DbContextOptions<SIAMISDbContext> options) : DbContext(options)
 {
+    public DbSet<SIAMIS.Domain.Entities.Leave.WorkCalendar> WorkCalendars => Set<SIAMIS.Domain.Entities.Leave.WorkCalendar>();
+    public DbSet<SIAMIS.Domain.Entities.Leave.EmployeeLeaveEntitlement> EmployeeLeaveEntitlements => Set<SIAMIS.Domain.Entities.Leave.EmployeeLeaveEntitlement>();
     public DbSet<SIAMIS.Domain.Entities.OrganizationProfile> OrganizationProfiles => Set<SIAMIS.Domain.Entities.OrganizationProfile>();
     public DbSet<EmployeePayslip> EmployeePayslips => Set<EmployeePayslip>();
     public DbSet<EmployeePitPaymentSchedule> EmployeePitPaymentSchedules => Set<EmployeePitPaymentSchedule>();
@@ -72,6 +74,7 @@ public sealed class SIAMISDbContext(DbContextOptions<SIAMISDbContext> options) :
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+        LeaveFoundationConfiguration.Configure(modelBuilder);
 
         modelBuilder.Entity<MasterDataEntity>().UseTpcMappingStrategy();
         modelBuilder.Entity<MasterDataEntity>().HasKey(item => item.Id);

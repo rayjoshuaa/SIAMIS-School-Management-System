@@ -27,6 +27,7 @@ builder.Services.AddScoped<IEmployeeCompensationService, EmployeeCompensationSer
 builder.Services.AddScoped<IEmployeeHistoryService, EmployeeHistoryService>();
 builder.Services.AddScoped<IEmployeeAttendanceService, EmployeeAttendanceService>();
 builder.Services.AddScoped<IEmployeeLeaveService, EmployeeLeaveService>();
+builder.Services.AddScoped<SIAMIS.Application.Leave.ILeaveFoundationService, LeaveFoundationService>();
 builder.Services.AddScoped<IEmployeePerformanceService, EmployeePerformanceService>();
 builder.Services.AddScoped<IMasterDataService, MasterDataService>();
 builder.Services.AddScoped<IEmploymentStatusService, EmploymentStatusService>();

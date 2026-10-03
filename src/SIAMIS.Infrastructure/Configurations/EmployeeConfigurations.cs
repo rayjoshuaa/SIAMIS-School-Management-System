@@ -238,6 +238,15 @@ internal sealed class EmployeeLeaveConfiguration : IEntityTypeConfiguration<Empl
     public void Configure(EntityTypeBuilder<EmployeeLeave> builder)
     {
         builder.ToTable("EmployeeLeave");
+        builder.ToTable("EmployeeLeave", table =>
+        {
+            table.HasCheckConstraint("CK_EmployeeLeave_RequestTimes", "([RequestedStartTime] IS NULL AND [RequestedEndTime] IS NULL) OR ([RequestedStartTime] IS NOT NULL AND [RequestedEndTime] IS NOT NULL AND DATEPART(SECOND,[RequestedStartTime]) = 0 AND DATEPART(SECOND,[RequestedEndTime]) = 0 AND ([EndDate] > [StartDate] OR ([EndDate] = [StartDate] AND [RequestedEndTime] > [RequestedStartTime])))");
+            table.HasCheckConstraint("CK_EmployeeLeave_ChargeMinutes", "[ChargeableMinutes] IS NULL OR [ChargeableMinutes] >= 0");
+            table.HasCheckConstraint("CK_EmployeeLeave_CalculationSnapshot", "([CalculationSnapshotVersion] IS NULL AND [CalculationSnapshotJson] IS NULL) OR ([CalculationSnapshotVersion] IS NOT NULL AND [CalculationSnapshotVersion] > 0 AND [CalculationSnapshotJson] IS NOT NULL AND ISJSON([CalculationSnapshotJson]) = 1)");
+        });
+        builder.Property(item => item.RequestedStartTime).HasColumnType("time(0)");
+        builder.Property(item => item.RequestedEndTime).HasColumnType("time(0)");
+        builder.Property(item => item.CalculationSnapshotJson).HasColumnType("nvarchar(max)");
         builder.HasKey(item => item.LeaveId);
         builder.Property(item => item.StartDate).HasColumnType("date").IsRequired();
         builder.Property(item => item.EndDate).HasColumnType("date").IsRequired();
