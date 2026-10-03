@@ -4,14 +4,14 @@ using System.Text.Json.Serialization;
 namespace SIAMIS.Application.Payroll;
 
 public sealed record PitIncomeLine(Guid PayrollComponentId, string ComponentCode, string ComponentName,
-    string ComponentType, decimal Amount, string PitIncomeTreatmentSnapshot, string SourceType, Guid? SourceId)
+    string ComponentType, decimal Amount, string PitIncomeTreatmentSnapshot, string SourceType, Guid? SourceId, string PitPaymentTreatmentSnapshot = "Unknown")
 {
     public static PitIncomeLine FromCalculatedLine(PayrollCalculatedLine line)
         => new(line.PayrollComponentId, line.ComponentCode, line.ComponentName, line.ComponentType,
-            line.Amount, line.PitIncomeTreatmentSnapshot, line.SourceType, line.SourceId);
+            line.Amount, line.PitIncomeTreatmentSnapshot, line.SourceType, line.SourceId, line.PitPaymentTreatmentSnapshot);
     public static PitIncomeLine FromStoredLine(EmployeePayrollLineDto line)
         => new(line.PayrollComponentId, line.ComponentCode, line.ComponentName, line.ComponentType,
-            line.Amount, line.PitIncomeTreatmentSnapshot, line.SourceType, line.SourceId);
+            line.Amount, line.PitIncomeTreatmentSnapshot, line.SourceType, line.SourceId, line.PitPaymentTreatmentSnapshot);
 }
 public sealed record PitIncomeIssue(int LineIndex, Guid PayrollComponentId, string ComponentCode,
     string ComponentName, string SourceType, Guid? SourceId, string Code, string Message);

@@ -66,7 +66,8 @@ public sealed record ApplicablePayrollRuleDto(
     bool PayrollComponentIsStatutory = false,
     string? PayrollComponentContributionSide = null,
     string PayrollComponentSsoWageTreatment = "Unknown",
-    string PayrollComponentPitIncomeTreatment = "Unknown");
+    string PayrollComponentPitIncomeTreatment = "Unknown",
+    string PayrollComponentPitPaymentTreatment = "Unknown");
 
 public sealed record PayrollRuleEvaluationDto(
     PayrollRuleEvaluationEmployeeDto Employee,

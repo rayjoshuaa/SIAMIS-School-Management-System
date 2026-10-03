@@ -58,6 +58,7 @@ internal sealed class EmployeePayrollLineConfiguration : IEntityTypeConfiguratio
                 "[ContributionSideSnapshot] IS NULL OR [ContributionSideSnapshot] IN ('Employee', 'Employer', 'Both')");
             table.HasCheckConstraint("CK_EmployeePayrollLines_SsoWageTreatmentSnapshot",
                 "[SsoWageTreatmentSnapshot] IN ('Unknown', 'Included', 'Excluded')");
+            table.HasCheckConstraint("CK_EmployeePayrollLines_PitPaymentTreatmentSnapshot", "[PitPaymentTreatmentSnapshot] IN ('Unknown', 'Regular', 'Special')");
             table.HasCheckConstraint("CK_EmployeePayrollLines_PitIncomeTreatmentSnapshot",
                 "[PitIncomeTreatmentSnapshot] IN ('Unknown', 'Included', 'Excluded')");
             table.HasCheckConstraint("CK_EmployeePayrollLines_SourceTypeAndId",
@@ -73,6 +74,7 @@ internal sealed class EmployeePayrollLineConfiguration : IEntityTypeConfiguratio
         builder.Property(item => item.ContributionSideSnapshot).HasMaxLength(20);
         builder.Property(item => item.SsoWageTreatmentSnapshot).HasMaxLength(20).HasDefaultValue("Unknown").IsRequired();
         builder.Property(item => item.PitIncomeTreatmentSnapshot).HasMaxLength(20).HasDefaultValue("Unknown").IsRequired();
+        builder.Property(item => item.PitPaymentTreatmentSnapshot).HasMaxLength(20).HasDefaultValue("Unknown").IsRequired();
         builder.Property(item => item.Amount).HasColumnType("decimal(19,4)").IsRequired();
         builder.Property(item => item.Quantity).HasColumnType("decimal(19,4)");
         builder.Property(item => item.Rate).HasColumnType("decimal(19,4)");

@@ -36,7 +36,7 @@ ApplicablePayrollRuleDto Rule(PayrollComponent component, string mode, decimal a
     Guid.NewGuid(), "RULE", "Synthetic rule", component.Id, component.Code, component.Name, component.Category,
     mode, component.Category, component.Category, 1, method, baseType, rate,
     method == "FixedAmount" ? amount : null, null, null, "Employee", new(2026, 1, 1), null,
-    "Synthetic", [], component.IsTaxable, component.IsStatutory, component.ContributionSide, component.SsoWageTreatment, component.PitIncomeTreatment);
+    "Synthetic", [], component.IsTaxable, component.IsStatutory, component.ContributionSide, component.SsoWageTreatment, component.PitIncomeTreatment, component.PitPaymentTreatment);
 var basic = Component("BASIC");
 var earning = Component("EARNING");
 var other = Component("OTHER");
@@ -157,4 +157,24 @@ foreach (var treatment in new[] { "Unknown", "Included", "Excluded" })
 D6BFoundationRegressionTests.Run(Check, model);
 D6CContractRegressionTests.Run(Check, model);
 PitSsoRecognitionContractTests.Run(Check);
-Console.WriteLine($"PASS: {checks} focused D5A/D5B/D5C/D6A/D6B/D6C regression assertions. No database connections or writes.");
+D6DCalculatorTests.Run(Check, model);
+foreach (var payment in new[] { "Unknown", "Regular", "Special" })
+{
+    basic.PitPaymentTreatment = earning.PitPaymentTreatment = payment;
+    var result = Calculate(Rule(earning, "Supplement", 300));
+    var selected = result.Lines.Where(x => x.SourceType is "BasicSalary" or "PayrollRule" || x.SourceId == assignments[0].EmployeePayrollComponentAssignmentId).ToArray();
+    Check(selected.Length == 3 && selected.All(x => x.PitPaymentTreatmentSnapshot == payment), "D6D BasicSalary/Assignment/PayrollRule payment snapshots " + payment);
+    Check(result.GrossPay == 33300 && result.NetPay == 32800 && result.TotalDeductions == 500, "D6D payment classification changes no money " + payment);
+    basic.PitPaymentTreatment = earning.PitPaymentTreatment = "Unknown";
+    Check(selected.All(x => x.PitPaymentTreatmentSnapshot == payment), "D6D historical payment snapshots preserved " + payment);
+}
+manualComponent.PitPaymentTreatment = "Regular";
+var newManual = new EmployeePayrollLine();
+manualRequest.PayrollComponentId = manualComponent.Id;
+applyLine.Invoke(null, [newManual, manualRequest, manualComponent]);
+Check(newManual.PitPaymentTreatmentSnapshot == "Regular", "D6D manual creation payment snapshot");
+manualComponent.PitPaymentTreatment = "Special";
+applyLine.Invoke(null, [newManual, manualRequest, manualComponent]);
+Check(newManual.PitPaymentTreatmentSnapshot == "Regular", "D6D manual amount edit preserves payment snapshot");
+Check(typeof(EmployeePayrollLineRequest).GetProperty("PitPaymentTreatmentSnapshot") == null, "D6D manual caller cannot forge payment snapshot");
+Console.WriteLine($"PASS: {checks} focused D5A/D5B/D5C/D6A/D6B/D6C/D6D regression assertions. No database connections or writes.");

@@ -105,7 +105,8 @@ public sealed record EmployeePayrollLineDto(
     string? ContributionSideSnapshot,
     string? BasicSalaryCalculationSnapshotJson,
     string SsoWageTreatmentSnapshot,
-    string PitIncomeTreatmentSnapshot = "Unknown");
+    string PitIncomeTreatmentSnapshot = "Unknown",
+    string PitPaymentTreatmentSnapshot = "Unknown");
 
 [JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
 public sealed class EmployeePayrollLineRequest

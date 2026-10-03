@@ -34,7 +34,8 @@ public sealed record PayrollPreviewLineDto(
     string? ContributionSide = null,
     BasicSalaryCalculationSnapshot? BasicSalaryCalculationSnapshot = null,
     string SsoWageTreatmentSnapshot = "Unknown",
-    string PitIncomeTreatmentSnapshot = "Unknown");
+    string PitIncomeTreatmentSnapshot = "Unknown",
+    string PitPaymentTreatmentSnapshot = "Unknown");
 
 public sealed record PayrollPreviewEmployeeResult(
     Guid EmployeeId,

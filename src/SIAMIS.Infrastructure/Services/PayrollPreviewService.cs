@@ -129,7 +129,7 @@ public sealed class PayrollPreviewService(SIAMISDbContext db, IPayrollCalculatio
                     line.Quantity, line.Rate, line.Amount, line.Remarks, line.PayrollRuleId, line.RuleCode,
                     line.RuleName, line.ApplicationMode, line.BaseType, line.BaseAmount,
                     line.MinimumBase, line.MaximumBase, line.SourceType, line.SourceId,
-                    line.IsTaxableSnapshot, line.IsStatutorySnapshot, line.ContributionSideSnapshot, line.SourceType == "BasicSalary" ? entitlement.Snapshot : null, line.SsoWageTreatmentSnapshot, line.PitIncomeTreatmentSnapshot)).ToArray(),
+                    line.IsTaxableSnapshot, line.IsStatutorySnapshot, line.ContributionSideSnapshot, line.SourceType == "BasicSalary" ? entitlement.Snapshot : null, line.SsoWageTreatmentSnapshot, line.PitIncomeTreatmentSnapshot, line.PitPaymentTreatmentSnapshot)).ToArray(),
                 statutory.Value.Result is { } statutoryResult ? Section33PayrollService.ToDto(statutoryResult) : null));
         }
 

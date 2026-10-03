@@ -97,7 +97,7 @@ public sealed class PayrollRuleEvaluator(SIAMISDbContext db, IPayrollEmploymentC
         var displays = await ResolveTargetDisplaysAsync(displayTargets, cancellationToken);
         var componentIds = applicable.Select(item => item.Rule.PayrollComponentId).Distinct().ToArray();
         var componentDisplays = await db.PayrollComponents.AsNoTracking().Where(item => componentIds.Contains(item.Id))
-            .Select(item => new { item.Id, item.Code, item.Name, item.Category, item.IsTaxable, item.IsStatutory, item.ContributionSide, item.SsoWageTreatment, item.PitIncomeTreatment })
+            .Select(item => new { item.Id, item.Code, item.Name, item.Category, item.IsTaxable, item.IsStatutory, item.ContributionSide, item.SsoWageTreatment, item.PitIncomeTreatment, item.PitPaymentTreatment })
             .ToDictionaryAsync(item => item.Id, cancellationToken);
         var orderedRules = applicable
             .Select(item => new ApplicablePayrollRuleDto(
@@ -119,7 +119,7 @@ public sealed class PayrollRuleEvaluator(SIAMISDbContext db, IPayrollEmploymentC
                 componentDisplays[item.Rule.PayrollComponentId].IsStatutory,
                 componentDisplays[item.Rule.PayrollComponentId].ContributionSide,
                 componentDisplays[item.Rule.PayrollComponentId].SsoWageTreatment,
-                componentDisplays[item.Rule.PayrollComponentId].PitIncomeTreatment))
+                componentDisplays[item.Rule.PayrollComponentId].PitIncomeTreatment, componentDisplays[item.Rule.PayrollComponentId].PitPaymentTreatment))
             .ToArray();
 
         return ServiceResult<PayrollRuleEvaluationDto>.Success(new(employee, period, orderedRules));

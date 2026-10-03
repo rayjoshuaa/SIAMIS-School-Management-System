@@ -28,7 +28,8 @@ public sealed class PayrollCalculationService : IPayrollCalculationService
                     IsStatutorySnapshot: basicSalaryComponent.IsStatutory,
                     ContributionSideSnapshot: basicSalaryComponent.ContributionSide,
                     SsoWageTreatmentSnapshot: basicSalaryComponent.SsoWageTreatment,
-                    PitIncomeTreatmentSnapshot: basicSalaryComponent.PitIncomeTreatment)
+                    PitIncomeTreatmentSnapshot: basicSalaryComponent.PitIncomeTreatment,
+                    PitPaymentTreatmentSnapshot: basicSalaryComponent.PitPaymentTreatment)
             };
             var grossEarnings = roundedBasicSalary;
             var earningRules = applicableRules.Where(rule => rule.CalculationStage == "Earning").ToArray();
@@ -155,7 +156,7 @@ public sealed class PayrollCalculationService : IPayrollCalculationService
             rule.PayrollRuleId, rule.Code, rule.Name, rule.ApplicationMode, rule.BaseType, baseAmount,
             rule.MinimumBase, rule.MaximumBase, "PayrollRule", rule.PayrollRuleId,
             rule.PayrollComponentIsTaxable, rule.PayrollComponentIsStatutory, rule.PayrollComponentContributionSide,
-            rule.PayrollComponentSsoWageTreatment, rule.PayrollComponentPitIncomeTreatment);
+            rule.PayrollComponentSsoWageTreatment, rule.PayrollComponentPitIncomeTreatment, rule.PayrollComponentPitPaymentTreatment);
         return (line, null, null);
     }
 
@@ -212,7 +213,8 @@ public sealed class PayrollCalculationService : IPayrollCalculationService
             IsStatutorySnapshot: assignment.PayrollComponent.IsStatutory,
             ContributionSideSnapshot: assignment.PayrollComponent.ContributionSide,
             SsoWageTreatmentSnapshot: assignment.PayrollComponent.SsoWageTreatment,
-            PitIncomeTreatmentSnapshot: assignment.PayrollComponent.PitIncomeTreatment);
+            PitIncomeTreatmentSnapshot: assignment.PayrollComponent.PitIncomeTreatment,
+            PitPaymentTreatmentSnapshot: assignment.PayrollComponent.PitPaymentTreatment);
 
     private static string? NormalizePercentageBase(string? value) => value?.Trim() switch
     {
