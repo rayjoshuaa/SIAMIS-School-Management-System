@@ -68,6 +68,7 @@ public sealed class SIAMISDbContext(DbContextOptions<SIAMISDbContext> options) :
     public DbSet<EmployeeCompensation> EmployeeCompensations => Set<EmployeeCompensation>();
     public DbSet<EmployeeHistory> EmployeeHistory => Set<EmployeeHistory>();
     public DbSet<EmployeeAttendance> Attendance => Set<EmployeeAttendance>();
+    public DbSet<AttendanceEvent> AttendanceEvents => Set<AttendanceEvent>();
     public DbSet<EmployeeLeave> EmployeeLeaves => Set<EmployeeLeave>();
     public DbSet<EmployeePerformance> EmployeePerformanceRecords => Set<EmployeePerformance>();
 
@@ -127,6 +128,8 @@ public sealed class SIAMISDbContext(DbContextOptions<SIAMISDbContext> options) :
 
     private void UpdateTimestamps()
     {
+        if (ChangeTracker.Entries<AttendanceEvent>().Any(x => x.State is EntityState.Modified or EntityState.Deleted))
+            throw new InvalidOperationException("Attendance events are immutable observation evidence.");
         var now = DateTime.UtcNow;
         foreach (var entry in ChangeTracker.Entries<IHasTimestamps>())
         {

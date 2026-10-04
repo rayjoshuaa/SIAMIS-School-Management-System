@@ -31,12 +31,10 @@ public sealed class EmployeeAttendanceController(IEmployeeAttendanceService serv
         return result.IsSuccess ? Ok(result.Value) : Failure<EmployeeAttendanceDto>(result.Failure!);
     }
 
-    /// <summary>Creates an attendance record. Only one record per employee per calendar date is allowed.</summary>
+    /// <summary>Retired legacy write. Valid legacy requests return 410 Gone; use Development-only manual attendance events. Legacy storage is retained.</summary>
     [HttpPost]
-    [ProducesResponseType(typeof(EmployeeAttendanceDto), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status410Gone)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
     public async Task<ActionResult<EmployeeAttendanceDto>> CreateAttendance(Guid employeeId, [FromBody] EmployeeAttendanceRequest request, CancellationToken ct)
     {
         var result = await service.CreateAttendanceAsync(employeeId, request, ct);
@@ -44,22 +42,19 @@ public sealed class EmployeeAttendanceController(IEmployeeAttendanceService serv
         return CreatedAtAction(nameof(GetAttendanceRecord), new { employeeId, attendanceId = result.Value!.AttendanceId }, result.Value);
     }
 
-    /// <summary>Updates an attendance record while enforcing employee/date uniqueness.</summary>
+    /// <summary>Retired legacy write. Returns 410 Gone; observations cannot be rewritten.</summary>
     [HttpPut("{attendanceId:guid}")]
-    [ProducesResponseType(typeof(EmployeeAttendanceDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status410Gone)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
     public async Task<ActionResult<EmployeeAttendanceDto>> UpdateAttendance(Guid employeeId, Guid attendanceId, [FromBody] EmployeeAttendanceRequest request, CancellationToken ct)
     {
         var result = await service.UpdateAttendanceAsync(employeeId, attendanceId, request, ct);
         return result.IsSuccess ? Ok(result.Value) : Failure<EmployeeAttendanceDto>(result.Failure!);
     }
 
-    /// <summary>Deletes an attendance record without affecting employee or status data.</summary>
+    /// <summary>Retired legacy write. Returns 410 Gone; legacy storage and reads are retained.</summary>
     [HttpDelete("{attendanceId:guid}")]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status410Gone)]
     public async Task<IActionResult> DeleteAttendance(Guid employeeId, Guid attendanceId, CancellationToken ct)
     {
         var result = await service.DeleteAttendanceAsync(employeeId, attendanceId, ct);
@@ -68,6 +63,7 @@ public sealed class EmployeeAttendanceController(IEmployeeAttendanceService serv
 
     private ActionResult<T> Failure<T>(ApiFailure failure) => failure.Code switch
     {
+        "retired" => new(StatusCode(StatusCodes.Status410Gone, new ProblemDetails { Title = "Legacy attendance writes retired", Detail = failure.Message, Status = StatusCodes.Status410Gone })),
         "validation" => new(BadRequest(new ValidationProblemDetails(new Dictionary<string, string[]> { ["request"] = [failure.Message] })
         { Title = "One or more validation errors occurred.", Status = StatusCodes.Status400BadRequest })),
         "not_found" => new(NotFound(new ProblemDetails { Title = "Not found", Detail = failure.Message, Status = StatusCodes.Status404NotFound })),
