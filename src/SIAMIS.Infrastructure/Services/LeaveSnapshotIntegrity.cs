@@ -14,9 +14,9 @@ public static class LeaveSnapshotIntegrity
         ServiceResult<LeaveCalculationSnapshot> Invalid() => ServiceResult<LeaveCalculationSnapshot>.Fail("conflict", "Stored leave calculation or allocation evidence is incomplete or inconsistent; integrity review is required.");
         try
         {
-            if (leave.CalculationSnapshotVersion != 1 || leave.CalculationSnapshotJson is null) return Invalid();
+            if (leave.CalculationSnapshotVersion is not (1 or 2) || leave.CalculationSnapshotJson is null) return Invalid();
             var s = JsonSerializer.Deserialize<LeaveCalculationSnapshot>(leave.CalculationSnapshotJson, EmployeeLeaveService.SnapshotJson);
-            if (s is null || s.Version != 1 || !s.IsPaid.HasValue || s.EmployeeId != leave.EmployeeId || s.LeaveTypeId != leave.LeaveTypeId
+            if (s is null || s.Version != leave.CalculationSnapshotVersion || !s.IsPaid.HasValue || s.EmployeeId != leave.EmployeeId || s.LeaveTypeId != leave.LeaveTypeId
                 || s.RequestMode != leave.RequestMode || s.NoticeCategory != leave.NoticeCategory || s.StartDate != leave.StartDate || s.EndDate != leave.EndDate
                 || s.RequestedStartTime != leave.RequestedStartTime || s.RequestedEndTime != leave.RequestedEndTime || s.RequestedAt != leave.RequestedAt
                 || s.BalanceTracked != leave.BalanceTracked || s.ChargeableMinutes != leave.ChargeableMinutes || s.ChargeableMinutes <= 0
@@ -46,9 +46,29 @@ public static class LeaveSnapshotIntegrity
             }
             var expected = s.Dates.Where(x => x.ChargeableMinutes > 0).GroupBy(x => x.Date.Year).OrderBy(x => x.Key)
                 .Select(x => new LeaveAllocationDto(x.Key, x.Sum(y => y.ChargeableMinutes))).ToArray();
+            if (s.Version == 1)
+            {
+                if (s.Dates.Any(d => d.PaymentIntervals is not null) || s.Allocations.Any(a => a.PaidMinutes.HasValue || a.UnpaidMinutes.HasValue)
+                    || allocations.Any(a => a.PaidMinutes.HasValue || a.UnpaidMinutes.HasValue)) return Invalid();
+            }
+            else
+            {
+                if (s.Allocations.Any(a => !a.PaidMinutes.HasValue || !a.UnpaidMinutes.HasValue || a.PaidMinutes < 0 || a.UnpaidMinutes < 0
+                    || (long)a.PaidMinutes + a.UnpaidMinutes != a.ChargeableMinutes)
+                    || s.Dates.Any(d => d.PaymentIntervals is null)) return Invalid();
+                var classified = LeavePaymentAllocation.Classify(s, s.Allocations.ToDictionary(a => a.LeaveYear, a => (long)a.PaidMinutes!.Value));
+                if (!classified.Allocations.SequenceEqual(s.Allocations)
+                    || classified.Dates.Where((d, n) => !d.PaymentIntervals!.SequenceEqual(s.Dates[n].PaymentIntervals!)).Any()) return Invalid();
+                expected = expected.Select(a =>
+                {
+                    var paid = s.Dates.Where(d => d.Date.Year == a.LeaveYear).SelectMany(d => d.PaymentIntervals!)
+                        .Where(i => i.IsPaid).Sum(i => LeaveRequestCalculator.Minutes(new(i.StartTime, i.EndTime)));
+                    return a with { PaidMinutes = paid, UnpaidMinutes = a.ChargeableMinutes - paid };
+                }).ToArray();
+            }
             if (s.Dates.Sum(x => (long)x.ChargeableMinutes) != s.ChargeableMinutes || leave.Days != s.Dates.Count(x => x.ChargeableMinutes > 0)
                 || !expected.SequenceEqual(s.Allocations) || allocations.Any(x => x.EmployeeLeaveId != leave.LeaveId)
-                || !expected.SequenceEqual(allocations.OrderBy(x => x.LeaveYear).Select(x => new LeaveAllocationDto(x.LeaveYear, x.ChargeableMinutes)))) return Invalid();
+                || !expected.SequenceEqual(allocations.OrderBy(x => x.LeaveYear).Select(x => new LeaveAllocationDto(x.LeaveYear, x.ChargeableMinutes) { PaidMinutes = x.PaidMinutes, UnpaidMinutes = x.UnpaidMinutes }))) return Invalid();
             var first = s.Dates.First(x => x.ChargeableMinutes > 0);
             var local = first.Date.ToDateTime(first.ChargedIntervals[0].StartTime, DateTimeKind.Unspecified);
             var utc = TimeZoneInfo.ConvertTimeToUtc(local, TimeZoneInfo.FindSystemTimeZoneById(s.BusinessTimeZone));
@@ -73,6 +93,6 @@ public static class LeaveSnapshotIntegrity
             if (!required.IsSuccess || s.RequiredDocumentTypeIds is not null && !s.RequiredDocumentTypeIds.SequenceEqual(required.Value!)) return Invalid();
             return ServiceResult<LeaveCalculationSnapshot>.Success(s);
         }
-        catch (Exception e) when (e is JsonException or ArgumentException or InvalidOperationException or NullReferenceException or OverflowException) { return Invalid(); }
+        catch (Exception e) when (e is JsonException or ArgumentException or InvalidOperationException or NullReferenceException or OverflowException or KeyNotFoundException) { return Invalid(); }
     }
 }

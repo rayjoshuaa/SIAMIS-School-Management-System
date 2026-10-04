@@ -57,23 +57,26 @@ public sealed partial class EmployeeLeaveService(SIAMISDbContext db) : IEmployee
                 if (!existing.IsSuccess) return Fail<EmployeeLeaveDto>("conflict", existing.Failure!.Message);
                 if (LeaveRequestCalculator.Overlap(snapshot, existing.Value!)) return Fail<EmployeeLeaveDto>("conflict", "The requested chargeable intervals overlap Pending or Approved leave.");
             }
-            if (snapshot.BalanceTracked)
+            var available = new Dictionary<int, long>();
+            if (snapshot.BalanceTracked && snapshot.IsPaid == true)
                 foreach (var allocation in snapshot.Allocations)
                 {
                     var balance = await AvailableAsync(employeeId, typeId, allocation.LeaveYear, ct);
                     if (!balance.IsSuccess) return Fail<EmployeeLeaveDto>("conflict", balance.Failure!.Message);
-                    if (balance.Value < allocation.ChargeableMinutes) return Fail<EmployeeLeaveDto>("conflict", "Insufficient available leave balance.");
+                    if (balance.Value < 0) return Fail<EmployeeLeaveDto>("conflict", "Stored reservations exceed configured entitlement; integrity review is required.");
+                    available[allocation.LeaveYear] = balance.Value;
                 }
+            snapshot = LeavePaymentAllocation.Classify(snapshot, available);
             var leave = new EmployeeLeave
             {
                 EmployeeId = employeeId, LeaveTypeId = typeId, StartDate = start, EndDate = end,
                 RequestMode = snapshot.RequestMode, NoticeCategory = snapshot.NoticeCategory, RequestedStartTime = snapshot.RequestedStartTime, RequestedEndTime = snapshot.RequestedEndTime,
                 BalanceTracked = snapshot.BalanceTracked, ChargeableMinutes = snapshot.ChargeableMinutes, RequestedAt = snapshot.RequestedAt,
-                CalculationSnapshotVersion = 1, CalculationSnapshotJson = JsonSerializer.Serialize(snapshot, SnapshotJson),
+                CalculationSnapshotVersion = snapshot.Version, CalculationSnapshotJson = JsonSerializer.Serialize(snapshot, SnapshotJson),
                 Days = snapshot.Dates.Count(x => x.ChargeableMinutes > 0), Reason = Clean(request.Reason), Status = "Pending"
             };
             db.Add(leave);
-            foreach (var allocation in snapshot.Allocations) db.Add(new EmployeeLeaveAllocation { EmployeeLeaveId = leave.LeaveId, LeaveYear = allocation.LeaveYear, ChargeableMinutes = allocation.ChargeableMinutes });
+            foreach (var allocation in snapshot.Allocations) db.Add(new EmployeeLeaveAllocation { EmployeeLeaveId = leave.LeaveId, LeaveYear = allocation.LeaveYear, ChargeableMinutes = allocation.ChargeableMinutes, PaidMinutes = allocation.PaidMinutes, UnpaidMinutes = allocation.UnpaidMinutes });
             await db.SaveChangesAsync(ct);
             var formed = await FormSandwiches(employeeId, leave.LeaveId, ct);
             if (!formed.IsSuccess) return Fail<EmployeeLeaveDto>("conflict", formed.Failure!.Message);
@@ -105,7 +108,7 @@ public sealed partial class EmployeeLeaveService(SIAMISDbContext db) : IEmployee
             if (leave.Status == "Approved" && string.IsNullOrWhiteSpace(remarks)) return Fail<EmployeeLeaveDto>("validation", "Approved cancellation requires CancellationRemarks.");
             var integrity = LeaveSnapshotIntegrity.Read(leave, await Allocations(leaveId, ct));
             if (!integrity.IsSuccess) return Fail<EmployeeLeaveDto>("conflict", integrity.Failure!.Message);
-            if (target == "Approved" && leave.BalanceTracked == true)
+            if (target == "Approved" && leave.BalanceTracked == true && (integrity.Value!.Version == 1 || integrity.Value.IsPaid == true))
                 foreach (var allocation in integrity.Value!.Allocations)
                 {
                     var balance = await AvailableAsync(employeeId, leave.LeaveTypeId, allocation.LeaveYear, ct);
@@ -134,7 +137,7 @@ public sealed partial class EmployeeLeaveService(SIAMISDbContext db) : IEmployee
         if (entitlement is null) return Fail<long>("conflict", "Leave entitlement not configured.");
         var adjustment = await db.Set<EmployeeLeaveEntitlementAdjustment>().Where(x => x.EmployeeLeaveEntitlementId == entitlement.Id).SumAsync(x => (long)x.AdjustmentMinutes, ct);
         var reserved = await (from a in db.Set<EmployeeLeaveAllocation>() join l in db.EmployeeLeaves on a.EmployeeLeaveId equals l.LeaveId
-            where l.EmployeeId == employee && l.LeaveTypeId == type && l.BalanceTracked == true && a.LeaveYear == year && (l.Status == "Pending" || l.Status == "Approved") select (long)a.ChargeableMinutes).SumAsync(ct);
+            where l.EmployeeId == employee && l.LeaveTypeId == type && l.BalanceTracked == true && a.LeaveYear == year && (l.Status == "Pending" || l.Status == "Approved") select (long)(a.PaidMinutes ?? a.ChargeableMinutes)).SumAsync(ct);
         return ServiceResult<long>.Success(entitlement.EntitledMinutes + adjustment - reserved - await SandwichCommitted(employee, type, year, ct));
     }
 }

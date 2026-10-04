@@ -122,7 +122,7 @@ public sealed partial class LeaveFoundationService
             return Invalid<EntitlementDto>("Adjusted entitlement must remain between zero and Int32.MaxValue minutes.");
         var committed = await (from a in db.Set<EmployeeLeaveAllocation>() join l in db.EmployeeLeaves on a.EmployeeLeaveId equals l.LeaveId
             where l.EmployeeId == employee && l.LeaveTypeId == x.LeaveTypeId && l.BalanceTracked == true && a.LeaveYear == x.LeaveYear
-                && (l.Status == "Pending" || l.Status == "Approved") select (long)a.ChargeableMinutes).SumAsync(ct);
+                && (l.Status == "Pending" || l.Status == "Approved") select (long)(a.PaidMinutes ?? a.ChargeableMinutes)).SumAsync(ct);
         committed += await (from a in db.Set<EmployeeLeaveSandwichAllocation>() join c in db.Set<EmployeeLeaveSandwichCase>() on a.CaseId equals c.Id
             where c.EmployeeId == employee && c.LeaveTypeId == x.LeaveTypeId && c.BalanceTracked && a.LeaveYear == x.LeaveYear
                 && (c.State == LeaveSandwichState.Reserved || c.State == LeaveSandwichState.ReasonNotAccepted || c.State == LeaveSandwichState.Charged) select (long)(a.AppliedDebitMinutes ?? a.SandwichDebitMinutes)).SumAsync(ct);

@@ -14,7 +14,7 @@ public sealed partial class EmployeeLeaveService
     private static EmployeeLeaveDto Dto(EmployeeLeave x, string? code, string name, IReadOnlyList<EmployeeLeaveAllocation> allocations)
     {
         LeaveCalculationSnapshot? snapshot = null;
-        if (x.CalculationSnapshotVersion == 1 && x.CalculationSnapshotJson is not null)
+        if (x.CalculationSnapshotVersion is 1 or 2 && x.CalculationSnapshotJson is not null)
         {
             var integrity = LeaveSnapshotIntegrity.Read(x, allocations);
             if (integrity.IsSuccess) snapshot = integrity.Value;
@@ -24,11 +24,11 @@ public sealed partial class EmployeeLeaveService
             LeaveId = x.LeaveId, EmployeeId = x.EmployeeId, LeaveTypeId = x.LeaveTypeId, LeaveTypeCode = snapshot?.LeaveTypeCode ?? code,
             LeaveTypeName = snapshot?.LeaveTypeName ?? name, IsPaid = snapshot?.IsPaid, StartDate = x.StartDate, EndDate = x.EndDate, Days = x.Days, Reason = x.Reason,
             Status = x.Status, Remarks = x.Remarks, RequestMode = x.RequestMode, NoticeCategory = x.NoticeCategory,
-            RequestedStartTime = x.RequestedStartTime, RequestedEndTime = x.RequestedEndTime, ChargeableMinutes = x.ChargeableMinutes,
+            RequestedStartTime = x.RequestedStartTime, RequestedEndTime = x.RequestedEndTime, ChargeableMinutes = x.ChargeableMinutes, PaidMinutes = snapshot?.Version == 2 ? snapshot.Allocations.Sum(a => a.PaidMinutes) : null, UnpaidMinutes = snapshot?.Version == 2 ? snapshot.Allocations.Sum(a => a.UnpaidMinutes) : null,
             RequestedAt = Utc(x.RequestedAt), ReviewedAt = Utc(x.ReviewedAt), CancelledAt = Utc(x.CancelledAt), ReviewRemarks = x.ReviewRemarks,
             CancellationRemarks = x.CancellationRemarks, Calculation = snapshot, SupportingDocumentRequired = snapshot?.SupportingDocumentRequired,
             CertificateRequirementReasons = snapshot?.CertificateRequirementReasons ?? [],
-            Allocations = allocations.OrderBy(a => a.LeaveYear).Select(a => new LeaveAllocationDto(a.LeaveYear, a.ChargeableMinutes)).ToArray()
+            Allocations = allocations.OrderBy(a => a.LeaveYear).Select(a => new LeaveAllocationDto(a.LeaveYear, a.ChargeableMinutes) { PaidMinutes = a.PaidMinutes, UnpaidMinutes = a.UnpaidMinutes }).ToArray()
         };
     }
     public async Task<ServiceResult<IReadOnlyList<EmployeeLeaveDto>>> GetLeavesAsync(Guid employeeId, DateOnly? fromDate, DateOnly? toDate, CancellationToken ct)
@@ -79,10 +79,10 @@ public sealed partial class EmployeeLeaveService
         var items = rows.Select(x =>
         {
             LeaveCalculationSnapshot? s = null;
-            try { if (x.Leave.CalculationSnapshotVersion == 1 && x.Leave.CalculationSnapshotJson is not null) s = JsonSerializer.Deserialize<LeaveCalculationSnapshot>(x.Leave.CalculationSnapshotJson, SnapshotJson); } catch (JsonException) { }
+            try { if (x.Leave.CalculationSnapshotVersion is 1 or 2 && x.Leave.CalculationSnapshotJson is not null) s = JsonSerializer.Deserialize<LeaveCalculationSnapshot>(x.Leave.CalculationSnapshotJson, SnapshotJson); } catch (JsonException) { }
             var l = x.Leave;
             return new LeaveHistoryItemDto(l.LeaveId, l.EmployeeId, x.EmployeeNumber, x.EmployeeName, l.LeaveTypeId, s?.LeaveTypeCode ?? x.Code, s?.LeaveTypeName ?? x.Name,
-                s?.IsPaid, l.StartDate, l.EndDate, l.RequestMode, l.RequestedStartTime, l.RequestedEndTime, l.ChargeableMinutes, l.Status, Utc(l.RequestedAt), l.NoticeCategory, s?.SupportingDocumentRequired, l.Reason);
+                s?.IsPaid, l.StartDate, l.EndDate, l.RequestMode, l.RequestedStartTime, l.RequestedEndTime, l.ChargeableMinutes, l.Status, Utc(l.RequestedAt), l.NoticeCategory, s?.SupportingDocumentRequired, l.Reason) { PaidMinutes = s?.Version == 2 ? s.Allocations.Sum(a => a.PaidMinutes) : null, UnpaidMinutes = s?.Version == 2 ? s.Allocations.Sum(a => a.UnpaidMinutes) : null };
         }).ToArray();
         foreach (var item in items)
         {
@@ -106,7 +106,7 @@ public sealed partial class EmployeeLeaveService
             .Select(x => new { x.LeaveTypeId, x.EntitledMinutes, Adjustment = db.Set<EmployeeLeaveEntitlementAdjustment>().Where(a => a.EmployeeLeaveEntitlementId == x.Id).Sum(a => (long)a.AdjustmentMinutes) }).ToListAsync(ct);
         var amounts = await (from a in db.Set<EmployeeLeaveAllocation>().AsNoTracking() join l in db.EmployeeLeaves.AsNoTracking() on a.EmployeeLeaveId equals l.LeaveId
             where l.EmployeeId == employeeId && l.BalanceTracked == true && a.LeaveYear == year && (l.Status == "Pending" || l.Status == "Approved")
-            select new { l.LeaveTypeId, l.Status, a.ChargeableMinutes }).ToListAsync(ct);
+            select new { l.LeaveTypeId, l.Status, ChargeableMinutes = a.PaidMinutes ?? a.ChargeableMinutes }).ToListAsync(ct);
         var sandwich = await (from a in db.Set<EmployeeLeaveSandwichAllocation>().AsNoTracking() join c in db.Set<EmployeeLeaveSandwichCase>().AsNoTracking() on a.CaseId equals c.Id
             where c.EmployeeId == employeeId && c.BalanceTracked && a.LeaveYear == year && (c.State == LeaveSandwichState.Reserved || c.State == LeaveSandwichState.ReasonNotAccepted || c.State == LeaveSandwichState.Charged)
             select new { c.LeaveTypeId, c.State, SandwichDebitMinutes = a.AppliedDebitMinutes ?? a.SandwichDebitMinutes }).ToListAsync(ct);
@@ -122,7 +122,7 @@ public sealed partial class EmployeeLeaveService
             var su = sandwich.Where(c => c.LeaveTypeId == t.Id && c.State == LeaveSandwichState.Charged).Sum(c => (long)c.SandwichDebitMinutes);
             var expose = tracked != false && e is not null;
             return new LeaveBalanceDto(t.Id, t.Code, t.Name, tracked, coverage, expose ? e!.EntitledMinutes : null, expose ? e!.Adjustment : null,
-                expose ? e!.EntitledMinutes + e.Adjustment : null, pending, used, expose ? e!.EntitledMinutes + e.Adjustment - pending - used - sp - su : null, sp, su);
+                expose ? e!.EntitledMinutes + e.Adjustment : null, pending, used, expose ? Math.Max(0L, e!.EntitledMinutes + e.Adjustment - pending - used - sp - su) : null, sp, su);
         }).ToArray();
         await tx.CommitAsync(ct);
         return ServiceResult<IReadOnlyList<LeaveBalanceDto>>.Success(result);

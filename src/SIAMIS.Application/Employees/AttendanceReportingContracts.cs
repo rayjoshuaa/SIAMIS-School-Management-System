@@ -39,7 +39,11 @@ public sealed class AttendanceRangeQuery
 }
 public sealed record AttendanceReportEvent(Guid AttendanceEventId, DateTime OccurredAtUtc, string Direction, string Source);
 public sealed record AttendanceLeaveWindow(TimeOnly StartTime, TimeOnly EndTime);
-public sealed record AttendanceReportLeave(Guid LeaveId, bool IsPaid, IReadOnlyList<AttendanceLeaveWindow> ChargedIntervals);
+public sealed record AttendanceReportLeave(Guid LeaveId, bool IsPaid, IReadOnlyList<AttendanceLeaveWindow> ChargedIntervals)
+{
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public IReadOnlyList<ClassifiedLeaveInterval>? PaymentIntervals { get; init; }
+}
 
 /// <summary>Privacy-minimized calculation facts. Null coverage totals mean no authoritative partition. Residual is precision metadata only.</summary>
 public sealed class AttendanceReportFacts

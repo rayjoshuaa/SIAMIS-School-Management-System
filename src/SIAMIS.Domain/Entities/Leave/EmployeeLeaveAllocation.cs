@@ -7,4 +7,6 @@ public sealed class EmployeeLeaveAllocation
     public Guid EmployeeLeaveId { get; set; }
     public int LeaveYear { get; set; }
     public int ChargeableMinutes { get; set; }
+    public int? PaidMinutes { get; set; }
+    public int? UnpaidMinutes { get; set; }
 }

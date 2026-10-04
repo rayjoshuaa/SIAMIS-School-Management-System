@@ -96,8 +96,9 @@ try:
     missing=expect('POST',f'employees/{e}/leave',request(),409,'missing entitlement rejected')
     check('not configured' in missing['detail'],'missing entitlement message')
     ent=entitlement(e,minutes=0)
-    zero=expect('POST',f'employees/{e}/leave',request(),409,'zero entitlement insufficient')
-    check('Insufficient' in zero['detail'] and balance(e)['entitledMinutes']==0,'configured zero differs from missing')
+    zero=expect('POST',f'employees/{e}/leave',request(),201,'D11 configured zero becomes unpaid')
+    check(zero['paidMinutes']==0 and zero['unpaidMinutes']==420 and balance(e)['entitledMinutes']==0,'configured zero differs from missing')
+    cancel(e,zero)
     api('POST',f"employees/{e}/leave-entitlements/{ent['id']}/adjustments",{'adjustmentMinutes':10000,'reason':PREFIX+' synthetic allowance'},201)
     check(balance(e)['adjustedEntitledMinutes']==10000,'append-only positive adjustment included')
     full=create(e,request(),420,'full split day');before=frozen(full)
@@ -210,7 +211,7 @@ try:
     expect('POST',f'employees/{e}/leave',request('2030-07-01',t=sick,noticeCategory='SuddenIllness',reason='Synthetic reason'),400,'Sudden forbidden by published revision')
     entitlement(e,year=2031,minutes=1000)
     cross=create(e,request('2030-12-31',end='2031-01-01'),240,'cross year exact allocation')
-    check(cross['allocations']==[{'leaveYear':2030,'chargeableMinutes':120},{'leaveYear':2031,'chargeableMinutes':120}], 'cross-year independent relational years')
+    check(cross['allocations']==[{'leaveYear':2030,'chargeableMinutes':120,'paidMinutes':120,'unpaidMinutes':0},{'leaveYear':2031,'chargeableMinutes':120,'paidMinutes':120,'unpaidMinutes':0}], 'cross-year independent relational years')
     check(balance(e,year=2031)['pendingMinutes']==120,'2031 reservation independent');cancel(e,cross)
     # Frozen evidence survives a legitimate calendar change and an entitlement adjustment.
     frozenLeave=create(e,request('2030-02-04'),420,'frozen calendar before change');stored=frozen(frozenLeave)
@@ -220,9 +221,9 @@ try:
     approved=command(e,frozenLeave,'approve');check(approved['chargeableMinutes']==420 and frozen(frozenLeave)==stored,'approval no current configuration recalculation');cancel(e,frozenLeave,True)
     # Corrupted allocation and snapshot fail approval without partial transition.
     broken=create(e,request('2030-02-05'),420,'integrity fixture');brokenBefore=frozen(broken)
-    sql('UPDATE EmployeeLeaveAllocations SET ChargeableMinutes=ChargeableMinutes+1 WHERE EmployeeLeaveId='+ident(broken['leaveId']))
+    sql('UPDATE EmployeeLeaveAllocations SET ChargeableMinutes=ChargeableMinutes+1,PaidMinutes=PaidMinutes+1 WHERE EmployeeLeaveId='+ident(broken['leaveId']))
     command(e,broken,'approve',status=409);check(True,'approval rejects corrupted allocation')
-    sql('UPDATE EmployeeLeaveAllocations SET ChargeableMinutes=ChargeableMinutes-1 WHERE EmployeeLeaveId='+ident(broken['leaveId']))
+    sql('UPDATE EmployeeLeaveAllocations SET ChargeableMinutes=ChargeableMinutes-1,PaidMinutes=PaidMinutes-1 WHERE EmployeeLeaveId='+ident(broken['leaveId']))
     sql("UPDATE EmployeeLeave SET CalculationSnapshotJson=JSON_MODIFY(CalculationSnapshotJson,'$.chargeableMinutes',421) WHERE LeaveId="+ident(broken['leaveId']))
     command(e,broken,'approve',status=409);check(True,'approval rejects corrupted snapshot')
     original_json=brokenBefore[0]['CalculationSnapshotJson'].replace("'","''")
@@ -244,12 +245,14 @@ try:
     # Reservation overspend, interval overlap, review/cancel and adjustment/create races.
     ce=employee('CONCURRENT');assign(ce,c);ceEnt=entitlement(ce,minutes=420)
     raced=race([('POST',f'employees/{ce}/leave',request('2030-04-01')),('POST',f'employees/{ce}/leave',request('2030-04-02'))])
-    check(sorted(x[0] for x in raced)==[201,409],'concurrent distinct dates cannot overspend last entitlement')
-    winner=next(x[1] for x in raced if x[0]==201);check(balance(ce)['pendingMinutes']==420 and balance(ce)['availableMinutes']==0,'SQL-backed race retains one reservation')
+    check(sorted(x[0] for x in raced)==[201,201] and sum(x[1]['paidMinutes'] for x in raced)==420,'D11 concurrent distinct dates share paid entitlement without overspend')
+    winner=next(x[1] for x in raced if x[0]==201 and x[1]['paidMinutes']==420);check(balance(ce)['pendingMinutes']==420 and balance(ce)['availableMinutes']==0,'SQL-backed race retains one reservation')
     expect('POST',f"employees/{ce}/leave-entitlements/{ceEnt['id']}/adjustments",{'adjustmentMinutes':-1,'reason':'Synthetic reduce below reservation'},409,'adjustment cannot reduce below Pending')
     command(ce,winner,'approve')
     expect('POST',f"employees/{ce}/leave-entitlements/{ceEnt['id']}/adjustments",{'adjustmentMinutes':-1,'reason':'Synthetic reduce below Used'},409,'adjustment cannot reduce below Approved')
     cancel(ce,winner,True)
+    for code,value in raced:
+        if code==201 and value['leaveId']!=winner['leaveId']:cancel(ce,value)
     raced=race([('POST',f'employees/{ce}/leave',request('2030-04-03',a='09:00',b='11:00'))]*2)
     check(sorted(x[0] for x in raced)==[201,409],'concurrent exact interval overlap prevented')
     winner=next(x[1] for x in raced if x[0]==201);cancel(ce,winner)
@@ -260,7 +263,7 @@ try:
         state=api('GET',f"employees/{ce}/leave/{l['leaveId']}");check(frozen(l)==ev,'race preserves frozen evidence '+str(i))
         if state['status']=='Approved':cancel(ce,l,True)
     raced=race([('POST',f'employees/{ce}/leave',request('2030-04-05')),('POST',f"employees/{ce}/leave-entitlements/{ceEnt['id']}/adjustments",{'adjustmentMinutes':-1,'reason':'Synthetic concurrent reduction'})])
-    check(sum(code==201 for code,_ in raced)==1 and sorted(code for code,_ in raced)==[201,409],'entitlement adjustment/create coherent reservation race')
+    check(raced[0][0]==201 and raced[1][0] in [201,409] and raced[0][1]['paidMinutes'] in [419,420],'D11 entitlement adjustment/create coherent paid reservation race')
     check(balance(ce)['availableMinutes']>=0,'no negative balance after concurrent adjustment')
     for code,value in raced:
         if code==201 and 'leaveId' in value:cancel(ce,value)
@@ -278,7 +281,7 @@ try:
         ("UPDATE EmployeeLeave SET CalculationSnapshotVersion=NULL WHERE LeaveId="+ident(full['leaveId']),'SQL snapshot version required',547),
         ("UPDATE EmployeeLeaveAllocations SET ChargeableMinutes=0 WHERE EmployeeLeaveId="+ident(full['leaveId']),'SQL positive allocation',547),
         ("UPDATE EmployeeLeaveAllocations SET LeaveYear=0 WHERE EmployeeLeaveId="+ident(full['leaveId']),'SQL valid allocation year',547),
-        ("INSERT EmployeeLeaveAllocations SELECT NEWID(),EmployeeLeaveId,LeaveYear,ChargeableMinutes FROM EmployeeLeaveAllocations WHERE EmployeeLeaveId="+ident(full['leaveId']),'SQL unique allocation per leave/year',2601),
+        ("INSERT EmployeeLeaveAllocations (Id,EmployeeLeaveId,LeaveYear,ChargeableMinutes,PaidMinutes,UnpaidMinutes) SELECT NEWID(),EmployeeLeaveId,LeaveYear,ChargeableMinutes,PaidMinutes,UnpaidMinutes FROM EmployeeLeaveAllocations WHERE EmployeeLeaveId="+ident(full['leaveId']),'SQL unique allocation per leave/year',2601),
         ("DELETE EmployeeLeave WHERE LeaveId="+ident(full['leaveId']),'SQL allocation prevents hard deletion',547)]:constraint(query,label,num)
     with urllib.request.urlopen(BASE+'/swagger/v1/swagger.json') as r:swagger=json.load(r)
     path='/api/employees/{employeeId}/leave/{leaveId}'

@@ -145,7 +145,11 @@ try:
     e,c=new('NONPART',None);pair(e,t=other);check(cases(e)==[],'nonparticipating boundary excludes sandwich')
     for budget,label in [(None,'MISSING'),(0,'ZERO'),(1000,'INSUFFICIENT')]:
         e,c=new(label,budget)
-        if budget is None or budget==0:expect('POST',f'employees/{e}/leave',request('2030-01-11'),409,label+' normal budget rejected');continue
+        if budget is None:expect('POST',f'employees/{e}/leave',request('2030-01-11'),409,label+' normal budget rejected');continue
+        if budget==0:
+            exhausted=create(e,request('2030-01-11'),420,'D11 configured zero is unpaid')
+            check(exhausted['paidMinutes']==0 and exhausted['unpaidMinutes']==420 and balance(e)['availableMinutes']==0,'D11 zero paid allocation has no entitlement debt')
+            continue
         l=create(e,request('2030-01-11'),420,'older before budget');command(e,l,'approve');old=complete(l)
         r=create(e,request('2030-01-14'),420,'potential pair despite insufficient sandwich budget');cc=cases(e)[0]
         old_case=case_frozen(cc);old_balance=balance(e)
@@ -200,7 +204,7 @@ try:
             reviewed=sandwich_review(e,cc,outcome=outcome)
             check(complete(l)==old_l and complete(r)==old_r,'review never rewrites normal leave minutes/days/status')
             command(e,l,'approve');command(e,r,'approve')
-            check(cases(e)[0]['reviewOutcome']==outcome and balance(e)['usedMinutes']==840 and balance(e)['sandwichUsedMinutes']==(600 if outcome=='ReasonNotAccepted' else 0),'paid/unpaid '+outcome+' independent entitlement consequence')
+            check(cases(e)[0]['reviewOutcome']==outcome and balance(e)['usedMinutes']==(840 if paid else 0) and balance(e)['sandwichUsedMinutes']==(600 if outcome=='ReasonNotAccepted' else 0),'D11 normal paid-only usage and unchanged D8D '+outcome+' separate sandwich debit')
             sandwich_review(e,cc,409,outcome=outcome)
             cancel(e,r,True);check(cases(e)[0]['reviewOutcome']==outcome and balance(e)['sandwichPendingMinutes']==balance(e)['sandwichUsedMinutes']==0,'release retains explicit historical review outcome')
     sql('UPDATE LeaveTypes SET IsPaid=1 WHERE Id='+ident(annual))

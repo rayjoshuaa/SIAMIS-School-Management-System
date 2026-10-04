@@ -78,6 +78,9 @@ public static class AttendanceDayCalculator
                 Find("LeaveScheduleMismatch", "Frozen Leave schedule differs from current expected work; no precedence selected.", l.LeaveId);
         }
         IReadOnlyList<AttendanceTimeInterval> Charged(AttendanceLeaveEvidence l) => l.Date.ChargedIntervals.Select(x => new AttendanceTimeInterval(Instant(work.Date, x.StartTime), Instant(work.Date, x.EndTime))).ToArray();
+        IEnumerable<AttendanceTimeInterval> Payment(AttendanceLeaveEvidence l, bool paid) => l.SnapshotVersion == 2
+            ? l.Date.PaymentIntervals!.Where(i => i.IsPaid == paid).Select(i => new AttendanceTimeInterval(Instant(work.Date, i.StartTime), Instant(work.Date, i.EndTime)))
+            : l.IsPaid == paid ? Charged(l) : [];
         for (int i = 0; i < leaves.Count; i++)
             for (int j = i + 1; j < leaves.Count; j++)
                 if (Intersect(Charged(leaves[i]), Charged(leaves[j])).Count > 0)
@@ -108,8 +111,8 @@ public static class AttendanceDayCalculator
             ApprovedLeaveCoveredIntervals = lcov, PresenceLeaveOverlapIntervals = overlap, UnexplainedScheduledIntervals = u,
             ObservedPresenceMilliseconds = Ms(observed), ScheduledMilliseconds = work.Readiness == "Ready" ? Ms(schedule) : null,
             PresenceCoveredScheduledMilliseconds = partition ? Ms(p) : null, ApprovedLeaveCoveredScheduledMilliseconds = partition ? Ms(lcov) : null,
-            PaidLeaveCoveredMilliseconds = partition ? Ms(Intersect(schedule, leaves.Where(x => x.IsPaid).SelectMany(Charged))) : null,
-            UnpaidLeaveCoveredMilliseconds = partition ? Ms(Intersect(schedule, leaves.Where(x => !x.IsPaid).SelectMany(Charged))) : null,
+            PaidLeaveCoveredMilliseconds = partition ? Ms(Intersect(schedule, leaves.SelectMany(x => Payment(x, true)))) : null,
+            UnpaidLeaveCoveredMilliseconds = partition ? Ms(Intersect(schedule, leaves.SelectMany(x => Payment(x, false)))) : null,
             UnexplainedScheduledMilliseconds = partition ? Ms(u) : null, CoverageTruncationResidualMilliseconds = residual,
             ExpectedArrivalUtc = arrival, FirstRelevantPresenceUtc = first?.StartUtc, RawStartVarianceTicks = variance,
             RawStartVarianceMilliseconds = variance / TimeSpan.TicksPerMillisecond, IsLateUnderCurrentPolicy = variance.HasValue ? variance > 5 * TimeSpan.TicksPerMinute : null

@@ -48,9 +48,9 @@ public sealed partial class EmployeeLeaveService
                 if (frozen.Length > 0)
                 {
                     // Charged intersections are request-specific; resolution facts must match independently.
-                    string Resolution(LeaveDateCalculation d) => JsonSerializer.Serialize(d with { ChargedIntervals = [], ChargeableMinutes = 0 }, SnapshotJson);
+                    string Resolution(LeaveDateCalculation d) => JsonSerializer.Serialize(d with { ChargedIntervals = [], ChargeableMinutes = 0, PaymentIntervals = null }, SnapshotJson);
                     if (frozen.Skip(1).Any(d => Resolution(d) != Resolution(frozen[0]))) return Fail<bool>("conflict", "Frozen gap facts conflict; integrity review is required.");
-                    fact = frozen[0] with { ChargedIntervals = [], ChargeableMinutes = 0 };
+                    fact = frozen[0] with { ChargedIntervals = [], ChargeableMinutes = 0, PaymentIntervals = null };
                 }
                 else
                 {

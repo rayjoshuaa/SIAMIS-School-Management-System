@@ -31,7 +31,7 @@ public sealed class EmployeeLeaveController(IEmployeeLeaveService service) : Con
         return result.IsSuccess ? Ok(result.Value) : Failure<EmployeeLeaveDto>(result.Failure!);
     }
 
-    /// <summary>Calculates FullDay/Timed scheduled minutes, freezes evidence and reserves tracked entitlement. Always creates Pending.</summary>
+    /// <summary>Calculates FullDay/Timed scheduled minutes and freezes V2 paid/unpaid intervals. Paid tracked leave reserves only available entitlement; excess is unpaid. Missing entitlement remains a conflict. Always creates Pending.</summary>
     [HttpPost]
     [ProducesResponseType(typeof(EmployeeLeaveDto), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]

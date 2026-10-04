@@ -44,14 +44,23 @@ public sealed class LeaveHistoryQuery
     [Range(1, int.MaxValue)] public int Page { get; set; } = 1;
     [Range(1, 100)] public int PageSize { get; set; } = 20;
 }
-public sealed record LeaveAllocationDto(int LeaveYear, int ChargeableMinutes);
+public sealed record LeaveAllocationDto(int LeaveYear, int ChargeableMinutes)
+{
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] public int? PaidMinutes { get; init; }
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] public int? UnpaidMinutes { get; init; }
+}
+public sealed record ClassifiedLeaveInterval(TimeOnly StartTime, TimeOnly EndTime, bool IsPaid);
 public sealed record LeavePolicyEvidence(Guid Id, string Version, bool BalanceTracked, int? ForeseeableNoticeHours, bool AllowsSuddenRequest,
     string SupportingDocumentPolicy, Guid? DocumentTypeId, int? CertificateAfterConsecutiveDays,
     bool CertificateOnMondayWorkingDate, bool CertificateOnFridayWorkingDate, bool SandwichParticipation, int? SandwichEquivalentDayMinutes = null);
 public sealed record ScheduledLeaveInterval(Guid Id, TimeOnly StartTime, TimeOnly EndTime);
 public sealed record LeaveDateCalculation(DateOnly Date, Guid EmploymentRecordId, Guid AssignmentId, Guid WorkCalendarId,
     string WorkCalendarCode, string WorkCalendarName, string ScheduleSource, Guid? OverrideId, LeavePolicyEvidence Policy,
-    IReadOnlyList<ScheduledLeaveInterval> ScheduledIntervals, IReadOnlyList<WorkIntervalDto> ChargedIntervals, int ChargeableMinutes);
+    IReadOnlyList<ScheduledLeaveInterval> ScheduledIntervals, IReadOnlyList<WorkIntervalDto> ChargedIntervals, int ChargeableMinutes)
+{
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public IReadOnlyList<ClassifiedLeaveInterval>? PaymentIntervals { get; init; }
+}
 public sealed record LeaveCalculationSnapshot(int Version, Guid EmployeeId, Guid LeaveTypeId, string? LeaveTypeCode, string LeaveTypeName, bool? IsPaid,
     string RequestMode, DateOnly StartDate, DateOnly EndDate, TimeOnly? RequestedStartTime, TimeOnly? RequestedEndTime,
     string NoticeCategory, DateTime RequestedAt, string BusinessTimeZone, DateTime FirstChargeableLocalStart, DateTime FirstChargeableUtcStart,
@@ -68,7 +77,8 @@ public sealed class EmployeeLeaveDto
     public Guid LeaveTypeId { get; init; }
     public string? LeaveTypeCode { get; init; }
     public string LeaveTypeName { get; init; } = string.Empty;
-    // Historical classification from the frozen calculation; null means legacy evidence is unavailable.
+    // Original requested LeaveType policy fact; V2 actual coverage is in PaymentIntervals and Paid/UnpaidMinutes.
+    // Null means legacy evidence is unavailable.
     public bool? IsPaid { get; init; }
     public DateOnly StartDate { get; init; }
     public DateOnly EndDate { get; init; }
@@ -82,6 +92,8 @@ public sealed class EmployeeLeaveDto
     public TimeOnly? RequestedStartTime { get; init; }
     public TimeOnly? RequestedEndTime { get; init; }
     public int? ChargeableMinutes { get; init; }
+    public int? PaidMinutes { get; init; }
+    public int? UnpaidMinutes { get; init; }
     public decimal? ChargeableHours => ChargeableMinutes / 60m;
     public DateTime? RequestedAt { get; init; }
     public DateTime? ReviewedAt { get; init; }
@@ -101,6 +113,8 @@ public sealed record LeaveHistoryItemDto(Guid LeaveId, Guid EmployeeId, string E
     TimeOnly? RequestedStartTime, TimeOnly? RequestedEndTime, int? ChargeableMinutes, string Status, DateTime? RequestedAt,
     string? NoticeCategory, bool? SupportingDocumentRequired, string? Reason)
 {
+    public int? PaidMinutes { get; init; }
+    public int? UnpaidMinutes { get; init; }
     public LeaveEvidenceSummary? Evidence { get; set; }
     public IReadOnlyList<LeaveSandwichDto> SandwichCases { get; set; } = [];
     public long SandwichDebitMinutes { get; set; }

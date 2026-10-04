@@ -31,8 +31,14 @@ public static class AttendanceReviewSources
             Serialize(new { w.EmployeeId, w.Date, w.BusinessTimeZone, w.Readiness, Employment = w.Employment is null ? null : new { w.Employment.EmploymentRecordId, w.Employment.EmploymentStart, w.Employment.EmploymentEnd },
                 w.AssignmentId, w.WorkCalendarId, w.OverrideId, w.ScheduleKind, Intervals = w.Intervals.OrderBy(x => x.StartTime).ThenBy(x => x.IntervalId) }),
             Serialize(raw.Events.OrderBy(x => x.AttendanceEventId).Select(x => new { x.AttendanceEventId, x.OccurredAtUtc, x.Direction, x.Source, x.BusinessDate })),
-            Serialize(raw.ApprovedLeaves.OrderBy(x => x.LeaveId).Select(x => new { x.LeaveId, x.SnapshotVersion, x.IsPaid, x.Date.Date, x.Date.EmploymentRecordId, x.Date.AssignmentId, x.Date.WorkCalendarId,
-                x.Date.OverrideId, x.Date.ScheduleSource, x.Date.ScheduledIntervals, x.Date.ChargedIntervals })),
+            Serialize(raw.ApprovedLeaves.OrderBy(x => x.LeaveId).Select(x =>
+            {
+                // Keep V1 fingerprint bytes unchanged; only V2 adds classification sources.
+                var fact = JsonSerializer.SerializeToNode(new { x.LeaveId, x.SnapshotVersion, x.IsPaid, x.Date.Date, x.Date.EmploymentRecordId, x.Date.AssignmentId, x.Date.WorkCalendarId,
+                    x.Date.OverrideId, x.Date.ScheduleSource, x.Date.ScheduledIntervals, x.Date.ChargedIntervals }, Json)!;
+                if (x.SnapshotVersion == 2) fact["paymentIntervals"] = JsonSerializer.SerializeToNode(x.Date.PaymentIntervals, Json);
+                return fact;
+            })),
             Serialize(new { Adjudications = Effective(actions).Select(x => new { x.Id, x.AttendanceEventId, x.Action }), Corrections = actions.Where(x => x.Action == "CorrectionAdded").OrderBy(x => x.Id).Select(x => new { x.Id, x.AttendanceEventId }) }),
             Serialize(new { raw.CalculationContractVersion, raw.CurrentGracePolicy, raw.ClockInGraceMinutes }),
             Serialize(raw.Findings.Where(x => x.Code == "LeaveSnapshotInvalid").OrderBy(x => x.Code).ThenBy(x => x.SourceIds.FirstOrDefault()).Select(x => new { x.Code, x.SourceIds })),

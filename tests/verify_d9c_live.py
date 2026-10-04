@@ -60,7 +60,7 @@ try:
     for d,t in [('2030-01-14',paid),('2030-01-15',unpaid)]:
         leave=create_leave(d,t=t);r=day(d);partition(r,'full Leave '+d)
         check(r['readiness']=='Ready' and not r['potentialAbsence'] and r['unexplainedScheduledMilliseconds']==0 and r['approvedLeaveCoveredScheduledMilliseconds']==30600000,'full Approved Leave covers no clocks')
-        check(r['approvedLeaves'][0]['leaveId']==leave['leaveId'] and r['approvedLeaves'][0]['snapshotVersion']==1 and r['approvedLeaves'][0]['observedStatus']=='Approved' and r['approvedLeaves'][0]['isPaid']==(t==paid),'frozen Leave provenance/classification')
+        check(r['approvedLeaves'][0]['leaveId']==leave['leaveId'] and r['approvedLeaves'][0]['snapshotVersion']==2 and r['approvedLeaves'][0]['observedStatus']=='Approved' and r['approvedLeaves'][0]['isPaid']==(t==paid),'frozen Leave provenance/classification')
     pair('2030-01-16','07:30:00.0000001','15:30:00');create_leave('2030-01-16','15:30','16:00');r=day('2030-01-16');partition(r,'presence Leave residue')
     check(r['paidLeaveCoveredMilliseconds']==1800000 and r['presenceCoveredScheduledMilliseconds']==28799999 and r['unexplainedScheduledMilliseconds']==0 and r['coverageTruncationResidualMilliseconds']==1,'approved precision example in SQL/API')
     pair('2030-01-17','09:00:00','16:00:00');create_leave('2030-01-17','07:30','09:00');r=day('2030-01-17');partition(r,'morning Leave')
