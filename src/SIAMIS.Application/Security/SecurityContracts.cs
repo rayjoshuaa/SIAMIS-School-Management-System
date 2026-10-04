@@ -35,6 +35,7 @@ public interface ICurrentActor
     Guid? UserId { get; }
     Guid? EmployeeId { get; }
     string Operation { get; }
+    bool HasCapability(string capability);
 }
 
 public static class SecurityCapabilities
@@ -50,7 +51,13 @@ public static class SecurityCapabilities
     public static string[] ForRoles(IEnumerable<string> roles) => roles.Where(Roles.ContainsKey).SelectMany(r => Roles[r].Append("MasterData.Read")).Distinct().Order().ToArray();
 }
 
-public sealed record SecurityUserDto(Guid UserId, string UserName, string? Email, Guid? EmployeeId, bool IsActive, bool RequiresPasswordChange, string Version, IReadOnlyList<string> Roles, IReadOnlyList<string> Capabilities);
+public sealed record SecurityUserDto(Guid UserId, string UserName, string? Email, Guid? EmployeeId, bool IsActive, bool RequiresPasswordChange, string Version, IReadOnlyList<string> Roles, IReadOnlyList<string> Capabilities)
+{
+    public Guid? CurrentEmploymentRecordId { get; init; }
+    public string? CurrentEmploymentStatus { get; init; }
+    public bool? HasCurrentEmployment { get; init; }
+    public bool RequiresOffboardingDecision { get; init; }
+}
 [JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
 public sealed class LoginRequest
 {

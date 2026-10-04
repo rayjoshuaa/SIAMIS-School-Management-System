@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.Data;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using SIAMIS.Application.Employees;
 using SIAMIS.Domain.Entities.Employees;
@@ -7,7 +8,7 @@ using SIAMIS.Infrastructure.Data;
 
 namespace SIAMIS.Infrastructure.Services;
 
-public sealed class EmploymentLifecycleService(SIAMISDbContext db) : IEmploymentLifecycleService, IEmploymentResolver
+public sealed class EmploymentLifecycleService(SIAMISDbContext db, IEmployeeAccountLifecycleService accounts) : IEmploymentLifecycleService, IEmploymentResolver
 {
     public Task<ServiceResult<EmploymentRecordDto>> ChangeAsync(Guid employeeId, EmploymentChangeRequest request, CancellationToken ct)
         => MutateAsync(employeeId, request, "change", request.EffectiveDate, ct);
@@ -17,6 +18,13 @@ public sealed class EmploymentLifecycleService(SIAMISDbContext db) : IEmployment
         => MutateAsync(employeeId, request, "rehire", request.StartDate ?? request.HireDate, ct);
 
     private async Task<ServiceResult<EmploymentRecordDto>> MutateAsync(Guid id, object request, string action, DateOnly? date, CancellationToken ct)
+    {
+        try { return await MutateLockedAsync(id, request, action, date, ct); }
+        catch (Exception e) when (e is SqlException { Number: 1205 } || e is DbUpdateConcurrencyException || e is DbUpdateException { InnerException: SqlException { Number: 1205 or 2601 or 2627 } })
+        { return Fail("conflict", "Concurrent employment or account state changed. Reload before retrying."); }
+    }
+
+    private async Task<ServiceResult<EmploymentRecordDto>> MutateLockedAsync(Guid id, object request, string action, DateOnly? date, CancellationToken ct)
     {
         if (!Validator.TryValidateObject(request, new ValidationContext(request), [], true) || !date.HasValue)
             return Fail("validation", "Required lifecycle date and context fields must be supplied.");
@@ -51,9 +59,12 @@ public sealed class EmploymentLifecycleService(SIAMISDbContext db) : IEmployment
             if (action == "end")
             {
                 var r = (EndEmploymentRequest)request;
+                if (r.ExpectedEmploymentRecordId != current.EmploymentRecordId) return Fail("conflict", "Current employment changed. Reload employment history before ending it.");
                 if (!await db.EmploymentStatuses.AnyAsync(x => x.Id == r.EmploymentStatusId && x.IsActive && x.IsTerminal, ct))
                     return Fail("validation", "End employment requires an active terminal EmploymentStatus.");
                 if (date.Value < EmploymentIntegrity.Start(current)) return Fail("validation", "EndDate cannot be before EmploymentStart.");
+                var accountError = await accounts.ResolveEndAsync(id, current.EmploymentRecordId, r, ct);
+                if (accountError is not null) return Fail(accountError.Code, accountError.Message);
                 current.EndDate = date; current.IsCurrent = false; current.EmploymentStatusId = r.EmploymentStatusId;
                 employee.IsActive = false; result = current;
             }

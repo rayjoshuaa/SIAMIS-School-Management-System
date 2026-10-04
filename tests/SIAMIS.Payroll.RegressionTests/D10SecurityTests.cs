@@ -13,7 +13,7 @@ internal static class D10SecurityTests
 {
     private sealed class Actor(Guid user,Guid employee) : ICurrentActor
     {
-        public Guid? UserId=>user;public Guid? EmployeeId=>employee;public string Operation=>"PureTest";
+        public Guid? UserId=>user;public Guid? EmployeeId=>employee;public string Operation=>"PureTest";public bool HasCapability(string capability)=>false;
     }
     public static void Run(Action<bool,string> check)
     {

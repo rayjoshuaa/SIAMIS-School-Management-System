@@ -168,7 +168,7 @@ try:
     expect('POST',f'employees/{e}/leave',request(),409,'after employment rejected');sql(f"UPDATE EmploymentRecords SET EndDate=NULL,IsCurrent=1 WHERE EmploymentRecordId='{job}'")
     # Separate D1 history fixture exercises an actual gap followed by adjacent coverage via supported workflow.
     gap=employee('HISTORY',hire='2026-09-01',start=None);assign(gap,c);entitlement(gap)
-    api('POST',f'employees/{gap}/end-employment',{'endDate':'2026-09-07','employmentStatusId':'40000000-0000-0000-0000-000000000005'})
+    api('POST',f'employees/{gap}/end-employment',{'expectedEmploymentRecordId':next(r['employmentRecordId'] for r in api('GET',f'employees/{gap}/employment-history') if r['isCurrent']),'endDate':'2026-09-07','employmentStatusId':'40000000-0000-0000-0000-000000000005'})
     rehire={'hireDate':'2026-09-09','departmentId':'10000000-0000-0000-0000-000000000004','designationId':'20000000-0000-0000-0000-000000000006','employmentTypeId':'30000000-0000-0000-0000-000000000001','employmentStatusId':'40000000-0000-0000-0000-000000000001'}
     api('POST',f'employees/{gap}/rehire',rehire,201)
     # D1 commands prohibit future-dated mutations. Move only these disposable history fixtures to the synthetic calculation year.

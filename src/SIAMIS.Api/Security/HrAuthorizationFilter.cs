@@ -11,6 +11,8 @@ public sealed class CurrentActor(IHttpContextAccessor http) : ICurrentActor
 {
     public Guid? UserId => Guid.TryParse(http.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier), out var id) ? id : null;
     public Guid? EmployeeId => Guid.TryParse(http.HttpContext?.User.FindFirstValue("employee_id"), out var id) ? id : null;
+    public bool HasCapability(string capability) => http.HttpContext?.User is { } p && p.Identity?.IsAuthenticated == true
+        && !p.HasClaim("password_change", "required") && SecurityCapabilities.ForRoles(p.FindAll(ClaimTypes.Role).Select(r => r.Value)).Contains(capability);
     public string Operation => http.HttpContext is { } h ? $"{h.Request.Method} {h.GetEndpoint()?.DisplayName}" : "System";
 }
 

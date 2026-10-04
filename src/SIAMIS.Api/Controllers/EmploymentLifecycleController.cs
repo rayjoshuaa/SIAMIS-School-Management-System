@@ -9,7 +9,7 @@ namespace SIAMIS.Api.Controllers;
 [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
 [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
 [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
-public sealed class EmploymentLifecycleController(IEmploymentLifecycleService lifecycle, IEmploymentResolver resolver) : ControllerBase
+public sealed class EmploymentLifecycleController(IEmploymentLifecycleService lifecycle, IEmploymentResolver resolver, IEmployeeAccountLifecycleService accounts) : ControllerBase
 {
     /// <summary>Closes the current context the day before EffectiveDate and opens its replacement. Omitted IDs retain their values; future dates are rejected.</summary>
     [HttpPost("employment-changes")]
@@ -20,7 +20,7 @@ public sealed class EmploymentLifecycleController(IEmploymentLifecycleService li
         return result.IsSuccess ? Created($"/api/employees/{employeeId}/employment-history", result.Value) : Failure(result.Failure!);
     }
 
-    /// <summary>Ends current employment inclusively and deactivates the employee using an active terminal status. Future dates are rejected.</summary>
+    /// <summary>Ends the expected current employment inclusively. An active linked account requires explicit DisableLinkedAccount, its current version and Security.Manage. Future dates are rejected; employee and account history are retained.</summary>
     [HttpPost("end-employment")]
     [ProducesResponseType(typeof(EmploymentRecordDto), StatusCodes.Status200OK)]
     public async Task<IActionResult> End(Guid employeeId, EndEmploymentRequest request, CancellationToken ct)
@@ -56,11 +56,21 @@ public sealed class EmploymentLifecycleController(IEmploymentLifecycleService li
         return result.IsSuccess ? new JsonResult(result.Value) : Failure(result.Failure!);
     }
 
+    /// <summary>Safe HR account linkage/status and employment readiness; never returns security stamps or credentials.</summary>
+    [HttpGet("account-lifecycle")]
+    [ProducesResponseType(typeof(EmployeeAccountLifecycleDto), StatusCodes.Status200OK)]
+    public async Task<IActionResult> AccountLifecycle(Guid employeeId, CancellationToken ct)
+    {
+        var result = await accounts.GetAsync(employeeId, ct);
+        return result.IsSuccess ? Ok(result.Value) : Failure(result.Failure!);
+    }
+
     private IActionResult Failure(ApiFailure f) => f.Code switch
     {
         "validation" => BadRequest(new ValidationProblemDetails(new Dictionary<string, string[]> { ["request"] = [f.Message] }) { Status = 400 }),
         "not_found" => Problem(statusCode: 404, title: "Not found", detail: f.Message),
-        "conflict" => Problem(statusCode: 409, title: "Conflict", detail: f.Message),
+        "conflict" or "active_linked_account_requires_offboarding_decision" => StatusCode(409, new ProblemDetails { Status = 409, Title = "Conflict", Detail = f.Message, Extensions = { ["code"] = f.Code } }),
+        "forbidden" => StatusCode(403, new ProblemDetails { Status = 403, Title = "Forbidden", Detail = f.Message }),
         _ => Problem(statusCode: 500)
     };
 }

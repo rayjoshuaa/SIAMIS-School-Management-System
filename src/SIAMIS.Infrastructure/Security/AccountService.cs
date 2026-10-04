@@ -8,13 +8,16 @@ using SIAMIS.Infrastructure.Data;
 
 namespace SIAMIS.Infrastructure.Security;
 
-public sealed class AccountService(SIAMISDbContext db, UserManager<ApplicationUser> users, SignInManager<ApplicationUser> signin, ICurrentActor actor) : IAccountService
+public sealed class AccountService(SIAMISDbContext db, UserManager<ApplicationUser> users, SignInManager<ApplicationUser> signin, ICurrentActor actor, IEmployeeAccountLifecycleService lifecycle) : IAccountService
 {
     private static ServiceResult<SecurityUserDto> Fail(string code, string message) => ServiceResult<SecurityUserDto>.Fail(code, message);
     private async Task<SecurityUserDto> Dto(ApplicationUser u)
     {
         var roles = await users.GetRolesAsync(u);
-        return new(u.Id, u.UserName!, u.Email, u.EmployeeId, u.IsActive, u.RequiresPasswordChange, u.AdministrationVersion, roles.ToArray(), u.RequiresPasswordChange ? [] : SecurityCapabilities.ForRoles(roles));
+        var readiness = u.EmployeeId.HasValue ? (await lifecycle.GetAsync(u.EmployeeId.Value, CancellationToken.None)).Value : null;
+        return new(u.Id, u.UserName!, u.Email, u.EmployeeId, u.IsActive, u.RequiresPasswordChange, u.AdministrationVersion, roles.ToArray(), u.RequiresPasswordChange ? [] : SecurityCapabilities.ForRoles(roles))
+        { CurrentEmploymentRecordId = readiness?.CurrentEmploymentRecordId, CurrentEmploymentStatus = readiness?.CurrentEmploymentStatus,
+            HasCurrentEmployment = readiness?.HasCurrentEmployment, RequiresOffboardingDecision = readiness?.RequiresOffboardingDecision ?? false };
     }
     private async Task Audit(string operation, Guid? target = null)
     {
@@ -56,7 +59,7 @@ public sealed class AccountService(SIAMISDbContext db, UserManager<ApplicationUs
         try
         {
             await using var tx = await db.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct);
-            if (r.EmployeeId.HasValue && !await db.Employees.AnyAsync(e => e.EmployeeId == r.EmployeeId, ct)) return Fail("not_found", "Employee was not found.");
+            if (r.EmployeeId.HasValue && await SIAMIS.Infrastructure.Services.EmploymentIntegrity.LockAsync(db, r.EmployeeId.Value, ct) is null) return Fail("not_found", "Employee was not found.");
             var u = new ApplicationUser { Id = Guid.NewGuid(), UserName = r.UserName.Trim(), Email = r.Email?.Trim(), EmployeeId = r.EmployeeId, LockoutEnabled = true };
             var result = await users.CreateAsync(u, r.TemporaryPassword);
             if (!result.Succeeded) return Fail(result.Errors.Any(e=>e.Code.StartsWith("Duplicate",StringComparison.Ordinal))?"conflict":"validation", string.Join(" ", result.Errors.Select(e => e.Description)));
@@ -73,9 +76,17 @@ public sealed class AccountService(SIAMISDbContext db, UserManager<ApplicationUs
         => Mutate(id, r.Version, null, r.Roles, ct);
     private async Task<ServiceResult<SecurityUserDto>> Mutate(Guid id, string version, bool? active, string[]? roles, CancellationToken ct)
     {
+        try { return await MutateLocked(id, version, active, roles, ct); }
+        catch (Exception e) when (e is SqlException { Number: 1205 } || e is DbUpdateConcurrencyException || e is DbUpdateException { InnerException: SqlException { Number: 1205 or 2601 or 2627 } })
+        { return Fail("conflict", "Concurrent account or employment state changed. Reload before retrying."); }
+    }
+    private async Task<ServiceResult<SecurityUserDto>> MutateLocked(Guid id, string version, bool? active, string[]? roles, CancellationToken ct)
+    {
         if (roles?.Any(r => !SecurityCapabilities.Roles.ContainsKey(r)) == true) return Fail("validation", "Unknown role.");
+        // Linkage is immutable through administration; read it before opening the locking transaction.
+        var linkedEmployee = await db.Users.AsNoTracking().Where(u => u.Id == id).Select(u => u.EmployeeId).SingleOrDefaultAsync(ct);
         await using var tx = await db.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct);
-        var u = await db.Users.FromSqlInterpolated($"SELECT * FROM [Users] WITH (UPDLOCK) WHERE [Id] = {id}").SingleOrDefaultAsync(ct);
+        var u = await AccountLock.LockAsync(db, id, linkedEmployee, ct);
         if (u is null) return Fail("not_found", "User was not found.");
         if (u.AdministrationVersion != version) return Fail("conflict", "User changed. Reload before modifying.");
         if (roles?.Contains("Employee") == true && !u.EmployeeId.HasValue) return Fail("validation", "Employee role requires a linked employee.");
@@ -92,7 +103,7 @@ public sealed class AccountService(SIAMISDbContext db, UserManager<ApplicationUs
         u.AdministrationVersion = Guid.NewGuid().ToString();
         result = await users.UpdateSecurityStampAsync(u);
         if (!result.Succeeded) return Fail("conflict", "Concurrent user change.");
-        await Audit(roles is null ? "AccountStatusChanged" : "RolesChanged", id); await tx.CommitAsync(ct);
+        await Audit(roles is not null ? "RolesChanged" : u.IsActive ? "AccountEnabled" : "AccountDisabled", id); await tx.CommitAsync(ct);
         return ServiceResult<SecurityUserDto>.Success(await Dto(u));
     }
     public async Task<bool> ChangePasswordAsync(ChangePasswordRequest r)

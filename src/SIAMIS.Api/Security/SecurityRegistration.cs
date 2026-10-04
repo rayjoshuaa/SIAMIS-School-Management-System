@@ -16,6 +16,7 @@ public static class SecurityRegistration
         builder.Services.AddHttpContextAccessor();
         builder.Services.AddScoped<ICurrentActor,CurrentActor>();
         builder.Services.AddScoped<IAccountService,AccountService>();
+        builder.Services.AddScoped<SIAMIS.Application.Employees.IEmployeeAccountLifecycleService,EmployeeAccountLifecycleService>();
         builder.Services.AddScoped<IResourceAccessService,ResourceAccessService>();
         builder.Services.AddScoped<IHrSecurityReadService,HrSecurityReadService>();
         builder.Services.AddScoped<HrAuthorizationFilter>();

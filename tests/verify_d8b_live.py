@@ -115,7 +115,7 @@ try:
     emp=api('POST','employees',{'employeeNumber':PREFIX+'EMP','firstName':'Synthetic','lastName':'D8B','departmentId':'10000000-0000-0000-0000-000000000004','designationId':'20000000-0000-0000-0000-000000000006','employmentTypeId':'30000000-0000-0000-0000-000000000001','employmentStatusId':'40000000-0000-0000-0000-000000000001','hireDate':'2026-09-01'},201)
     eid=emp['employeeId'];employee_ids.append(eid);check(True,'synthetic D1 employee created')
     verify_status('POST',f'employees/{eid}/employment-changes',{'effectiveDate':'2026-09-15'},201,'D1 effective context change')
-    verify_status('POST',f'employees/{eid}/end-employment',{'endDate':'2026-09-30','employmentStatusId':'40000000-0000-0000-0000-000000000005'},200,'D1 employment end')
+    verify_status('POST',f'employees/{eid}/end-employment',{'expectedEmploymentRecordId':next(r['employmentRecordId'] for r in api('GET',f'employees/{eid}/employment-history') if r['isCurrent']),'endDate':'2026-09-30','employmentStatusId':'40000000-0000-0000-0000-000000000005'},200,'D1 employment end')
     verify_status('POST',f'employees/{eid}/rehire',{'hireDate':'2026-10-01','departmentId':'10000000-0000-0000-0000-000000000004','designationId':'20000000-0000-0000-0000-000000000006','employmentTypeId':'30000000-0000-0000-0000-000000000001','employmentStatusId':'40000000-0000-0000-0000-000000000001'},201,'D1 rehire')
     check(len(api('GET',f'employees/{eid}/employment-history'))==3,'D1 preserves historical intervals')
     l=api('POST',f'employees/{eid}/leave',{'leaveTypeId':sick,'startDate':'2026-10-12','endDate':'2026-10-13'},201);leave_ids.append(l['leaveId'])
