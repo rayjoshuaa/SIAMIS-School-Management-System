@@ -6,10 +6,12 @@ using SIAMIS.Infrastructure.Data;
 using SIAMIS.Infrastructure.Services;
 using SIAMIS.Api.Security;
 using Microsoft.AspNetCore.Authorization;
+using SIAMIS.Api;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.AddSiamisSecurity();
 builder.ConfigureDeploymentSecurity();
+builder.AddPrivateHrDocuments();
 
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();

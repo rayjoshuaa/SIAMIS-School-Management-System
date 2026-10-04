@@ -73,72 +73,6 @@ public sealed class EmployeeContractDocumentService(SIAMISDbContext db) : IEmplo
         return ServiceResult<bool>.Success(true);
     }
 
-    public async Task<ServiceResult<IReadOnlyList<EmployeeDocumentDto>>> GetDocumentsAsync(Guid employeeId, CancellationToken ct)
-    {
-        if (!await EmployeeExists(employeeId, ct)) return NotFound<IReadOnlyList<EmployeeDocumentDto>>("Employee was not found.");
-        var rows = await db.EmployeeDocuments.AsNoTracking().Where(x => x.EmployeeId == employeeId)
-            .OrderByDescending(x => x.UploadedAt).ThenBy(x => x.EmployeeDocumentId)
-            .Select(x => new EmployeeDocumentDto
-            {
-                EmployeeDocumentId = x.EmployeeDocumentId, EmployeeId = x.EmployeeId, DocumentTypeId = x.DocumentTypeId,
-                DocumentType = x.DocumentType == null ? null : x.DocumentType.Name, DocumentNumber = x.DocumentNumber,
-                IssueDate = x.IssueDate, ExpiryDate = x.ExpiryDate, FileName = x.FileName, StorageKey = x.StorageKey,
-                VerificationStatus = x.VerificationStatus, VerifiedBy = x.VerifiedBy, VerifiedAt = x.VerifiedAt,
-                Remarks = x.Remarks, UploadedAt = x.UploadedAt
-            }).ToListAsync(ct);
-        return ServiceResult<IReadOnlyList<EmployeeDocumentDto>>.Success(rows);
-    }
-
-    public async Task<ServiceResult<EmployeeDocumentDto>> GetDocumentAsync(Guid employeeId, Guid documentId, CancellationToken ct)
-    {
-        if (!await EmployeeExists(employeeId, ct)) return NotFound<EmployeeDocumentDto>("Employee was not found.");
-        var dto = await DocumentQuery().SingleOrDefaultAsync(x => x.EmployeeId == employeeId && x.EmployeeDocumentId == documentId, ct);
-        return dto is null ? NotFound<EmployeeDocumentDto>("Document was not found for this employee.") : ServiceResult<EmployeeDocumentDto>.Success(dto);
-    }
-
-    public async Task<ServiceResult<EmployeeDocumentDto>> CreateDocumentAsync(Guid employeeId, EmployeeDocumentRequest request, CancellationToken ct)
-    {
-        if (!await EmployeeExists(employeeId, ct)) return NotFound<EmployeeDocumentDto>("Employee was not found.");
-        var validation = await ValidateDocument(request, ct);
-        if (validation is not null) return Invalid<EmployeeDocumentDto>(validation);
-        var document = new EmployeeDocument
-        {
-            EmployeeId = employeeId, DocumentTypeId = request.DocumentTypeId, DocumentNumber = Clean(request.DocumentNumber),
-            IssueDate = request.IssueDate, ExpiryDate = request.ExpiryDate, FileName = request.FileName.Trim(),
-            StorageKey = request.StorageKey.Trim(), VerificationStatus = string.IsNullOrWhiteSpace(request.VerificationStatus) ? "Pending" : request.VerificationStatus.Trim(),
-            VerifiedBy = request.VerifiedBy, VerifiedAt = request.VerifiedAt, Remarks = Clean(request.Remarks)
-        };
-        db.EmployeeDocuments.Add(document); await db.SaveChangesAsync(ct);
-        return await GetDocumentAsync(employeeId, document.EmployeeDocumentId, ct);
-    }
-
-    public async Task<ServiceResult<EmployeeDocumentDto>> UpdateDocumentAsync(Guid employeeId, Guid documentId, EmployeeDocumentRequest request, CancellationToken ct)
-    {
-        if (!await EmployeeExists(employeeId, ct)) return NotFound<EmployeeDocumentDto>("Employee was not found.");
-        var document = await db.EmployeeDocuments.SingleOrDefaultAsync(x => x.EmployeeId == employeeId && x.EmployeeDocumentId == documentId, ct);
-        if (document is null) return NotFound<EmployeeDocumentDto>("Document was not found for this employee.");
-        var validation = await ValidateDocument(request, ct);
-        if (validation is not null) return Invalid<EmployeeDocumentDto>(validation);
-        document.DocumentTypeId = request.DocumentTypeId; document.DocumentNumber = Clean(request.DocumentNumber);
-        document.IssueDate = request.IssueDate; document.ExpiryDate = request.ExpiryDate;
-        document.FileName = request.FileName.Trim(); document.StorageKey = request.StorageKey.Trim();
-        document.VerificationStatus = string.IsNullOrWhiteSpace(request.VerificationStatus) ? "Pending" : request.VerificationStatus.Trim();
-        document.VerifiedBy = request.VerifiedBy; document.VerifiedAt = request.VerifiedAt; document.Remarks = Clean(request.Remarks);
-        await db.SaveChangesAsync(ct);
-        return await GetDocumentAsync(employeeId, documentId, ct);
-    }
-
-    public async Task<ServiceResult<bool>> DeleteDocumentAsync(Guid employeeId, Guid documentId, CancellationToken ct)
-    {
-        if (!await EmployeeExists(employeeId, ct)) return NotFound<bool>("Employee was not found.");
-        var document = await db.EmployeeDocuments.SingleOrDefaultAsync(x => x.EmployeeId == employeeId && x.EmployeeDocumentId == documentId, ct);
-        if (document is null) return NotFound<bool>("Document was not found for this employee.");
-        if (await db.EmployeeContracts.AnyAsync(x => x.EmployeeId == employeeId && x.DocumentId == documentId, ct))
-            return Conflict<bool>("This document is linked to an employee contract. Unlink the contract before deleting it.");
-        db.EmployeeDocuments.Remove(document); await db.SaveChangesAsync(ct);
-        return ServiceResult<bool>.Success(true);
-    }
-
     private async Task<string?> ValidateContract(Guid employeeId, EmployeeContractRequest request, CancellationToken ct)
     {
         if (string.IsNullOrWhiteSpace(request.ContractNumber)) return "ContractNumber is required.";
@@ -155,47 +89,12 @@ public sealed class EmployeeContractDocumentService(SIAMISDbContext db) : IEmplo
         return null;
     }
 
-    private async Task<string?> ValidateDocument(EmployeeDocumentRequest request, CancellationToken ct)
-    {
-        if (!request.DocumentTypeId.HasValue) return "DocumentTypeId is required.";
-        var type = await db.DocumentTypes.AsNoTracking().Where(x => x.Id == request.DocumentTypeId && x.IsActive)
-            .Select(x => new { x.RequiresDocumentNumber, x.RequiresExpiryDate, x.RequiresVerification }).SingleOrDefaultAsync(ct);
-        if (type is null) return "DocumentTypeId must reference an active document type.";
-        if (type.RequiresDocumentNumber && string.IsNullOrWhiteSpace(request.DocumentNumber)) return "DocumentNumber is required for this document type.";
-        if (type.RequiresExpiryDate && !request.ExpiryDate.HasValue) return "ExpiryDate is required for this document type.";
-        if (request.ExpiryDate.HasValue && request.IssueDate.HasValue && request.ExpiryDate < request.IssueDate)
-            return "ExpiryDate cannot be before IssueDate.";
-        if (string.IsNullOrWhiteSpace(request.FileName) || request.FileName.Trim().Length > 260) return "FileName is required and cannot exceed 260 characters.";
-        if (string.IsNullOrWhiteSpace(request.StorageKey) || request.StorageKey.Trim().Length > 500) return "StorageKey is required and cannot exceed 500 characters.";
-        if (request.DocumentNumber?.Length > 100 || request.Remarks?.Length > 2000) return "DocumentNumber or Remarks exceeds the supported length.";
-        var status = string.IsNullOrWhiteSpace(request.VerificationStatus) ? "Pending" : request.VerificationStatus.Trim();
-        if (status.Length > 40) return "VerificationStatus cannot exceed 40 characters.";
-        if ((request.VerifiedBy.HasValue != request.VerifiedAt.HasValue) ||
-            (string.Equals(status, "Pending", StringComparison.OrdinalIgnoreCase) && (request.VerifiedBy.HasValue || request.VerifiedAt.HasValue)))
-            return "VerifiedBy and VerifiedAt must be supplied together and cannot be set while VerificationStatus is Pending.";
-        if (!string.Equals(status, "Pending", StringComparison.OrdinalIgnoreCase) && !request.VerifiedBy.HasValue)
-            return "VerifiedBy and VerifiedAt are required when VerificationStatus is not Pending.";
-        if (!type.RequiresVerification && (!string.Equals(status, "Pending", StringComparison.OrdinalIgnoreCase) || request.VerifiedBy.HasValue))
-            return "Verification fields are not enabled for this document type.";
-        if (request.VerifiedBy.HasValue && !await db.Employees.AsNoTracking().AnyAsync(x => x.EmployeeId == request.VerifiedBy, ct))
-            return "VerifiedBy must reference an existing employee.";
-        return null;
-    }
-
     private IQueryable<EmployeeContractDto> ContractQuery() => db.EmployeeContracts.AsNoTracking().Select(x => new EmployeeContractDto
     {
         EmployeeContractId = x.EmployeeContractId, EmployeeId = x.EmployeeId, ContractNumber = x.ContractNumber,
         ContractTypeId = x.ContractTypeId, ContractType = x.ContractType == null ? null : x.ContractType.Name,
         StartDate = x.StartDate, EndDate = x.EndDate, ProbationEndDate = x.ProbationEndDate,
         ContractStatus = x.ContractStatus, DocumentId = x.DocumentId, Notes = x.Notes, CreatedAt = x.CreatedAt, UpdatedAt = x.UpdatedAt
-    });
-
-    private IQueryable<EmployeeDocumentDto> DocumentQuery() => db.EmployeeDocuments.AsNoTracking().Select(x => new EmployeeDocumentDto
-    {
-        EmployeeDocumentId = x.EmployeeDocumentId, EmployeeId = x.EmployeeId, DocumentTypeId = x.DocumentTypeId,
-        DocumentType = x.DocumentType == null ? null : x.DocumentType.Name, DocumentNumber = x.DocumentNumber,
-        IssueDate = x.IssueDate, ExpiryDate = x.ExpiryDate, FileName = x.FileName, StorageKey = x.StorageKey,
-        VerificationStatus = x.VerificationStatus, VerifiedBy = x.VerifiedBy, VerifiedAt = x.VerifiedAt, Remarks = x.Remarks, UploadedAt = x.UploadedAt
     });
 
     private Task<bool> EmployeeExists(Guid employeeId, CancellationToken ct) => db.Employees.AsNoTracking().AnyAsync(x => x.EmployeeId == employeeId, ct);

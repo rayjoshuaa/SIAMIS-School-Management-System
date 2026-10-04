@@ -22,3 +22,5 @@ secrets.json
 *.p12
 *.pem
 *.key
+## Private HR binaries (never source controlled)
+**/App_Data/hr-documents/

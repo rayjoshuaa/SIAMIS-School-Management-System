@@ -31,6 +31,7 @@ public sealed class HrAuthorizationFilter(IAuthorizationService authorization, I
         string capability = name switch
         {
             "AdminUsers" or "DevelopmentCredentialDelivery" => "Security.Manage",
+            "EmployeeDocuments" or "HrDocuments" => read ? "HRDocuments.Read" : "HRDocuments.Manage",
             "AttendanceReporting" => action.ActionName == "Queue" ? "Attendance.Read" : "Reporting.Read",
             "HrOverview" => "Reporting.Read",
             "SelfService" => "SelfService",
@@ -42,7 +43,7 @@ public sealed class HrAuthorizationFilter(IAuthorizationService authorization, I
             "LeaveFoundation" => read ? "Leave.Read" : "Leave.Manage",
             "MasterData" or "Status" => read ? "MasterData.Read" : "Unmapped",
             _ when name.Contains("Payroll", StringComparison.Ordinal) || name.Contains("Statutory", StringComparison.Ordinal) || name.Contains("Tax", StringComparison.Ordinal) || name.Contains("Pit", StringComparison.Ordinal) || name is "EmployeeCompensations" or "OrganizationProfile" => read ? "Payroll.Read" : "Payroll.Manage",
-            "Employees" or "EmployeeContacts" or "EmployeeAddresses" or "EmployeeEmergencyContacts" or "EmployeeContracts" or "EmployeeDocuments" or "EmployeeHistory" or "EmployeePerformance" or "EmploymentLifecycle" or "EmploymentStatuses" => read ? "Employee.Read" : "Employee.Manage",
+            "Employees" or "EmployeeContacts" or "EmployeeAddresses" or "EmployeeEmergencyContacts" or "EmployeeContracts" or "EmployeeHistory" or "EmployeePerformance" or "EmploymentLifecycle" or "EmploymentStatuses" => read ? "Employee.Read" : "Employee.Manage",
             _ => "Unmapped"
         };
         Guid? employee = null;

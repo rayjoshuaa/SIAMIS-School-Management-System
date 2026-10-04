@@ -43,7 +43,7 @@ public static class SecurityCapabilities
     public static readonly IReadOnlyDictionary<string, string[]> Roles = new Dictionary<string, string[]>
     {
         ["SystemAdmin"] = ["Security.Manage", "Employee.Read", "Employee.Manage", "Leave.Read", "Leave.Manage", "Leave.Review", "Leave.Evidence", "Attendance.Read", "Attendance.Manage", "Attendance.Finalize", "Payroll.Read", "Payroll.Manage", "Reporting.Read"],
-        ["HRAdmin"] = ["Employee.Read", "Employee.Manage", "Leave.Read", "Leave.Manage", "Leave.Review", "Leave.Evidence", "Attendance.Read", "Attendance.Manage", "Attendance.Finalize", "Reporting.Read"],
+        ["HRAdmin"] = ["HRDocuments.Read", "HRDocuments.Manage", "Employee.Read", "Employee.Manage", "Leave.Read", "Leave.Manage", "Leave.Review", "Leave.Evidence", "Attendance.Read", "Attendance.Manage", "Attendance.Finalize", "Reporting.Read"],
         ["PayrollAdmin"] = ["Payroll.Read", "Payroll.Manage"],
         ["Management"] = ["Reporting.Read"],
         ["Employee"] = ["SelfService"]
