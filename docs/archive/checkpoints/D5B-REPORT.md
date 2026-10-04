@@ -205,5 +205,5 @@ Focused test command:
 - [src/SIAMIS.Infrastructure/Services/Section33ContributionWageResolver.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Infrastructure/Services/Section33ContributionWageResolver.cs>)
 - [tests/SIAMIS.Payroll.RegressionTests/Section33WageRegressionTests.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/tests/SIAMIS.Payroll.RegressionTests/Section33WageRegressionTests.cs>)
 - [tests/SIAMIS.Payroll.RegressionTests/Program.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/tests/SIAMIS.Payroll.RegressionTests/Program.cs>)
-- [D5B-REPORT.md](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/D5B-REPORT.md>)
-- [README.md](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/README.md>)
+- [D5B-REPORT.md](D5B-REPORT.md)
+- [README.md](FOUNDATION-README.md)

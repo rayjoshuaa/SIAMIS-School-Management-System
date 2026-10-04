@@ -233,4 +233,4 @@ Live scripts require the Development API on http://localhost:5155 and local Wind
 - [tests/SIAMIS.Payroll.RegressionTests/Program.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/tests/SIAMIS.Payroll.RegressionTests/Program.cs>)
 - [tests/verify_d8b_live.py](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/tests/verify_d8b_live.py>)
 - [tests/verify_d8b_regressions.py](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/tests/verify_d8b_regressions.py>)
-- [D8B-REPORT.md](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/D8B-REPORT.md>)
+- [D8B-REPORT.md](D8B-REPORT.md)

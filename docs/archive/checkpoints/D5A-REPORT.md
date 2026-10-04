@@ -223,7 +223,7 @@ Harness issues encountered during preparation (SQL JSON chunking/truncation, exp
 
 ## Complete changed-file list (D5A implementation and verification)
 
-- [README.md](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/README.md>)
+- [README.md](FOUNDATION-README.md)
 - [SIAMIS.sln](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/SIAMIS.sln>)
 - [src/SIAMIS.Application/MasterData/PayrollComponentContracts.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Application/MasterData/PayrollComponentContracts.cs>)
 - [src/SIAMIS.Application/Payroll/EmployeePayrollContracts.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Application/Payroll/EmployeePayrollContracts.cs>)
@@ -241,7 +241,7 @@ Harness issues encountered during preparation (SQL JSON chunking/truncation, exp
 - [src/SIAMIS.Infrastructure/Services/PayrollGenerationService.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Infrastructure/Services/PayrollGenerationService.cs>)
 - [src/SIAMIS.Infrastructure/Services/PayrollPreviewService.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Infrastructure/Services/PayrollPreviewService.cs>)
 - [src/SIAMIS.Infrastructure/Services/PayrollRuleEvaluator.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Infrastructure/Services/PayrollRuleEvaluator.cs>)
-- [D5A-REPORT.md](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/D5A-REPORT.md>)
+- [D5A-REPORT.md](D5A-REPORT.md)
 - [src/SIAMIS.Infrastructure/Migrations/20261001032904_AddSsoWageTreatmentClassification.Designer.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Infrastructure/Migrations/20261001032904_AddSsoWageTreatmentClassification.Designer.cs>)
 - [src/SIAMIS.Infrastructure/Migrations/20261001032904_AddSsoWageTreatmentClassification.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Infrastructure/Migrations/20261001032904_AddSsoWageTreatmentClassification.cs>)
 - [tests/SIAMIS.Payroll.RegressionTests/Program.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/tests/SIAMIS.Payroll.RegressionTests/Program.cs>)

@@ -98,5 +98,5 @@ markdown+='| Role | Capabilities |\n|---|---|\n'+''.join('| '+r+' | '+', '.join(
 markdown+='\nEmployee own-record exceptions: own Leave list/detail/create/cancel and balances; own Attendance history/summary; own Approved/Paid payroll, lines/PIT/payslip through server User→Employee linkage. No Employee document access; self-approval prohibited. Linked evidence content also requires Leave.Evidence.\n\n'
 markdown+='EmployeeHistory route admission uses either capability (`|` means OR). Service-level EventType gates: ordinary events require Employee.Read/Manage; Salary Change requires Payroll.Read/Manage independently. Lists filter in SQL before sorting/projection, with no placeholders or total. Unauthorized/nonowned direct IDs return 404; unauthorized creates return 403. Payroll-only callers cannot access ordinary events.\n\n'
 markdown+='| Method | Route | Capability | Default roles / combined role |\n|---|---|---|---|\n'+''.join('| '+r['method']+' | `'+r['route']+'` | '+r['capability'].replace('|',' or ')+' | '+', '.join(r['roles'])+' |\n' for r in matrix)
-(ROOT/'D15-AUTHORIZATION-MATRIX.md').write_text(markdown,encoding='utf-8')
+(directory/'D15-AUTHORIZATION-MATRIX.md').write_text(markdown,encoding='utf-8')
 print('PASS:',probes,'authenticated role/route probes;',len(routes),'routes',flush=True)

@@ -201,7 +201,7 @@ The baseline capture is read-only. It can capture the existing migrated baseline
 
 ## Complete changed-file list
 
-- [D7-REPORT.md](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/D7-REPORT.md>)
+- [D7-REPORT.md](D7-REPORT.md)
 - [src/SIAMIS.Api/Controllers/OrganizationProfileController.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Api/Controllers/OrganizationProfileController.cs>)
 - [src/SIAMIS.Api/Controllers/PayrollOperationsController.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Api/Controllers/PayrollOperationsController.cs>)
 - [src/SIAMIS.Api/Program.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Api/Program.cs>)

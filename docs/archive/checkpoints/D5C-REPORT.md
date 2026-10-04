@@ -256,9 +256,9 @@ The following counts were verified by both live suites after cleanup.
 
 Includes preserved D5B work; no claim that it was reimplemented. Ignored build, log and result artifacts are excluded.
 
-- [D5B-REPORT.md](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/D5B-REPORT.md>) (preserved D5B foundation)
-- [D5C-REPORT.md](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/D5C-REPORT.md>)
-- [README.md](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/README.md>)
+- [D5B-REPORT.md](D5B-REPORT.md) (preserved D5B foundation)
+- [D5C-REPORT.md](D5C-REPORT.md)
+- [README.md](FOUNDATION-README.md)
 - [src/SIAMIS.Api/Controllers/EmployeePayrollsController.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Api/Controllers/EmployeePayrollsController.cs>)
 - [src/SIAMIS.Api/Controllers/PayrollPeriodsController.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Api/Controllers/PayrollPeriodsController.cs>)
 - [src/SIAMIS.Api/Program.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Api/Program.cs>)

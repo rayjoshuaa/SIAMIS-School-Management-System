@@ -156,8 +156,8 @@ No annualization, PIT brackets/calculator, PIT deduction, policy resolution, ope
 
 ## Complete working-tree file list
 
-- [D6A-REPORT.md](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/D6A-REPORT.md>) (preserved D6A)
-- [D6B-REPORT.md](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/D6B-REPORT.md>)
+- [D6A-REPORT.md](D6A-REPORT.md) (preserved D6A)
+- [D6B-REPORT.md](D6B-REPORT.md)
 - [src/SIAMIS.Api/Controllers/EmployeeTaxController.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Api/Controllers/EmployeeTaxController.cs>)
 - [src/SIAMIS.Api/Program.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Api/Program.cs>)
 - [src/SIAMIS.Application/MasterData/PayrollComponentContracts.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Application/MasterData/PayrollComponentContracts.cs>)
