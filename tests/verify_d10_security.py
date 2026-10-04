@@ -12,6 +12,12 @@ class Client:
     def __init__(self):
         self.jar=http.cookiejar.CookieJar();self.opener=urllib.request.build_opener(urllib.request.HTTPCookieProcessor(self.jar));self.token=None
     def request(self,method,path,body=None,status=200,csrf=True,headers=None):
+        # Original pre-D13 security fixtures now establish credentials through the real activation API.
+        # This is test setup only; production no longer accepts an administrator-selected password.
+        fixture_password=body.get('temporaryPassword') if method=='POST' and path=='/api/admin/users' and body else None
+        if fixture_password is not None:
+            body={k:v for k,v in body.items() if k!='temporaryPassword'}
+            body.setdefault('email',body['userName']+'@example.invalid')
         if method not in ['GET','HEAD','OPTIONS'] and csrf:
             self.token=self.request('GET','/api/auth/csrf')['token']
         hdr={'Content-Type':'application/json',**(headers or {})}
@@ -21,7 +27,12 @@ class Client:
             with self.opener.open(request,timeout=40) as r:code,data=r.status,r.read()
         except urllib.error.HTTPError as e:code,data=e.code,e.read()
         if code!=status:raise AssertionError(f'{method} {path}: expected {status}, got {code}; {data.decode()[:500]}')
-        return json.loads(data) if data else None
+        value=json.loads(data) if data else None
+        if fixture_password is not None and code==201:
+            issued=self.request('POST','/api/admin/users/'+value['userId']+'/credential-delivery')
+            recipient=Client();recipient.request('POST','/api/auth/activate',{'userId':value['userId'],'token':issued['token'],'newPassword':fixture_password},204)
+            value=self.request('GET','/api/admin/users/'+value['userId'])
+        return value
     def login(self,name,pw=password):return self.request('POST','/api/auth/login',{'userName':name,'password':pw},204)
 
 def cleanup():

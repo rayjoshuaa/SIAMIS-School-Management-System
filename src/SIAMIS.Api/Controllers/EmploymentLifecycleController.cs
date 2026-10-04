@@ -69,7 +69,7 @@ public sealed class EmploymentLifecycleController(IEmploymentLifecycleService li
     {
         "validation" => BadRequest(new ValidationProblemDetails(new Dictionary<string, string[]> { ["request"] = [f.Message] }) { Status = 400 }),
         "not_found" => Problem(statusCode: 404, title: "Not found", detail: f.Message),
-        "conflict" or "active_linked_account_requires_offboarding_decision" => StatusCode(409, new ProblemDetails { Status = 409, Title = "Conflict", Detail = f.Message, Extensions = { ["code"] = f.Code } }),
+        "conflict" or "active_linked_account_requires_offboarding_decision" or "last_usable_system_admin_required" => StatusCode(409, new ProblemDetails { Status = 409, Title = "Conflict", Detail = f.Message, Extensions = { ["code"] = f.Code } }),
         "forbidden" => StatusCode(403, new ProblemDetails { Status = 403, Title = "Forbidden", Detail = f.Message }),
         _ => Problem(statusCode: 500)
     };

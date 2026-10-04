@@ -38,6 +38,11 @@ public sealed class EmployeeAccountLifecycleService(SIAMISDbContext db, UserMana
         var u = id.HasValue ? await AccountLock.LockAsync(db, id.Value, employeeId, ct) : null;
         var error = ValidateDecision(u?.IsActive == true, request.DisableLinkedAccount, actor.HasCapability("Security.Manage"), request.ExpectedLinkedAccountVersion, u?.AdministrationVersion ?? "");
         if (error is not null) return error;
+        if (u?.IsActive == true && request.DisableLinkedAccount == true)
+        {
+            error = await SystemAdminGuard.CanRemoveAsync(db, u, ct);
+            if (error is not null) return error;
+        }
         string decision = u is null ? "NoLinkedAccount" : !u.IsActive ? "AlreadyDisabled" : request.DisableLinkedAccount == true ? "Disabled" : "Retained";
         if (u?.IsActive == true)
         {

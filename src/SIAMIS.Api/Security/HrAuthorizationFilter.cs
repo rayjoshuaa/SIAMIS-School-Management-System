@@ -30,7 +30,7 @@ public sealed class HrAuthorizationFilter(IAuthorizationService authorization, I
         string name = action.ControllerName;
         string capability = name switch
         {
-            "AdminUsers" => "Security.Manage",
+            "AdminUsers" or "DevelopmentCredentialDelivery" => "Security.Manage",
             "AttendanceReporting" => action.ActionName == "Queue" ? "Attendance.Read" : "Reporting.Read",
             "HrOverview" => "Reporting.Read",
             "SelfService" => "SelfService",

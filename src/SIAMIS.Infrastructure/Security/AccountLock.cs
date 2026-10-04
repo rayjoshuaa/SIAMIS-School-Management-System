@@ -10,6 +10,7 @@ internal static class AccountLock
     public static async Task<ApplicationUser?> LockAsync(SIAMISDbContext db, Guid id, Guid? employee, CancellationToken ct)
     {
         if (employee.HasValue) await EmploymentIntegrity.LockAsync(db, employee.Value, ct);
+        await SystemAdminGuard.LockAsync(db, ct);
         var fresh = await db.Users.FromSqlInterpolated($"SELECT * FROM [Users] WITH (UPDLOCK) WHERE [Id] = {id}").AsNoTracking().SingleOrDefaultAsync(ct);
         if (fresh is null) return null;
         if (fresh.EmployeeId != employee) throw new DbUpdateConcurrencyException("Account linkage changed.");

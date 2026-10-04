@@ -16,6 +16,11 @@ public static class SecurityRegistration
         builder.Services.AddHttpContextAccessor();
         builder.Services.AddScoped<ICurrentActor,CurrentActor>();
         builder.Services.AddScoped<IAccountService,AccountService>();
+        builder.Services.AddScoped<ICredentialService,CredentialService>();
+        bool testDelivery=builder.Configuration.GetValue<bool>("Security:EnableDevelopmentCredentialDelivery");
+        if(testDelivery&&!builder.Environment.IsDevelopment())throw new InvalidOperationException("Development credential delivery is forbidden outside Development.");
+        if(testDelivery)builder.Services.AddSingleton<ICredentialDelivery,DevelopmentCredentialDelivery>();
+        else builder.Services.AddSingleton<ICredentialDelivery,UnconfiguredCredentialDelivery>();
         builder.Services.AddScoped<SIAMIS.Application.Employees.IEmployeeAccountLifecycleService,EmployeeAccountLifecycleService>();
         builder.Services.AddScoped<IResourceAccessService,ResourceAccessService>();
         builder.Services.AddScoped<IHrSecurityReadService,HrSecurityReadService>();
@@ -66,6 +71,7 @@ public static class SecurityRegistration
         {
             o.RejectionStatusCode=429;
             o.AddPolicy("login",http=>RateLimitPartition.GetFixedWindowLimiter(http.Connection.RemoteIpAddress?.ToString()??"unknown",_=>new FixedWindowRateLimiterOptions{PermitLimit=20,Window=TimeSpan.FromMinutes(1),QueueLimit=0}));
+            o.AddPolicy("credential",http=>RateLimitPartition.GetFixedWindowLimiter(http.Connection.RemoteIpAddress?.ToString()??"unknown",_=>new FixedWindowRateLimiterOptions{PermitLimit=60,Window=TimeSpan.FromMinutes(1),QueueLimit=0}));
         });
     }
 }

@@ -176,6 +176,9 @@ Console.WriteLine($"PASS: {checks - beforeD11} D11 payment allocation assertions
 var beforeD12 = checks;
 D12OffboardingTests.Run(Check);
 Console.WriteLine($"PASS: {checks - beforeD12} D12 offboarding assertions.");
+var beforeD13=checks;
+D13CredentialTests.Run(Check);
+Console.WriteLine($"PASS: {checks - beforeD13} D13 credential assertions.");
 beforeD9E = checks;
 D9EReportingTests.Run(Check);
 Console.WriteLine($"PASS: {checks - beforeD9E} D9E reporting assertions.");
@@ -204,4 +207,4 @@ manualComponent.PitPaymentTreatment = "Special";
 applyLine.Invoke(null, [newManual, manualRequest, manualComponent]);
 Check(newManual.PitPaymentTreatmentSnapshot == "Regular", "D6D manual amount edit preserves payment snapshot");
 Check(typeof(EmployeePayrollLineRequest).GetProperty("PitPaymentTreatmentSnapshot") == null, "D6D manual caller cannot forge payment snapshot");
-Console.WriteLine($"PASS: {checks} focused D5A/D5B/D5C/D6A/D6B/D6C/D6D/D6E/D7/D8B/D8C/D8D/D9B/D9C/D9D/D9E/D10/D11/D12 regression assertions. No database connections or writes.");
+Console.WriteLine($"PASS: {checks} focused D5A/D5B/D5C/D6A/D6B/D6C/D6D/D6E/D7/D8B/D8C/D8D/D9B/D9C/D9D/D9E/D10/D11/D12/D13 regression assertions. No database connections or writes.");

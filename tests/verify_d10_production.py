@@ -47,8 +47,15 @@ try:
     # Existing D8 helpers, authorized by real Identity cookies, retain their financial contracts.
     leave['api']=lambda method,path,body=None,status=200:admin.request(method,'/api/'+path,body,status)
     employee,calendar=leave['new']('PRODUCTION',minutes=None);attendance_employee=employee
+    # Production has no configured email provider. Establish isolated credentials through the explicit
+    # Development test delivery boundary; all authorization/domain assertions below use Production.
+    production_base=BASE;BASE='http://localhost:5155'
+    dev_admin=Client();dev_admin.login(PREFIX+'-production',new_password)
+    BASE=production_base
     for suffix,roles in [('employee',['Employee']),('hr',['HRAdmin']),('management',['Management'])]:
-        u=admin.request('POST','/api/admin/users',{'userName':PREFIX+'-'+suffix,'temporaryPassword':password,'employeeId':employee if suffix=='employee' else None,'roles':roles},201)
+        BASE='http://localhost:5155'
+        try:u=dev_admin.request('POST','/api/admin/users',{'userName':PREFIX+'-'+suffix,'temporaryPassword':password,'employeeId':employee if suffix=='employee' else None,'roles':roles},201)
+        finally:BASE=production_base
         fixtures['users'].append(u['userId'])
         c=ProxyClient();c.login(u['userName']);c.request('POST','/api/auth/change-password',{'currentPassword':password,'newPassword':new_password},204)
         if suffix=='employee':own=c

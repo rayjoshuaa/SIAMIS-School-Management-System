@@ -57,6 +57,9 @@ public sealed record SecurityUserDto(Guid UserId, string UserName, string? Email
     public string? CurrentEmploymentStatus { get; init; }
     public bool? HasCurrentEmployment { get; init; }
     public bool RequiresOffboardingDecision { get; init; }
+    public bool CredentialEstablished { get; init; }
+    public bool EmailConfirmed { get; init; }
+    public bool IsLockedOut { get; init; }
 }
 [JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
 public sealed class LoginRequest
@@ -68,9 +71,8 @@ public sealed class LoginRequest
 public sealed class CreateUserRequest
 {
     [Required, StringLength(256)] public string UserName { get; set; } = string.Empty;
-    [EmailAddress, StringLength(256)] public string? Email { get; set; }
+    [Required, EmailAddress, StringLength(256)] public string? Email { get; set; }
     public Guid? EmployeeId { get; set; }
-    [Required, StringLength(256)] public string TemporaryPassword { get; set; } = string.Empty;
     [Required] public string[] Roles { get; set; } = [];
 }
 [JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
