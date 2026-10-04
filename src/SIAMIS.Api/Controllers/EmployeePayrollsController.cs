@@ -56,7 +56,7 @@ public sealed class EmployeePayrollsController(IEmployeePayrollService service) 
     }
 
     /// <summary>Approves a Calculated payroll after validating stored financial integrity.</summary>
-    /// <remarks>Authorization and authenticated actor attribution must be added when SIAMIS authentication is implemented.</remarks>
+    /// <remarks>Requires Payroll.Manage; lifecycle actions attribute the authenticated actor.</remarks>
     [HttpPost("{id:guid}/approve")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
@@ -68,7 +68,7 @@ public sealed class EmployeePayrollsController(IEmployeePayrollService service) 
     }
 
     /// <summary>Marks an Approved payroll Paid after validating its approval timestamp and stored financial integrity.</summary>
-    /// <remarks>Authorization and authenticated actor attribution must be added when SIAMIS authentication is implemented.</remarks>
+    /// <remarks>Requires Payroll.Manage; lifecycle actions attribute the authenticated actor.</remarks>
     [HttpPost("{id:guid}/mark-paid")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
@@ -80,7 +80,7 @@ public sealed class EmployeePayrollsController(IEmployeePayrollService service) 
     }
 
     /// <summary>Cancels a Draft/Calculated payroll with a required reason, preserving financial totals and lines.</summary>
-    /// <remarks>Authorization and authenticated actor attribution must be added when SIAMIS authentication is implemented.</remarks>
+    /// <remarks>Requires Payroll.Manage; lifecycle actions attribute the authenticated actor.</remarks>
     [HttpPost("{id:guid}/cancel")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]

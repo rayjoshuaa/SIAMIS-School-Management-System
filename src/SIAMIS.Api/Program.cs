@@ -84,6 +84,11 @@ if(args.Contains("--bootstrap-admin",StringComparer.Ordinal))
     return;
 }
 
+// Keep unexpected infrastructure failures out of API responses in every environment.
+app.UseExceptionHandler(errors => errors.Run(context => Results.Problem(
+    statusCode: StatusCodes.Status500InternalServerError,
+    title: "An unexpected error occurred.").ExecuteAsync(context)));
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();

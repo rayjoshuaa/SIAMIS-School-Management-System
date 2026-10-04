@@ -2,10 +2,16 @@ using System.ComponentModel.DataAnnotations;
 
 namespace SIAMIS.Application.Employees;
 
-public sealed class EmployeeListQuery
+public sealed class EmployeeListQuery : IValidatableObject
 {
     [Range(1, int.MaxValue)] public int Page { get; set; } = 1;
     [Range(1, 100)] public int PageSize { get; set; } = 20;
+
+    public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+    {
+        if ((long)(Page - 1) * PageSize > int.MaxValue)
+            yield return new ValidationResult("The requested page offset exceeds the supported range.", [nameof(Page)]);
+    }
     [MaxLength(100)] public string? Search { get; set; }
     public Guid? DepartmentId { get; set; }
     public Guid? DesignationId { get; set; }
@@ -195,7 +201,7 @@ public sealed class EmergencyContactRequest
     [Required, StringLength(200, MinimumLength = 1)] public string Name { get; set; } = string.Empty;
     [Required, StringLength(80, MinimumLength = 1)] public string Relationship { get; set; } = string.Empty;
     [StringLength(30)] public string? Mobile { get; set; }
-    [StringLength(30)] public string? Phone { get; set; }
+    [Required, StringLength(30)] public string? Phone { get; set; }
     [EmailAddress, StringLength(254)] public string? Email { get; set; }
     public bool IsPrimary { get; set; }
 }

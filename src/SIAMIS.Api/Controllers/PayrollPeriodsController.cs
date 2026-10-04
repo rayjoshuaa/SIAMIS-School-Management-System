@@ -88,7 +88,7 @@ public sealed class PayrollPeriodsController(IPayrollPeriodService service, IPay
     }
 
     /// <summary>Starts formal processing of an Open period and freezes its code and dates.</summary>
-    /// <remarks>Authorization and authenticated actor attribution will be added when SIAMIS authentication exists.</remarks>
+    /// <remarks>Requires Payroll.Manage; lifecycle actions attribute the authenticated actor.</remarks>
     [HttpPost("{id:guid}/start-processing")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
@@ -112,7 +112,7 @@ public sealed class PayrollPeriodsController(IPayrollPeriodService service, IPay
     }
 
     /// <summary>Cancels an Open/Processing period with a reason, preserving children. Approved/Paid children prevent cancellation.</summary>
-    /// <remarks>Authorization and authenticated actor attribution will be added when SIAMIS authentication exists.</remarks>
+    /// <remarks>Requires Payroll.Manage; lifecycle actions attribute the authenticated actor.</remarks>
     [HttpPost("{id:guid}/cancel")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]

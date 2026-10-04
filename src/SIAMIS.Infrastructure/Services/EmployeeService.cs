@@ -267,9 +267,9 @@ public sealed class EmployeeService(SIAMISDbContext db) : IEmployeeService
         var validationResults = new List<ValidationResult>();
         if (!Validator.TryValidateObject(request, new ValidationContext(request), validationResults, validateAllProperties: true))
             return Invalid(string.Join(" ", validationResults.Select(item => item.ErrorMessage).Where(message => !string.IsNullOrWhiteSpace(message))));
-        if (request.Contacts?.Any(item => !IsValid(item)) == true
-            || request.Addresses?.Any(item => !IsValid(item)) == true
-            || request.EmergencyContacts?.Any(item => !IsValid(item)) == true
+        if (request.Contacts?.Any(item => item is null || !IsValid(item)) == true
+            || request.Addresses?.Any(item => item is null || !IsValid(item)) == true
+            || request.EmergencyContacts?.Any(item => item is null || !IsValid(item)) == true
             || request.TeacherProfile is not null && !IsValid(request.TeacherProfile))
             return Invalid("One or more contact, address, emergency-contact, or teacher-profile fields are invalid.");
         if (string.IsNullOrWhiteSpace(request.EmployeeNumber) || string.IsNullOrWhiteSpace(request.FirstName) || string.IsNullOrWhiteSpace(request.LastName))

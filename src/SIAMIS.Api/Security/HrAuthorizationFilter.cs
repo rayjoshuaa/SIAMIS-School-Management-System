@@ -53,6 +53,9 @@ public sealed class HrAuthorizationFilter(IAuthorizationService authorization, I
         if (name == "EmployeeLeave" && action.ActionName is "Approve" or "Reject" && self)
         { context.Result = new ForbidResult(); return; }
         bool allowed = (await authorization.AuthorizeAsync(http.User, capability)).Succeeded;
+        // History contains both HR and financial events; the service filters/checks each category.
+        if (name == "EmployeeHistory")
+            allowed = allowed || (await authorization.AuthorizeAsync(http.User, read ? "Payroll.Read" : "Payroll.Manage")).Succeeded;
         if (!allowed && selfCapability && self)
             allowed = name == "AttendanceReporting" && action.ActionName is "History" or "Summary"
                 || name == "EmployeeLeave" && action.ActionName is "GetLeaves" or "GetLeave" or "CreateLeave" or "Cancel"

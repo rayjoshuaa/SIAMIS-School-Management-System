@@ -53,7 +53,7 @@ def account(label,roles,employee=None):
     fixtures['users'].append(u['userId']);c=Client();c.login(u['userName']);return u,c
 
 def employee(label):
-    e=admin.request('POST','/api/employees',context|{'employeeNumber':PREFIX+'-'+label,'firstName':'Synthetic','lastName':'D14','hireDate':str(datetime.date.today()-datetime.timedelta(days=60))},201)['employeeId']
+    e=admin.request('POST','/api/employees',context|{'employeeNumber':PREFIX+'-'+label,'firstName':'Synthetic','lastName':'D14','hireDate':str(datetime.datetime.now(datetime.timezone.utc).date()-datetime.timedelta(days=60))},201)['employeeId']
     fixtures['employees'].append(e);return e
 
 def race(calls):
@@ -167,11 +167,11 @@ try:
     outcomes=race([lambda:raw(hr,'GET',direct(xid)+'/content')[0],lambda:raw(hr,'POST',direct(xid)+'/archive',json.dumps({'version':v}).encode(),{'Content-Type':'application/json'})[0]])
     check(outcomes==[200,200],'D14 download vs archive retains readable immutable content')
     # Employee-first locks serialize offboarding and upload without deleting history.
-    readiness=admin.request('GET',f'/api/employees/{other}/account-lifecycle');end={'expectedEmploymentRecordId':readiness['currentEmploymentRecordId'],'endDate':str(datetime.date.today()-datetime.timedelta(days=1)),'employmentStatusId':'40000000-0000-0000-0000-000000000005','disableLinkedAccount':True,'expectedLinkedAccountVersion':readiness['linkedAccountVersion']}
+    readiness=admin.request('GET',f'/api/employees/{other}/account-lifecycle');end={'expectedEmploymentRecordId':readiness['currentEmploymentRecordId'],'endDate':str(datetime.datetime.now(datetime.timezone.utc).date()-datetime.timedelta(days=1)),'employmentStatusId':'40000000-0000-0000-0000-000000000005','disableLinkedAccount':True,'expectedLinkedAccountVersion':readiness['linkedAccountVersion']}
     outcomes=race([lambda:upload(hr,other),lambda:raw(admin,'POST',f'/api/employees/{other}/end-employment',json.dumps(end).encode(),{'Content-Type':'application/json'})[0]])
     check(outcomes[1]==200 and outcomes[0]['employeeId']==other,'D14 offboarding vs upload succeeds with historical retention')
     old_ids=[x['employeeDocumentId'] for x in hr.request('GET',f'/api/employees/{other}/documents?includeHistory=true')]
-    admin.request('POST',f'/api/employees/{other}/rehire',context|{'hireDate':str(datetime.date.today())},201)
+    admin.request('POST',f'/api/employees/{other}/rehire',context|{'hireDate':str(datetime.datetime.now(datetime.timezone.utc).date())},201)
     check(old_ids==[x['employeeDocumentId'] for x in hr.request('GET',f'/api/employees/{other}/documents?includeHistory=true')],'D14 rehire retains same historical document IDs')
     # Explicit combined-role grant; session is revoked and then freshly authenticated.
     u=admin.request('GET','/api/admin/users/'+uid);admin.request('PUT','/api/admin/users/'+uid+'/roles',{'roles':['SystemAdmin','HRAdmin'],'version':u['version']})
