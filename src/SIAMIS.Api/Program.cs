@@ -4,8 +4,12 @@ using SIAMIS.Application.MasterData;
 using SIAMIS.Application.Payroll;
 using SIAMIS.Infrastructure.Data;
 using SIAMIS.Infrastructure.Services;
+using SIAMIS.Api.Security;
+using Microsoft.AspNetCore.Authorization;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.AddSiamisSecurity();
+builder.ConfigureDeploymentSecurity();
 
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
@@ -13,6 +17,7 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
+    options.OperationFilter<SecurityDocumentationFilter>();
     var xmlFile = $"{typeof(Program).Assembly.GetName().Name}.xml";
     options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFile));
 });
@@ -71,13 +76,24 @@ builder.Services.AddScoped<IEmployeePayrollComponentAssignmentService, EmployeeP
 
 var app = builder.Build();
 
+if(args.Contains("--bootstrap-admin",StringComparer.Ordinal))
+{
+    await AdminBootstrap.RunAsync(app.Services,app.Configuration);
+    return;
+}
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(options=>options.UseRequestInterceptor("async (request) => { if (!['GET','HEAD','OPTIONS'].includes(request.method.toUpperCase())) { const response = await fetch('/api/auth/csrf', { credentials: 'same-origin' }); const csrf = await response.json(); request.headers['X-CSRF-TOKEN'] = csrf.token; } request.credentials = 'same-origin'; return request; }"));
 }
 
+app.UseDeploymentSecurity();
 app.UseHttpsRedirection();
+if (!app.Environment.IsDevelopment()) app.UseHsts();
+app.UseAuthentication();
+app.UseAuthorization();
+app.UseRateLimiter();
 app.UseDefaultFiles();
 app.UseStaticFiles();
 app.MapControllers();
@@ -86,6 +102,6 @@ app.MapGet("/health", () => Results.Ok(new
     status = "Healthy",
     service = "SIAMIS API",
     timestampUtc = DateTimeOffset.UtcNow
-})).WithName("GetHealth").WithTags("Status");
+})).AllowAnonymous().WithName("GetHealth").WithTags("Status");
 
 app.Run();

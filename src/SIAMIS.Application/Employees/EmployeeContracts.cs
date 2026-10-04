@@ -52,7 +52,7 @@ public sealed class EmployeeDetailDto
     public IReadOnlyList<EmergencyContactDto> EmergencyContacts { get; init; } = [];
     public EmploymentSummaryDto? CurrentEmployment { get; init; }
     public TeacherProfileDto? TeacherProfile { get; init; }
-    public CompensationSummaryDto? CurrentCompensation { get; init; }
+    public CompensationSummaryDto? CurrentCompensation { get; set; }
 }
 
 public sealed class EmployeeContactDto

@@ -1,4 +1,8 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using SIAMIS.Infrastructure.Security;
+using SIAMIS.Application.Security;
 using SIAMIS.Domain.Common;
 using SIAMIS.Domain.Entities.Employees;
 using SIAMIS.Domain.Entities.MasterData;
@@ -7,7 +11,7 @@ using SIAMIS.Infrastructure.Configurations;
 
 namespace SIAMIS.Infrastructure.Data;
 
-public sealed class SIAMISDbContext(DbContextOptions<SIAMISDbContext> options) : DbContext(options)
+public sealed class SIAMISDbContext(DbContextOptions<SIAMISDbContext> options, ICurrentActor? actor = null) : IdentityDbContext<ApplicationUser, IdentityRole<Guid>, Guid>(options)
 {
     public DbSet<SIAMIS.Domain.Entities.Leave.WorkCalendar> WorkCalendars => Set<SIAMIS.Domain.Entities.Leave.WorkCalendar>();
     public DbSet<SIAMIS.Domain.Entities.Leave.EmployeeLeaveEntitlement> EmployeeLeaveEntitlements => Set<SIAMIS.Domain.Entities.Leave.EmployeeLeaveEntitlement>();
@@ -75,6 +79,7 @@ public sealed class SIAMISDbContext(DbContextOptions<SIAMISDbContext> options) :
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+        SecurityConfiguration.Configure(modelBuilder);
         LeaveFoundationConfiguration.Configure(modelBuilder);
 
         modelBuilder.Entity<MasterDataEntity>().UseTpcMappingStrategy();
@@ -104,8 +109,7 @@ public sealed class SIAMISDbContext(DbContextOptions<SIAMISDbContext> options) :
 
     public override int SaveChanges()
     {
-        UpdateTimestamps();
-        return base.SaveChanges();
+        return SaveChanges(true);
     }
 
     public override int SaveChanges(bool acceptAllChangesOnSuccess)
@@ -116,8 +120,7 @@ public sealed class SIAMISDbContext(DbContextOptions<SIAMISDbContext> options) :
 
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
-        UpdateTimestamps();
-        return base.SaveChangesAsync(cancellationToken);
+        return SaveChangesAsync(true, cancellationToken);
     }
 
     public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
@@ -128,6 +131,7 @@ public sealed class SIAMISDbContext(DbContextOptions<SIAMISDbContext> options) :
 
     private void UpdateTimestamps()
     {
+        AttributeActor();
         if (ChangeTracker.Entries<AttendanceEvent>().Any(x => x.State is EntityState.Modified or EntityState.Deleted))
             throw new InvalidOperationException("Attendance events are immutable observation evidence.");
         if (ChangeTracker.Entries<AttendanceReviewAction>().Any(x => x.State is EntityState.Modified or EntityState.Deleted)
@@ -148,6 +152,33 @@ public sealed class SIAMISDbContext(DbContextOptions<SIAMISDbContext> options) :
                 entry.Property(entity => entity.CreatedAt).IsModified = false;
                 entry.Entity.UpdatedAt = now;
             }
+        }
+    }
+
+    private void AttributeActor()
+    {
+        if(ChangeTracker.Entries<SecurityAuditEvent>().Any(x=>x.State is EntityState.Modified or EntityState.Deleted))
+            throw new InvalidOperationException("Security audit events are immutable.");
+        if(actor?.UserId is not Guid userId)return;
+        var changes=ChangeTracker.Entries().Where(x=>x.State is EntityState.Added or EntityState.Modified or EntityState.Deleted).ToArray();
+        foreach(var entry in changes)
+        {
+            if(entry.Entity is SecurityAuditEvent || entry.Metadata.ClrType.Namespace?.StartsWith("Microsoft.AspNetCore.Identity") == true || entry.Entity is ApplicationUser)continue;
+            if(entry.State==EntityState.Added)
+            {
+                switch(entry.Entity)
+                {
+                    case AttendanceEvent x:x.ActorId=userId;break;
+                    case AttendanceReviewCase x:x.ActorUserId=userId;break;
+                    case AttendanceReviewAction x:x.ActorUserId=userId;x.Origin="Authenticated";break;
+                    case FinalizedAttendanceRevision x:x.ActorUserId=userId;break;
+                    case SIAMIS.Domain.Entities.Leave.EmployeeLeaveEvidenceEvent x:x.ActorId=userId;break;
+                    case SIAMIS.Domain.Entities.Leave.EmployeeLeaveSandwichEvent x:x.ActorId=userId;break;
+                }
+            }
+            var key=string.Join("/",entry.Metadata.FindPrimaryKey()!.Properties.Select(p=>entry.Property(p.Name).CurrentValue));
+            var operation=$"{actor.Operation}:{entry.State}";
+            Set<SecurityAuditEvent>().Add(new(){ActorUserId=userId,Operation=operation.Length>200?operation[..200]:operation,ResourceType=entry.Metadata.ClrType.Name,ResourceId=key.Length>100?key[..100]:key});
         }
     }
 }

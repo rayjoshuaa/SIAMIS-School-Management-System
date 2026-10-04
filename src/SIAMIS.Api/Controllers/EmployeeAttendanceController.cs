@@ -31,7 +31,7 @@ public sealed class EmployeeAttendanceController(IEmployeeAttendanceService serv
         return result.IsSuccess ? Ok(result.Value) : Failure<EmployeeAttendanceDto>(result.Failure!);
     }
 
-    /// <summary>Retired legacy write. Valid legacy requests return 410 Gone; use Development-only manual attendance events. Legacy storage is retained.</summary>
+    /// <summary>Retired legacy write. Valid authorized legacy requests return 410 Gone; use authorized manual attendance events. Legacy storage is retained.</summary>
     [HttpPost]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status410Gone)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]

@@ -7,9 +7,9 @@ namespace SIAMIS.Api.Controllers;
 [ApiController]
 [Route("api/employees/{employeeId:guid}")]
 [Produces("application/json")]
-public sealed class AttendanceFoundationController(IAttendanceFoundationService service, IWebHostEnvironment environment) : ControllerBase
+public sealed class AttendanceFoundationController(IAttendanceFoundationService service) : ControllerBase
 {
-    /// <summary>Development-only manual evidence. Requires explicit-offset timestamp, reason and global request key. Source/actor are server-controlled. Replay returns 200; new evidence 201. No pairing or daily calculation.</summary>
+    /// <summary>Authorized manual evidence. Requires explicit-offset timestamp, reason and global request key. Source/actor are server-controlled. Replay returns 200; new evidence 201. No pairing or daily calculation.</summary>
     [HttpPost("attendance-events/manual")]
     [ProducesResponseType(typeof(AttendanceEventDto), 201)]
     [ProducesResponseType(typeof(AttendanceEventDto), 200)]
@@ -18,7 +18,6 @@ public sealed class AttendanceFoundationController(IAttendanceFoundationService 
     [ProducesResponseType(typeof(ProblemDetails), 409)]
     public async Task<ActionResult<AttendanceEventDto>> Manual(Guid employeeId, ManualAttendanceEventRequest request, CancellationToken ct)
     {
-        if (!environment.IsDevelopment()) return NotFound();
         var result = await service.CreateManualAsync(employeeId, request, ct);
         if (!result.IsSuccess) return Failure<AttendanceEventDto>(result.Failure!);
         return result.Value!.IsReplay ? Ok(result.Value.Event) : CreatedAtAction(nameof(Event), new { employeeId, eventId = result.Value.Event.AttendanceEventId }, result.Value.Event);

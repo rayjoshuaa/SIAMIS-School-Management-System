@@ -3,7 +3,7 @@ using SIAMIS.Application.Payroll;
 
 namespace SIAMIS.Api.Controllers;
 
-/// <summary>Configures the single employer identity. Administrative authorization will be added with authentication.</summary>
+/// <summary>Configures the single employer identity under explicit Payroll read/manage authorization.</summary>
 [ApiController]
 [Route("api/organization-profile")]
 [Produces("application/json")]
