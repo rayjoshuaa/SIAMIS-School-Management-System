@@ -79,6 +79,14 @@ public sealed class AttendanceFoundationService(SIAMISDbContext db) : IAttendanc
         await using var tx = await db.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct);
         var employee = await EmploymentIntegrity.LockAsync(db, employeeId, ct);
         if (employee is null) return Fail<AttendanceExpectedWorkDto>("not_found", "Employee was not found.");
+        var result = await ResolveExpectedWorkAsync(db, employee, date, ct);
+        await tx.CommitAsync(ct);
+        return ServiceResult<AttendanceExpectedWorkDto>.Success(result);
+    }
+    // Caller owns the employee-first transaction; shared by D9B and the coherent D9C read.
+    internal static async Task<AttendanceExpectedWorkDto> ResolveExpectedWorkAsync(SIAMISDbContext db, Employee employee, DateOnly date, CancellationToken ct)
+    {
+        var employeeId = employee.EmployeeId;
         var employment = await db.EmploymentRecords.AsNoTracking().Where(x => x.EmployeeId == employeeId).Where(EmploymentIntegrity.EffectiveOn(date)).Take(2).ToListAsync(ct);
         var assignments = await db.Set<EmployeeWorkCalendarAssignment>().AsNoTracking().Where(x => x.EmployeeId == employeeId && x.EffectiveFrom <= date && (!x.EffectiveTo.HasValue || x.EffectiveTo >= date)).Take(2).ToListAsync(ct);
         var calendars = new List<WorkCalendar>();
@@ -90,10 +98,9 @@ public sealed class AttendanceFoundationService(SIAMISDbContext db) : IAttendanc
         var ids = calendars.Select(x => x.Id).ToArray();
         var overrides = await db.Set<WorkCalendarDateOverride>().AsNoTracking().Where(x => ids.Contains(x.WorkCalendarId) && x.Date == date).ToListAsync(ct);
         var overrideIds = overrides.Select(x => x.Id).ToArray();
-        var result = AttendanceFoundationResolver.Resolve(employeeId, employee.IsActive, date, employment, assignments, calendars,
+        return AttendanceFoundationResolver.Resolve(employeeId, employee.IsActive, date, employment, assignments, calendars,
             await db.Set<WorkCalendarWeeklyInterval>().AsNoTracking().Where(x => ids.Contains(x.WorkCalendarId) && x.DayOfWeek == date.DayOfWeek).ToListAsync(ct), overrides,
             await db.Set<WorkCalendarOverrideInterval>().AsNoTracking().Where(x => overrideIds.Contains(x.WorkCalendarDateOverrideId)).ToListAsync(ct));
-        await tx.CommitAsync(ct);
-        return ServiceResult<AttendanceExpectedWorkDto>.Success(result);
     }
+
 }
