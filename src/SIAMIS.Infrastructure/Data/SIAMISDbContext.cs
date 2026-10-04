@@ -130,6 +130,11 @@ public sealed class SIAMISDbContext(DbContextOptions<SIAMISDbContext> options) :
     {
         if (ChangeTracker.Entries<AttendanceEvent>().Any(x => x.State is EntityState.Modified or EntityState.Deleted))
             throw new InvalidOperationException("Attendance events are immutable observation evidence.");
+        if (ChangeTracker.Entries<AttendanceReviewAction>().Any(x => x.State is EntityState.Modified or EntityState.Deleted)
+            || ChangeTracker.Entries<FinalizedAttendanceRevision>().Any(x => x.State is EntityState.Modified or EntityState.Deleted)
+            || ChangeTracker.Entries<AttendanceReviewCase>().Any(x => x.State == EntityState.Deleted
+                || x.State == EntityState.Modified && x.Properties.Any(p => p.IsModified && p.Metadata.Name != nameof(AttendanceReviewCase.State))))
+            throw new InvalidOperationException("Attendance review history and finalized snapshots are immutable.");
         var now = DateTime.UtcNow;
         foreach (var entry in ChangeTracker.Entries<IHasTimestamps>())
         {
