@@ -24,3 +24,12 @@ secrets.json
 *.key
 ## Private HR binaries (never source controlled)
 **/App_Data/hr-documents/
+
+## Frontend generated output and local configuration
+frontend/node_modules/
+frontend/dist/
+frontend/coverage/
+frontend/.env*
+!frontend/.env.example
+frontend/test-results/
+frontend/playwright-report/

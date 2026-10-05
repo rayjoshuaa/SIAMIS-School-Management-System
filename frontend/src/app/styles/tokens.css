@@ -1,0 +1,104 @@
+@import 'tailwindcss';
+
+:root {
+  --primary: #702638;
+  --primary-foreground: #ffffff;
+  --secondary: #eee8e5;
+  --secondary-foreground: #342e33;
+  --accent: #94702d;
+  --accent-foreground: #ffffff;
+  --background: #f8f7f4;
+  --foreground: #282d36;
+  --surface: #ffffff;
+  --surface-muted: #f1f0ed;
+  --border: #dedfdf;
+  --input: #83868c;
+  --muted: #f1f0ed;
+  --muted-foreground: #5e626b;
+  --success: #226347;
+  --success-surface: #edf5f0;
+  --warning: #805b15;
+  --warning-surface: #faf3e3;
+  --destructive: #aa3039;
+  --danger-surface: #fbefef;
+  --info: #315f87;
+  --info-surface: #edf3f8;
+  --sidebar: #ffffff;
+  --sidebar-foreground: #342e33;
+  --sidebar-active: #f3e9ec;
+  --ring: #702638;
+  --radius: 0.375rem;
+  --space-unit: 0.25rem;
+  --overlay: rgb(24 27 32 / 40%);
+  --shadow-overlay: 0 12px 36px rgb(24 27 32 / 15%);
+  --font-ui: 'Segoe UI', 'Noto Sans Thai', Tahoma, Arial, sans-serif;
+}
+
+@theme inline {
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-destructive: var(--destructive);
+  --color-info: var(--info);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-active: var(--sidebar-active);
+  --color-ring: var(--ring);
+  --font-sans: var(--font-ui);
+  --radius-md: var(--radius);
+}
+
+@layer base {
+  body {
+    margin: 0;
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-ui);
+    font-size: 1rem;
+    line-height: 1.6;
+  }
+  *,
+  ::before,
+  ::after {
+    box-sizing: border-box;
+  }
+  button,
+  input,
+  textarea,
+  select {
+    font: inherit;
+  }
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 3px;
+  }
+  button:not(:disabled),
+  [role='button']:not([aria-disabled='true']) {
+    cursor: pointer;
+  }
+  ::selection {
+    background: var(--sidebar-active);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    ::before,
+    ::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}

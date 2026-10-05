@@ -8,12 +8,12 @@ SIAMIS is an API-first school management system. Its HR backend covers employmen
 |---|---|
 | HR | Backend V1 Frozen — authoritative Git tag: `hr-backend-v1` |
 | School Management | Planned; next major backend module |
-| Frontend | Application screens not implemented; only the original AdminLTE/Bootstrap starter exists |
+| Frontend | F1 React/TypeScript design-system foundation; application workflows and final shell deferred |
 | Production | Deployment validation and infrastructure setup remain required |
 
 ## Technology and architecture
 
-C#, .NET 10, ASP.NET Core Web API, EF Core 10, SQL Server, ASP.NET Core Identity, Swagger/OpenAPI and Git. The static interface foundation uses AdminLTE and Bootstrap.
+C#, .NET 10, ASP.NET Core Web API, EF Core 10, SQL Server, ASP.NET Core Identity, Swagger/OpenAPI and Git. The new frontend uses React, TypeScript, Vite, Tailwind CSS and Radix primitives. The original static AdminLTE starter remains historical and is not used by the new frontend.
 
 | Directory | Responsibility |
 |---|---|
@@ -22,6 +22,7 @@ C#, .NET 10, ASP.NET Core Web API, EF Core 10, SQL Server, ASP.NET Core Identity
 | `src/SIAMIS.Domain` | Domain entities |
 | `src/SIAMIS.Infrastructure` | EF Core persistence and service implementations |
 | `tests/` | Established regression runner and verification scripts |
+| `frontend/` | React frontend and Development design-system showcase |
 | `docs/` | Current documentation and archived engineering evidence |
 
 Controllers use application interfaces; EF entities are not API responses. See [system architecture](docs/architecture/SYSTEM-ARCHITECTURE.md).
@@ -41,6 +42,7 @@ The launch profile uses `https://localhost:7142` and `http://localhost:5142`. Sw
 ## Documentation
 
 - [Documentation index](docs/README.md)
+- [Frontend setup and design system](docs/frontend/README.md)
 - [Frozen HR V1 contract](docs/modules/hr/HR-V1-FREEZE.md)
 - [Development](docs/deployment/DEVELOPMENT.md) and [Production requirements](docs/deployment/PRODUCTION.md)
 - [Historical checkpoint archive](docs/archive/checkpoints/README.md)
