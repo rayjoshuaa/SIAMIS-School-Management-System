@@ -1,4 +1,5 @@
 import { ApiError, normalizeProblem } from './errors';
+import { sessionEpoch, reportSessionLoss } from '../auth/session-events';
 
 type RequestOptions = {
   method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
@@ -24,6 +25,7 @@ export function createApiClient(baseUrl = '') {
     }
   }
   async function send(path: string, init: RequestInit) {
+    const started = sessionEpoch();
     let response: Response;
     try {
       response = await fetch(url(path), {
@@ -37,6 +39,17 @@ export function createApiClient(baseUrl = '') {
       throw new ApiError('network', 0);
     }
     if (!response.ok) {
+      if (
+        response.status === 401 &&
+        ![
+          '/api/auth/login',
+          '/api/auth/activate',
+          '/api/auth/reset-password',
+          '/api/auth/forgot-password',
+          '/api/auth/csrf',
+        ].includes(path)
+      )
+        reportSessionLoss(started);
       const body: unknown = await readJson(response, init.signal).catch((error: unknown) => {
         if (init.signal?.aborted) throw error;
         return null;

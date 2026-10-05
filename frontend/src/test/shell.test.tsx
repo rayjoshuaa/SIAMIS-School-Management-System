@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
-import { render, screen } from '@testing-library/react';
+import { render as renderUi, screen } from '@testing-library/react';
+import { AuthContext } from '../lib/auth/auth-context';
 import userEvent from '@testing-library/user-event';
 import { Tooltip } from 'radix-ui';
 import {
@@ -19,9 +20,30 @@ import { AccountMenu } from '../components/layout/account-menu';
 import { MobileNavigation } from '../components/layout/mobile-navigation';
 import { PageActionGroup } from '../components/layout/page-action-group';
 import { SchoolDashboard } from '../features/shell/dashboard';
+const logout = vi.fn().mockResolvedValue(undefined);
+const auth = {
+  state: {
+    status: 'authenticated' as const,
+    user: {
+      userId: 'fixture',
+      userName: 'Test',
+      employeeId: null,
+      isActive: true,
+      requiresPasswordChange: false,
+      roles: [],
+      capabilities: [],
+    },
+  },
+  refresh: async () => {},
+  login: async () => {},
+  logout,
+};
+function render(ui: React.ReactNode) {
+  return renderUi(<AuthContext.Provider value={auth}>{ui}</AuthContext.Provider>);
+}
 const identity = {
   userName: 'Preview',
-  mode: 'development' as const,
+  mode: 'authenticated' as const,
   capabilities: ['Employee.Read', 'Reporting.Read'],
 };
 describe('navigation contract', () => {
@@ -86,10 +108,12 @@ describe('navigation contract', () => {
     );
     await userEvent.click(screen.getByRole('button', { name: `Account menu: ${name}` }));
     expect(screen.getByRole('menu')).toHaveTextContent(name);
-    expect(screen.getByRole('menuitem', { name: 'Sign out' })).toHaveAttribute(
+    expect(screen.getByRole('menuitem', { name: 'Profile' })).toHaveAttribute(
       'aria-disabled',
       'true',
     );
+    await userEvent.click(screen.getByRole('menuitem', { name: 'Sign out' }));
+    expect(logout).toHaveBeenCalled();
   });
   it('closes mobile navigation on a destination selection', async () => {
     render(

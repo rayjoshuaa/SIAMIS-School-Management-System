@@ -28,7 +28,7 @@ The API client defaults to same-origin, includes cookies and accepts AbortSignal
 
 ProblemDetails field errors are retained for validation; arbitrary server detail/extensions/stacks are not presented. UI errors distinguish validation, unauthenticated, forbidden, missing, conflict, server, request and network failures. Feature code should map field names deliberately rather than assuming every server key matches a form field.
 
-`/api/auth/me` already exposes authenticated identity, optional Employee linkage and capabilities. `can(session, capability)` is a presentation helper only; server authorization and ownership remain authoritative. No role-name inference, localStorage token or authentication workflow is introduced.
+`/api/auth/me` already exposes authenticated identity, optional Employee linkage and capabilities. `can(session, capability)` is a presentation helper only; server authorization and ownership remain authoritative. No role-name inference or browser-stored authentication token is introduced.
 
 ## Integration boundaries
 
@@ -42,11 +42,11 @@ The revised school dashboard uses a reusable compact StatisticCard and empty reg
 
 At 1280px and above, the sidebar defaults to expanded (248px); at 768–1279px it defaults to a 72px icon rail. The rail shows top-level module icons only; choosing HR or School Management expands the sidebar to show readable children. Planned modules remain unavailable. A persisted expanded/collapsed preference overrides defaults. Below 768px there is no permanent sidebar. A controlled Radix modal drawer traps focus, locks background scrolling, closes on navigation and transfers focus to content; Escape/close returns focus to the trigger. Sidebar navigation scrolls independently only when needed, including all 16 planned School Management destinations; content uses normal document scrolling. The controlled left drawer composes the same Radix foundation because the F1 general Sheet is an uncontrolled right overlay.
 
-### F3 session handoff
+### F3 authentication integration
 
-`NavigationSessionProvider` supplies display identity and capability strings; no role-name checks are used. F2 uses the real `Security.Manage` capability, not an invented `Security.Read`. HR overview uses `Reporting.Read`; other HR entries use the matching domain read capabilities. Visibility is UX only: directly visiting a placeholder is not an authorization check, and it returns no protected data.
+The application route branch wraps AuthProvider and SessionBoundary; `/dev/ui` remains a separate Development-only route without auth bootstrap. AuthProvider consumes the safe `/api/auth/me` DTO and drives real navigation/account identity. ProtectedRoutes guards session admission; CapabilityRoute reads the same metadata as navigation and shows a safe forbidden state. ShellSession is now an adapter from real session data, and the Development capability provider is deleted.
 
-The lazy Development provider supplies disposable, explicitly unauthenticated preview values. Production uses an empty, unconnected context. F3 replaces this boundary with real `/api/auth/me` bootstrap, extends the session state for authenticated/loading/expired/forbidden states, wires account actions, protects direct routes, and clears server-state caches when identity changes. Backend authorization and authenticated User-to-Employee linkage remain authoritative for future self-service. No session endpoint gap was discovered: the existing DTO includes userId, userName, roles, capabilities, optional employeeId and account-state fields. F2 does not fetch it or reinterpret its security semantics.
+Auth forms are lazy-loaded in a shared AuthLayout, keyed by mode to avoid retaining success/password state across routes. The API client centrally reports protected-request 401 with identity-transition epoch protection, preserving existing CSRF and ProblemDetails behavior. Query data is cancelled/cleared on session loss, logout and bootstrap revalidation. Safe return paths are restricted to registered application destinations. Credential links are scrubbed before router initialization, kept only in RAM and excluded from referrers. See [authentication](AUTHENTICATION.md) for contracts, setup and deployment boundaries. Backend authorization and User-to-Employee ownership remain authoritative; no backend/session contract gap was found.
 
 The backend uses Strict HttpOnly cookies, CSRF and a deny-by-default explicit CORS configuration. A same-origin proxy preserves these contracts. The Development proxy targets loopback only and verifies TLS. Production hosting, SPA fallback, certificate trust and deliberate separate-origin decisions remain deployment work.
 

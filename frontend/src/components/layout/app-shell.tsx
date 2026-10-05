@@ -1,9 +1,7 @@
-import { lazy, Suspense, useState, useEffect, type ReactNode } from 'react';
+import { Suspense, useState, useEffect, type ReactNode } from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
 import { PanelLeftClose, PanelLeftOpen, Search, CalendarDays } from 'lucide-react';
 import { Button } from '../ui/button';
-import { Select } from '../ui/controls';
-import { Badge } from '../ui/feedback';
 import { PageContainer, PageHeader, PageTitle, PageDescription } from './page';
 import { Brand } from './brand';
 import { AccountMenu } from './account-menu';
@@ -11,22 +9,26 @@ import { MobileNavigation } from './mobile-navigation';
 import { ShellNavigation } from './shell-navigation';
 import { ShellLoading, ShellError } from './shell-states';
 import { useMediaQuery } from '../../hooks/use-media-query';
-import { useNavigationSession } from '../../lib/auth/navigation-session';
-import { activeRoute, breadcrumbs, paths } from '../../app/router/navigation';
+import { NavigationSessionProvider, useNavigationSession } from '../../lib/auth/navigation-session';
+import { activeRoute, breadcrumbs } from '../../app/router/navigation';
 import { cn } from '../../lib/utils/cn';
 import { PageActionGroup } from './page-action-group';
 import { ErrorBoundary } from '../shared/error-boundary';
-const DevelopmentNavigation = import.meta.env.DEV
-  ? lazy(() => import('../../app/providers/development-navigation'))
-  : null;
+import { useAuth } from '../../lib/auth/auth-context';
 const preferenceKey = 'siamis.ui.sidebar.v1';
 export function ShellSession({ children }: { children: ReactNode }) {
-  return DevelopmentNavigation ? (
-    <Suspense fallback={<ShellLoading />}>
-      <DevelopmentNavigation>{children}</DevelopmentNavigation>
-    </Suspense>
-  ) : (
-    children
+  const { state } = useAuth();
+  return (
+    <NavigationSessionProvider
+      value={{
+        userName: state.user?.userName ?? '',
+        capabilities: state.user?.capabilities ?? [],
+        roles: state.user?.roles ?? [],
+        mode: 'authenticated',
+      }}
+    >
+      {children}
+    </NavigationSessionProvider>
   );
 }
 export function AppShell({ actions }: { actions?: ReactNode }) {
@@ -138,38 +140,12 @@ export function AppShell({ actions }: { actions?: ReactNode }) {
                   Academic session<span className="block text-muted-foreground">Not connected</span>
                 </span>
               </div>
-              {import.meta.env.DEV && session.mode === 'development' && <Badge>Preview</Badge>}
               <AccountMenu />
             </div>
           </div>
           <p className="border-t border-border px-4 py-2 text-xs text-muted-foreground sm:hidden">
             Academic session · not connected
           </p>
-          {import.meta.env.DEV && session.mode === 'development' && (
-            <div className="flex flex-wrap items-center gap-2 border-t border-border px-4 py-2 sm:px-6">
-              <p className="w-full flex-none text-xs text-muted-foreground sm:w-auto sm:flex-1">
-                Development preview · no authenticated session
-              </p>
-              <div className="w-40">
-                <Select
-                  label="Preview capabilities"
-                  value={session.preview}
-                  onValueChange={session.changePreview}
-                  options={[
-                    { value: 'full', label: 'All capabilities' },
-                    { value: 'people', label: 'Employee read only' },
-                    { value: 'none', label: 'No capabilities' },
-                  ]}
-                />
-              </div>
-              <Link
-                className="inline-flex min-h-11 items-center px-2 text-xs text-primary underline"
-                to={paths.designSystem}
-              >
-                Design system
-              </Link>
-            </div>
-          )}
         </header>
         <PageContainer tabIndex={-1} className="max-w-[100rem] min-w-0 py-5 lg:px-6 lg:py-6">
           <nav aria-label="Breadcrumb" className="mb-2">

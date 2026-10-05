@@ -2,9 +2,8 @@ import { createContext, useContext, type ReactNode } from 'react';
 export type NavigationSession = {
   userName: string;
   capabilities: readonly string[];
-  mode: 'development' | 'unconnected';
-  preview?: string;
-  changePreview?: (value: string) => void;
+  mode: 'unconnected' | 'authenticated';
+  roles?: readonly string[];
 };
 const context = createContext<NavigationSession>({
   userName: 'Session not connected',

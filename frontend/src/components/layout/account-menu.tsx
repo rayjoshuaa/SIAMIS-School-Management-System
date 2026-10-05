@@ -1,3 +1,5 @@
+import { useState } from 'react';
+import { useAuth } from '../../lib/auth/auth-context';
 import { DropdownMenu as M } from 'radix-ui';
 import { ChevronDown } from 'lucide-react';
 import { Avatar } from '../ui/feedback';
@@ -5,6 +7,21 @@ import { Button } from '../ui/button';
 import { useNavigationSession } from '../../lib/auth/navigation-session';
 export function AccountMenu() {
   const session = useNavigationSession();
+  const { logout } = useAuth();
+  const [busy, setBusy] = useState(false);
+  const [failed, setFailed] = useState(false);
+  async function signOut() {
+    if (busy) return;
+    setBusy(true);
+    setFailed(false);
+    try {
+      await logout();
+    } catch {
+      setFailed(true);
+    } finally {
+      setBusy(false);
+    }
+  }
   return (
     <M.Root>
       <M.Trigger asChild>
@@ -29,13 +46,11 @@ export function AccountMenu() {
           <M.Label className="break-words px-3 py-2 text-sm font-semibold">
             {session.userName}
             <span className="mt-1 block text-xs font-normal text-muted-foreground">
-              {session.mode === 'development'
-                ? 'Preview only — not authenticated'
-                : 'Account access is not connected'}
+              {session.roles?.join(' · ') || 'School account'}
             </span>
           </M.Label>
           <M.Separator className="my-2 h-px bg-border" />
-          {['Profile', 'Account settings', 'Sign out'].map((label) => (
+          {['Profile', 'Account settings'].map((label) => (
             <M.Item
               key={label}
               aria-label={label}
@@ -48,6 +63,26 @@ export function AccountMenu() {
               </span>
             </M.Item>
           ))}
+          <M.Item
+            disabled={busy}
+            onSelect={(event) => {
+              event.preventDefault();
+              void signOut();
+            }}
+            className="flex min-h-11 cursor-pointer items-center rounded-md px-3 text-sm data-[highlighted]:bg-muted"
+          >
+            {busy ? 'Signing out…' : 'Sign out'}
+          </M.Item>
+          {busy && (
+            <p role="status" className="px-3 text-xs">
+              Ending your session
+            </p>
+          )}
+          {failed && (
+            <p role="alert" className="px-3 py-2 text-xs text-destructive">
+              Unable to sign out. Please try again.
+            </p>
+          )}
         </M.Content>
       </M.Portal>
     </M.Root>

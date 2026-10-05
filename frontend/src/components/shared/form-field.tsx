@@ -24,7 +24,7 @@ export function FormField({
     [hint ? `${id}-hint` : null, error ? `${id}-error` : null].filter(Boolean).join(' ') ||
     undefined;
   return (
-    <div className="space-y-2">
+    <div className="flex flex-col">
       <Label htmlFor={id}>
         {label}
         {required && (
@@ -33,19 +33,21 @@ export function FormField({
           </span>
         )}
       </Label>
-      {children({
-        id,
-        'aria-describedby': describedBy,
-        'aria-invalid': Boolean(error),
-        'aria-required': required || undefined,
-      })}
+      <div className="mt-2">
+        {children({
+          id,
+          'aria-describedby': describedBy,
+          'aria-invalid': Boolean(error),
+          'aria-required': required || undefined,
+        })}
+      </div>
       {hint && (
-        <p id={`${id}-hint`} className="text-xs text-muted-foreground">
+        <p id={`${id}-hint`} className="mt-1.5 text-xs text-muted-foreground">
           {hint}
         </p>
       )}
       {error && (
-        <p id={`${id}-error`} role="alert" className="text-sm text-destructive">
+        <p id={`${id}-error`} role="alert" className="mt-1.5 text-sm text-destructive">
           {error}
         </p>
       )}

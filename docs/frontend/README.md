@@ -1,6 +1,6 @@
 # Frontend
 
-F1 provides the React/TypeScript design system and integration foundation. F2 adds the responsive application shell and module navigation. Authentication belongs to F3; HR workflows and dashboard analytics remain deferred. The backend remains frozen at `hr-backend-v1`.
+F1 provides the design system, F2 the school shell and F3 real authentication/session/account access. HR screens and dashboard analytics remain deferred. The backend remains frozen at `hr-backend-v1`.
 
 ## Run locally
 
@@ -12,11 +12,11 @@ npm ci
 npm run dev
 ```
 
-Open `http://localhost:5173/` to review the school dashboard structure and application shell. The dashboard shows honest empty statistic, enrollment, population, activity, event and action regions. HR Overview, Employees, Leave, Attendance, Payroll, Documents and Accounts & Security remain placeholders. School Management expands to an overview landing and planned destinations; the other school-platform modules are unavailable entries. No business data or API requests are introduced.
+Open `http://localhost:5173/`. Anonymous users see login; authenticated users see the school shell with effective capability navigation. HR feature pages and dashboard values remain placeholders. Planned school modules remain unavailable.
 
-The clearly marked Development preview lets you select all navigation capabilities, Employee read only, or no capabilities. This changes menu visibility only and never authenticates a user. Desktop sidebar preference alone persists in `siamis.ui.sidebar.v1`; credentials and capabilities do not persist.
+F3 removes the Development capability switch. Only sidebar preference persists in `siamis.ui.sidebar.v1`; credentials/tokens/capabilities do not persist. Real account sign-out uses the backend; profile/settings remain deferred.
 
-`http://localhost:5173/dev/ui` retains the F1 development-only showcase. Production builds exclude the showcase and Development navigation provider/controls; the account area displays “Session not connected” with no capabilities until F3 is connected. Disabled account actions do not implement login/logout.
+`http://localhost:5173/dev/ui` retains the independent Development-only F1 showcase without requiring authentication or API calls. It is excluded from Production.
 
 ```powershell
 npm run build
@@ -34,3 +34,5 @@ Run the API separately using its existing launch profile. Node must trust the lo
 Production should serve the application and API under one HTTPS origin with SPA routing configured by the deployment host. The Vite Development proxy is not Production infrastructure. A separate-origin deployment requires explicit approved CORS/cookie configuration; setting a public base URL alone does not authorize it.
 
 Read [architecture](ARCHITECTURE.md), [design system](DESIGN-SYSTEM.md), the historical [F1 report](F1-REPORT.md), and the [F2 report](F2-REPORT.md). The official school logo remains required; the shell uses approved text branding.
+
+See [authentication/setup](AUTHENTICATION.md) and [F3 report](F3-REPORT.md). No permanent test account remains; first-administrator provisioning requires explicit approval.

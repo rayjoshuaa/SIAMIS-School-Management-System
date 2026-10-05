@@ -9,7 +9,7 @@ import {
 import { Check, ChevronDown } from 'lucide-react';
 import { cn } from '../../lib/utils/cn';
 const fieldStyle =
-  'min-h-11 w-full rounded-md border border-input bg-surface px-3 py-2 text-sm placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:bg-muted disabled:opacity-60 read-only:bg-muted';
+  'min-h-11 w-full rounded-md border border-input bg-surface px-3 py-2 text-sm placeholder:text-muted-foreground aria-invalid:border-destructive disabled:cursor-not-allowed disabled:bg-muted disabled:opacity-60 read-only:bg-muted';
 export function Input({ className, ...props }: ComponentProps<'input'>) {
   return <input className={cn(fieldStyle, className)} {...props} />;
 }
@@ -17,7 +17,7 @@ export function Textarea({ className, ...props }: ComponentProps<'textarea'>) {
   return <textarea className={cn(fieldStyle, 'min-h-28', className)} {...props} />;
 }
 export function Label(props: ComponentProps<typeof L.Root>) {
-  return <L.Root className="text-sm font-semibold" {...props} />;
+  return <L.Root className="block text-sm leading-5 font-semibold" {...props} />;
 }
 export function Checkbox(props: ComponentProps<typeof C.Root>) {
   return (

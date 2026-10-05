@@ -8,7 +8,7 @@ SIAMIS is an API-first school management system. Its HR backend covers employmen
 |---|---|
 | HR | Backend V1 Frozen — authoritative Git tag: `hr-backend-v1` |
 | School Management | Planned; next major backend module |
-| Frontend | F1 design system and F2 responsive application shell; authentication and business screens deferred |
+| Frontend | F1 design system, F2 school shell and F3 authentication/session/account access; business screens deferred |
 | Production | Deployment validation and infrastructure setup remain required |
 
 ## Technology and architecture
