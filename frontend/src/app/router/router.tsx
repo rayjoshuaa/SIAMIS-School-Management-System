@@ -1,39 +1,20 @@
 import { lazy, Suspense } from 'react';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
-import { PageContainer, PageTitle, PageDescription } from '../../components/layout/page';
-import { Spinner } from '../../components/ui/feedback';
+import { ShellError, ShellLoading, ShellNotFound } from '../../components/layout/shell-states';
+import { ModulePlaceholder } from '../../features/shell/placeholder';
+import { SchoolDashboard } from '../../features/shell/dashboard';
+import { routes, paths } from './navigation';
 const Showcase = import.meta.env.DEV
   ? lazy(() => import('../../features/design-system/showcase'))
   : null;
-function Foundation() {
-  return (
-    <PageContainer>
-      <PageTitle>SIAMIS</PageTitle>
-      <PageDescription>
-        Frontend foundation. Application workflows will follow in separately approved checkpoints.
-      </PageDescription>
-      {import.meta.env.DEV && (
-        <a className="mt-6 inline-flex min-h-11 items-center text-primary underline" href="/dev/ui">
-          Open design system
-        </a>
-      )}
-    </PageContainer>
-  );
-}
+const ShellEntry = lazy(() => import('../../components/layout/shell-entry'));
 const router = createBrowserRouter([
-  { path: '/', element: <Foundation /> },
   ...(Showcase
     ? [
         {
-          path: '/dev/ui',
+          path: paths.designSystem,
           element: (
-            <Suspense
-              fallback={
-                <PageContainer>
-                  <Spinner label="Loading design system" />
-                </PageContainer>
-              }
-            >
+            <Suspense fallback={<ShellLoading />}>
               <Showcase />
             </Suspense>
           ),
@@ -41,15 +22,19 @@ const router = createBrowserRouter([
       ]
     : []),
   {
-    path: '*',
     element: (
-      <PageContainer>
-        <PageTitle>Page not found</PageTitle>
-        <a className="inline-flex min-h-11 items-center text-primary underline" href="/">
-          Return to SIAMIS
-        </a>
-      </PageContainer>
+      <Suspense fallback={<ShellLoading />}>
+        <ShellEntry />
+      </Suspense>
     ),
+    errorElement: <ShellError />,
+    children: [
+      ...routes.map((route) => ({
+        path: route.path,
+        element: route.path === paths.dashboard ? <SchoolDashboard /> : <ModulePlaceholder />,
+      })),
+      { path: '*', element: <ShellNotFound /> },
+    ],
   },
 ]);
 export function AppRouter() {
