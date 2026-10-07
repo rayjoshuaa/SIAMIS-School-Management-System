@@ -9,9 +9,9 @@ import {
 import { X, MoreHorizontal } from 'lucide-react';
 import { Button } from './button';
 import { cn } from '../../lib/utils/cn';
-const overlay = 'fixed inset-0 z-40 bg-[var(--overlay)]';
+const overlay = 'ui-floating fixed inset-0 z-40 bg-[var(--overlay)]';
 const floating =
-  'z-50 rounded-md border border-border bg-surface p-5 shadow-[var(--shadow-overlay)]';
+  'ui-floating z-50 rounded-md border border-border bg-surface p-5 shadow-[var(--shadow-overlay)]';
 export function Dialog({
   trigger,
   title,
@@ -61,11 +61,13 @@ export function AlertDialog({
   title,
   description,
   onConfirm,
+  confirmLabel = 'Confirm',
 }: {
   trigger: ReactNode;
   title: string;
   description: string;
   onConfirm: () => void;
+  confirmLabel?: string;
 }) {
   return (
     <A.Root>
@@ -88,7 +90,7 @@ export function AlertDialog({
             </A.Cancel>
             <A.Action asChild>
               <Button variant="destructive" onClick={onConfirm}>
-                Confirm example
+                {confirmLabel}
               </Button>
             </A.Action>
           </div>
@@ -163,7 +165,7 @@ export function DropdownMenu({
             <M.Item
               key={item.label}
               onSelect={item.onSelect}
-              className="flex min-h-11 cursor-pointer items-center rounded-md px-3 text-sm data-[highlighted]:bg-muted"
+              className="ui-menu-item flex min-h-11 cursor-pointer items-center rounded-md px-3 text-sm data-[highlighted]:bg-muted"
             >
               {item.label}
             </M.Item>

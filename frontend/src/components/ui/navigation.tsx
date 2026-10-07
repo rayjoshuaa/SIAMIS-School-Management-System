@@ -2,18 +2,21 @@ import type { ReactNode } from 'react';
 import { Tabs as T } from 'radix-ui';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from './button';
-export function Tabs({ tabs }: { tabs: { value: string; label: string; content: ReactNode }[] }) {
+export function Tabs({
+  tabs,
+  label = 'Views',
+}: {
+  tabs: { value: string; label: string; content: ReactNode }[];
+  label?: string;
+}) {
   return (
     <T.Root defaultValue={tabs[0]?.value}>
-      <T.List
-        aria-label="Example views"
-        className="mb-4 flex flex-wrap gap-1 border-b border-border"
-      >
+      <T.List aria-label={label} className="mb-4 flex flex-wrap gap-1 border-b border-border">
         {tabs.map((tab) => (
           <T.Trigger
             key={tab.value}
             value={tab.value}
-            className="min-h-11 border-b-2 border-transparent px-4 text-sm text-muted-foreground data-[state=active]:border-primary data-[state=active]:text-primary"
+            className="ui-tab min-h-11 border-b-2 border-transparent px-4 text-sm text-muted-foreground data-[state=active]:border-primary data-[state=active]:text-primary"
           >
             {tab.label}
           </T.Trigger>
@@ -37,7 +40,7 @@ export function Breadcrumb({ items }: { items: { label: string; href?: string }[
             {item.href ? (
               <a
                 href={item.href}
-                className="inline-flex min-h-11 items-center underline-offset-4 hover:underline"
+                className="ui-link inline-flex min-h-11 items-center underline-offset-4 hover:underline"
               >
                 {item.label}
               </a>

@@ -1,209 +1,305 @@
 import { useState } from 'react';
-import { ArrowUpRight, Bell, Check, Menu, Settings2 } from 'lucide-react';
-import {
-  PageContainer,
-  PageHeader,
-  PageTitle,
-  PageDescription,
-  PageActions,
-  Section,
-  ResponsiveGrid,
-} from '../../components/layout/page';
+import { ArrowRight, Check, Settings2 } from 'lucide-react';
 import { Button } from '../../components/ui/button';
-import { Checkbox, Label, RadioGroup, Select, Switch } from '../../components/ui/controls';
+import { Checkbox, Input, Label, RadioGroup, Select, Switch } from '../../components/ui/controls';
+import { Alert, Badge, Skeleton, Spinner } from '../../components/ui/feedback';
+import { AlertDialog, Dialog, Tooltip } from '../../components/ui/overlays';
+import { Tabs } from '../../components/ui/navigation';
 import {
-  Alert,
-  Avatar,
-  Badge,
-  Card,
-  EmptyState,
-  Separator,
-  Skeleton,
-  Spinner,
-} from '../../components/ui/feedback';
-import {
-  AlertDialog,
-  Dialog,
-  Sheet,
-  Tooltip,
-  Popover,
-  DropdownMenu,
-} from '../../components/ui/overlays';
-import { Breadcrumb, Tabs } from '../../components/ui/navigation';
+  MetricStrip,
+  QueueList,
+  RecordSummary,
+  SystemState,
+  WorkspaceHeader,
+} from '../../components/shared/workspace';
+import { FormField } from '../../components/shared/form-field';
 import { DemoForm } from './demo-form';
 import { DemoTable } from './demo-table';
 import { useNotify } from '../../app/providers/notifications';
-import {
-  formatDateOnly,
-  formatInstant,
-  formatInteger,
-  formatThb,
-  formatPercent,
-} from '../../lib/utils/format';
+import './showcase.css';
 
-const palette = [
-  { name: 'Burgundy', token: '--primary', role: 'Identity & primary action' },
-  { name: 'Warm gold', token: '--accent', role: 'Restrained accent' },
-  { name: 'Canvas', token: '--background', role: 'A calm workspace' },
-  { name: 'Surface', token: '--surface', role: 'Content & controls' },
+const sections = [
+  ['overview', 'Overview'],
+  ['language', 'Visual language'],
+  ['controls', 'Controls'],
+  ['forms', 'Forms'],
+  ['tables', 'Tables & queues'],
+  ['states', 'Feedback'],
+  ['patterns', 'Page patterns'],
+] as const;
+const archetypes = [
+  {
+    value: 'dashboard',
+    label: 'Dashboard',
+    title: 'Overview without decoration',
+    description:
+      'Factual metrics, attention queues and contextual actions. Use aligned strips and lists before separate metric cards.',
+    parts: ['Metrics', 'Attention', 'Operational overview'],
+  },
+  {
+    value: 'directory',
+    label: 'Directory',
+    title: 'Find and compare records',
+    description:
+      'Search, visible frequent filters, a table or compact list, and pagination. Students, employees, guardians and applicants share these primitives.',
+    parts: ['Search & filters', 'Identity + status + metadata', 'Pagination'],
+  },
+  {
+    value: 'record',
+    label: 'Record / profile',
+    title: 'Identity with structured context',
+    description:
+      'Record summary, justified tabs, structured sections, related records and an audit timeline. Place actions beside the context they affect.',
+    parts: ['Identity & contextual actions', 'Details / related records', 'History'],
+  },
+  {
+    value: 'queue',
+    label: 'Queue',
+    title: 'Review and take the next action',
+    description:
+      'Compact actionable records, meaningful priority and review state. Suitable for admissions, leave, documents and academic exceptions.',
+    parts: ['Filters & workload context', 'Review records', 'Next action'],
+  },
+  {
+    value: 'processing',
+    label: 'Processing',
+    title: 'A controlled processing workspace',
+    description:
+      'Period/process state, prerequisites, exceptions and explicit progression. Payroll and finance do not inherit a dashboard layout.',
+    parts: ['Process / period state', 'Exceptions & validation', 'Progression actions'],
+  },
+  {
+    value: 'documents',
+    label: 'Documents',
+    title: 'Metadata before decoration',
+    description:
+      'Categories, document records, version metadata and explicit authorized actions. Never expose confidential actions from inferred roles.',
+    parts: ['Categories & filters', 'Document metadata', 'Version / lifecycle actions'],
+  },
+  {
+    value: 'administration',
+    label: 'Administration',
+    title: 'Dense, precise configuration',
+    description:
+      'Accounts, capabilities and configuration use clear tables and grouped forms. Permission limitations remain distinct from empty data.',
+    parts: ['Configuration context', 'Accounts / permissions', 'Audit information'],
+  },
+  {
+    value: 'calendar',
+    label: 'Calendar',
+    title: 'Time and resource context',
+    description:
+      'Date navigation, schedules/resources and conflicts need a calendar or timeline workspace. Do not replace them with a card grid.',
+    parts: ['Date & resource controls', 'Schedule workspace', 'Conflicts & detail disclosure'],
+  },
+  {
+    value: 'academic',
+    label: 'Academic',
+    title: 'Class and subject work in context',
+    description:
+      'Class/subject selection, dense student assessment controls and validation. Preserve row/column context in grading work.',
+    parts: [
+      'Class / subject / assessment',
+      'Student grading workspace',
+      'Validation & publication state',
+    ],
+  },
+  {
+    value: 'pipeline',
+    label: 'Pipeline / CRM',
+    title: 'Stages with next actions',
+    description:
+      'Stages, applicant records and explicit next actions. Stage lists may scroll locally on mobile; maintain a clear path to record detail.',
+    parts: ['Stage context', 'Applicant / entity records', 'Next actions'],
+  },
 ];
 export default function Showcase() {
   const notify = useNotify();
   const [checked, setChecked] = useState(false);
   return (
-    <>
-      <a
-        href="#main"
-        className="sr-only fixed top-2 left-2 z-50 rounded-md bg-surface px-4 py-3 focus:not-sr-only"
-      >
+    <div className="v2-showcase">
+      <a href="#v2-main" className="v2-skip">
         Skip to content
       </a>
-      <header className="border-b border-border bg-surface">
-        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-4 py-5 sm:px-6 lg:px-10">
-          <div className="border-l-3 border-accent pl-3">
-            <p className="text-xl font-semibold tracking-[0.16em] text-primary">SIAMIS</p>
-            <p className="text-xs text-muted-foreground">Siam International School</p>
-          </div>
-          <div className="flex items-center gap-3">
-            <Badge>Development only</Badge>
-            <Sheet
-              trigger={
-                <Button icon variant="outline" aria-label="Open showcase navigation">
-                  <Menu className="size-5" />
-                </Button>
-              }
-              title="Foundation preview"
-              description="Development navigation only. The application shell is planned for F2."
-            >
-              <nav aria-label="Showcase sections" className="flex flex-col gap-3">
-                {['identity', 'controls', 'forms', 'tables', 'feedback'].map((item) => (
-                  <a
-                    key={item}
-                    className="min-h-11 rounded-md px-3 py-2 capitalize hover:bg-muted"
-                    href={`#${item}`}
-                  >
-                    {item}
-                  </a>
-                ))}
-              </nav>
-            </Sheet>
-          </div>
+      <header className="v2-masthead">
+        <div className="v2-masthead-inner">
+          <a href="#overview" className="v2-wordmark">
+            SIAMIS <span>Siam International School</span>
+          </a>
+          <span className="v2-development">V2.1 · Development showcase</span>
         </div>
       </header>
-      <PageContainer>
-        <Breadcrumb items={[{ label: 'Development' }, { label: 'Design system' }]} />
-        <PageHeader>
-          <div>
-            <p className="mb-3 text-xs font-semibold tracking-widest text-accent uppercase">
-              SIAMIS / Interface foundation
-            </p>
-            <PageTitle>A considered workspace.</PageTitle>
-            <PageDescription>
-              A calm, readable foundation for school operations. Review the shared language before
-              building feature workflows.
-            </PageDescription>
-          </div>
-          <PageActions>
-            <Button
-              variant="outline"
-              onClick={() => notify('F1 preview only. No API requests are made.')}
-            >
-              <Bell className="size-4" aria-hidden="true" />
-              Preview notification
-            </Button>
-          </PageActions>
-        </PageHeader>
-        <div className="mb-10 flex flex-wrap gap-x-6 gap-y-1 border-y border-border py-3 text-xs text-muted-foreground">
-          <span>F1 · Design system</span>
-          <span>Light theme</span>
-          <span>Static sample data</span>
-          <span className="sm:ml-auto">No HR workflow or database changes</span>
-        </div>
-        <Section id="identity" title="01 / Identity & type">
-          <ResponsiveGrid className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
-            {palette.map((color) => (
-              <Card key={color.name} className="p-0 sm:p-0">
-                <div
-                  className="h-20 rounded-t-md border-b border-border"
-                  style={{ background: `var(${color.token})` }}
-                />
-                <div className="p-5">
-                  <h3 className="font-semibold">{color.name}</h3>
-                  <p className="text-sm text-muted-foreground">{color.role}</p>
-                  <code className="mt-3 block text-xs text-muted-foreground">{color.token}</code>
-                </div>
-              </Card>
+      <div className="v2-layout">
+        <aside className="v2-index">
+          <p className="v2-eyebrow">Master foundation</p>
+          <nav aria-label="Design system sections">
+            {sections.map(([id, label], index) => (
+              <a href={`#${id}`} key={id}>
+                <span aria-hidden="true">0{index + 1}</span>
+                {label}
+              </a>
             ))}
-          </ResponsiveGrid>
-          <Card>
-            <div className="grid gap-6 md:grid-cols-2">
+          </nav>
+          <p className="v2-index-note">
+            One SIAMIS ecosystem.
+            <br />
+            Different workflows.
+          </p>
+        </aside>
+        <main id="v2-main" className="v2-main">
+          <section id="overview">
+            <WorkspaceHeader
+              context="SIAMIS / Frontend V2"
+              title="A precise foundation for school operations"
+              description="One design language for academic, administrative and operational work. Consistent quality, without prescribing identical pages."
+              actions={
+                <Button
+                  variant="outline"
+                  onClick={() =>
+                    notify('Design-system specimen only. No API request or school data changes.')
+                  }
+                >
+                  <Check aria-hidden="true" className="size-4" />
+                  Preview feedback
+                </Button>
+              }
+            />
+            <p className="v2-specimen-note">
+              Development specimens only. All examples are fictional component states, not school
+              records or operational metrics.
+            </p>
+            <MetricStrip
+              items={[
+                { label: 'Component specimens', value: '04', context: 'Local table examples only' },
+                { label: 'Page archetypes', value: '10', context: 'Different workflow structures' },
+                {
+                  label: 'Runtime school metrics',
+                  value: '—',
+                  context: 'Not queried in this showcase',
+                },
+              ]}
+            />
+            <div className="v2-principles">
               <div>
-                <h3 className="text-xl font-semibold">Clarity, across every detail.</h3>
-                <p className="mt-3 text-sm text-muted-foreground">
-                  Professional sans-serif, compact headings and space to read. Local system fonts
-                  support English and Thai without external font requests.
-                </p>
+                <h2>Clear hierarchy</h2>
+                <p>Typography and alignment lead. Containers serve a purpose.</p>
               </div>
-              <div className="space-y-2">
-                <p lang="th" className="text-lg">
-                  ระบบบริหารจัดการโรงเรียน
+              <div>
+                <h2>Useful density</h2>
+                <p>Readable controls and compact data. Space for actual work.</p>
+              </div>
+              <div>
+                <h2>Honest states</h2>
+                <p>Empty, unavailable and restricted mean different things.</p>
+              </div>
+            </div>
+          </section>
+          <section id="language" className="v2-section">
+            <div className="v2-section-heading">
+              <h2>Visual language</h2>
+              <p>Warm neutrals. Burgundy interactions. Restrained institutional gold.</p>
+            </div>
+            <div className="v2-palette">
+              {[
+                ['brand', 'Burgundy', 'Identity & primary action', '--primary'],
+                ['gold', 'School gold', 'Accent, never default action', '--accent'],
+                ['canvas', 'Canvas', 'Application background', '--background'],
+                ['surface', 'Surface', 'Reading & working area', '--surface'],
+                ['muted', 'Grouped surface', 'Secondary context', '--surface-muted'],
+              ].map(([kind, name, role, token]) => (
+                <div key={kind}>
+                  <div className={`v2-swatch v2-swatch-${kind}`} aria-hidden="true" />
+                  <h3>{name}</h3>
+                  <p>{role}</p>
+                  <code>{token}</code>
+                </div>
+              ))}
+            </div>
+            <div className="v2-split v2-type-surface">
+              <div>
+                <p className="v2-eyebrow">Typography specimen</p>
+                <p className="v2-page-type">Page title · 24 / 31</p>
+                <h3 className="v2-section-type">Section heading · 18 / 27</h3>
+                <p>Body & labels · 14 / 21</p>
+                <p className="v2-meta-type">Metadata & table headers · 13 / 20</p>
+                <p lang="th">ระบบบริหารจัดการโรงเรียน · 0123456789</p>
+              </div>
+              <div className="v2-surface-example">
+                <h3>Grouped context</h3>
+                <p>
+                  Use a subtle surface for related secondary information. Ordinary content does not
+                  need its own shadow.
                 </p>
-                <p className="text-sm">School operations · 0123456789</p>
-                <p className="text-xs text-muted-foreground">
-                  Helper text / labels / tabular information
+                <div className="v2-spacing" aria-label="Spacing scale">
+                  <span>4</span>
+                  <span>8</span>
+                  <span>12</span>
+                  <span>16</span>
+                  <span>24</span>
+                  <span>32</span>
+                  <span>48</span>
+                </div>
+                <p className="v2-meta-type">
+                  4px rhythm · 4px controls · 6px panels · elevation for overlays
                 </p>
               </div>
             </div>
-          </Card>
-        </Section>
-        <Section id="controls" title="02 / Actions & controls">
-          <Card>
-            <h3 className="mb-4 font-semibold">A clear action hierarchy</h3>
-            <div className="flex flex-wrap gap-3">
+          </section>
+          <section id="controls" className="v2-section">
+            <div className="v2-section-heading">
+              <h2>Actions & controls</h2>
+              <p>A deliberate hierarchy with visible, distinct interaction states.</p>
+            </div>
+            <div className="v2-action-samples">
               <Button>
-                <Check aria-hidden="true" className="size-4" />
+                <Check className="size-4" aria-hidden="true" />
                 Primary action
               </Button>
               <Button variant="secondary">Secondary</Button>
               <Button variant="outline">Outline</Button>
-              <Button variant="ghost">Ghost</Button>
+              <Button variant="ghost">Quiet action</Button>
               <Button variant="destructive">Destructive</Button>
               <Button disabled>Disabled</Button>
               <Button loading>Submitting</Button>
-              <Tooltip label="Configure display preferences">
+              <Tooltip label="Display settings">
                 <Button icon variant="outline" aria-label="Display settings">
-                  <Settings2 className="size-4" />
+                  <Settings2 className="size-4" aria-hidden="true" />
                 </Button>
               </Tooltip>
             </div>
-            <Separator />
-            <div className="grid items-start gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              <div className="flex items-center gap-3">
+            <div className="v2-controls-grid">
+              <div className="flex items-center gap-2">
                 <Checkbox
-                  id="sample-check"
+                  id="v2-checkbox"
                   checked={checked}
                   onCheckedChange={(value) => setChecked(value === true)}
                 />
-                <Label htmlFor="sample-check">Select example</Label>
+                <Label htmlFor="v2-checkbox">Select specimen</Label>
               </div>
-              <div className="flex items-center gap-3">
-                <Switch id="sample-switch" />
-                <Label htmlFor="sample-switch">Notifications</Label>
+              <div className="flex items-center gap-2">
+                <Switch id="v2-switch" />
+                <Label htmlFor="v2-switch">Enable example</Label>
               </div>
-              <Select
-                label="Example view"
-                options={[
-                  { value: 'comfortable', label: 'Comfortable' },
-                  { value: 'compact', label: 'Compact' },
-                ]}
-                defaultValue="comfortable"
-              />
-              <div className="sm:col-span-2">
-                <p id="sample-radio-label" className="mb-2 text-sm font-semibold">
+              <div>
+                <Label htmlFor="v2-select">Display density</Label>
+                <div className="mt-2">
+                  <Select
+                    id="v2-select"
+                    label="Display density"
+                    defaultValue="standard"
+                    options={[
+                      { value: 'standard', label: 'Standard' },
+                      { value: 'compact', label: 'Compact' },
+                    ]}
+                  />
+                </div>
+              </div>
+              <div>
+                <p id="v2-radio-label" className="text-sm font-semibold">
                   Sample preference
                 </p>
                 <RadioGroup
-                  aria-labelledby="sample-radio-label"
+                  aria-labelledby="v2-radio-label"
                   defaultValue="standard"
                   options={[
                     { value: 'standard', label: 'Standard' },
@@ -212,188 +308,274 @@ export default function Showcase() {
                 />
               </div>
             </div>
-          </Card>
-          <Card>
-            <h3 className="mb-4 font-semibold">Status communicates, without deciding policy</h3>
-            <div className="flex flex-wrap gap-3">
-              <Badge intent="success">Success</Badge>
-              <Badge intent="warning">Requires review</Badge>
-              <Badge intent="danger">Unable to complete</Badge>
-              <Badge intent="info">Information</Badge>
+            <div className="v2-statuses">
+              <span className="v2-meta-type">Semantic meaning</span>
               <Badge>Neutral</Badge>
+              <Badge intent="info">Information</Badge>
+              <Badge intent="success">Complete</Badge>
+              <Badge intent="warning">Requires review</Badge>
+              <Badge intent="danger">Failed</Badge>
             </div>
-          </Card>
-        </Section>
-        <Section id="forms" title="03 / Forms & validation">
-          <div className="grid items-start gap-5 lg:grid-cols-[2fr_1fr]">
-            <Card>
-              <DemoForm />
-            </Card>
-            <Card>
-              <h3 className="font-semibold">One consistent pattern</h3>
-              <p className="mt-3 text-sm text-muted-foreground">
-                Labels, helper text and errors stay attached to their fields. Forms become
-                single-column on mobile, and commands expose submitting state.
+          </section>
+          <section id="forms" className="v2-section">
+            <div className="v2-section-heading">
+              <h2>Forms & validation</h2>
+              <p>
+                Visible labels, local errors and efficient grouping. Focus is blue; errors are red.
               </p>
-              <Separator />
-              <p className="text-xs text-muted-foreground">
-                React Hook Form + Zod. This demonstration validates in memory and saves nothing.
-              </p>
-            </Card>
-          </div>
-        </Section>
-        <Section title="04 / Overlays & focus">
-          <Card>
-            <div className="flex flex-wrap gap-3">
-              <Dialog
-                trigger={<Button variant="outline">Open dialog</Button>}
-                title="A focused conversation"
-                description="Focus stays in this dialog until it closes. Escape returns to the trigger."
-              >
-                <p className="text-sm text-muted-foreground">
-                  A reusable overlay for future workflows. No business action is performed.
-                </p>
-              </Dialog>
-              <Sheet
-                trigger={<Button variant="outline">Open drawer</Button>}
-                title="Context, without losing your place"
-                description="Responsive side panel with keyboard focus containment."
-              >
-                <p className="text-sm text-muted-foreground">
-                  A foundation for future record details.
-                </p>
-              </Sheet>
-              <AlertDialog
-                trigger={<Button variant="outline">Confirm example</Button>}
-                title="Confirm a demonstration?"
-                description="This only shows a notification. No data is changed."
-                onConfirm={() => notify('Example confirmation complete. No data was changed.')}
-              />
-              <Popover
-                label="Display guidance"
-                trigger={<Button variant="outline">Open popover</Button>}
-              >
-                <p className="text-sm">
-                  Small contextual information should be accessible without moving to another page.
-                </p>
-              </Popover>
-              <DropdownMenu
-                items={[{ label: 'Example action', onSelect: () => notify('Sample action only.') }]}
-              />
             </div>
-          </Card>
-        </Section>
-        <Section id="tables" title="05 / Data presentation">
-          <Card>
-            <div className="mb-5 flex items-center gap-3">
-              <Avatar name="Sample Workspace" />
+            <div className="v2-split">
+              <div className="v2-primary-surface">
+                <DemoForm />
+              </div>
+              <div className="v2-form-context">
+                <FormField
+                  id="v2-password"
+                  label="Password specimen"
+                  hint="Browser autocomplete retained; no account operation."
+                >
+                  {(props) => <Input {...props} type="password" autoComplete="new-password" />}
+                </FormField>
+                <FormField id="v2-date" label="Date specimen">
+                  {(props) => <Input {...props} type="date" />}
+                </FormField>
+                <FormField
+                  id="v2-invalid"
+                  label="Invalid specimen"
+                  error="Review this demonstration value."
+                >
+                  {(props) => <Input {...props} defaultValue="Example" />}
+                </FormField>
+                <p className="v2-meta-type">
+                  Use sections for long forms, dialogs for short contextual work, and full pages for
+                  sustained workflows.
+                </p>
+              </div>
+            </div>
+          </section>
+          <section id="tables" className="v2-section">
+            <div className="v2-section-heading">
+              <h2>Operational data</h2>
+              <p>Identity, status, selection, numeric alignment and restrained actions.</p>
+            </div>
+            <div className="v2-operational">
+              <div className="v2-primary-surface">
+                <h3 className="v2-subheading">Directory specimens</h3>
+                <DemoTable />
+              </div>
+              <div className="v2-queue-panel">
+                <h3 className="v2-subheading">Review queue</h3>
+                <p className="v2-meta-type">Fictional component examples</p>
+                <QueueList
+                  label="Specimen review queue"
+                  items={[
+                    {
+                      id: 'q1',
+                      title: 'Example submission',
+                      metadata: 'Component specimen · needs review',
+                      status: <Badge intent="warning">Review</Badge>,
+                      action: (
+                        <Button
+                          icon
+                          variant="ghost"
+                          aria-label="Inspect example submission"
+                          onClick={() => notify('Specimen only. No operational action.')}
+                        >
+                          <ArrowRight className="size-4" aria-hidden="true" />
+                        </Button>
+                      ),
+                    },
+                    {
+                      id: 'q2',
+                      title: 'Example configuration',
+                      metadata: 'Component specimen · ready',
+                      status: <Badge intent="success">Ready</Badge>,
+                    },
+                    {
+                      id: 'q3',
+                      title: 'Example document',
+                      metadata: 'Component specimen · draft',
+                      status: <Badge>Draft</Badge>,
+                    },
+                  ]}
+                />
+                <p className="v2-meta-type mt-4">
+                  Only actionable items have an action affordance. Status never invents a business
+                  consequence.
+                </p>
+              </div>
+            </div>
+          </section>
+          <section id="states" className="v2-section">
+            <div className="v2-section-heading">
+              <h2>Feedback & system states</h2>
+              <p>Communicate the cause, then offer the relevant next step.</p>
+            </div>
+            <div className="v2-feedback-grid">
+              <Alert intent="success" title="Example saved">
+                A completed action needs concise confirmation.
+              </Alert>
+              <Alert intent="warning" title="Review required">
+                This state does not imply misconduct or a payroll deduction.
+              </Alert>
+              <Alert intent="danger" title="Example request failed">
+                Keep entered information visible; offer retry.
+              </Alert>
+              <Alert title="Information">Context belongs near the task it informs.</Alert>
+            </div>
+            <div className="v2-state-grid">
+              {(
+                [
+                  {
+                    kind: 'empty',
+                    title: 'No records yet',
+                    text: 'Explain what belongs here; offer an authorized creation action where appropriate.',
+                  },
+                  {
+                    kind: 'search',
+                    title: 'No search results',
+                    text: 'Change the search terms. Do not report a connection failure.',
+                  },
+                  {
+                    kind: 'filtered',
+                    title: 'No records match these filters',
+                    text: 'Clear or adjust filters without discarding context.',
+                  },
+                  {
+                    kind: 'configuration',
+                    title: 'Configuration required',
+                    text: 'A prerequisite has not been configured. This is not a failed request.',
+                  },
+                  {
+                    kind: 'permission',
+                    title: 'Capability required',
+                    text: 'Hide inaccessible actions. Backend authorization remains authoritative.',
+                  },
+                  {
+                    kind: 'disconnected',
+                    title: 'Not connected',
+                    text: 'This feature has no connected data source. Do not display invented values.',
+                  },
+                  {
+                    kind: 'error',
+                    title: 'Service unavailable',
+                    text: 'The request failed. Retain context and provide a meaningful retry.',
+                  },
+                ] as const
+              ).map((state) => (
+                <SystemState key={state.kind} kind={state.kind} title={state.title}>
+                  {state.text}
+                </SystemState>
+              ))}
+            </div>
+            <div className="v2-loading">
               <div>
-                <h3 className="font-semibold">Foundation examples</h3>
-                <p className="text-xs text-muted-foreground">
-                  Static samples · table on desktop, readable cards on mobile
+                <h3 className="v2-subheading">Section loading</h3>
+                <div role="status" aria-label="Loading specimen records" className="space-y-3">
+                  <Skeleton className="h-5 w-1/3" />
+                  <Skeleton className="h-9 w-full" />
+                  <Skeleton className="h-9 w-4/5" />
+                </div>
+              </div>
+              <div>
+                <h3 className="v2-subheading">Inline progress</h3>
+                <Spinner label="Preparing example" />
+                <p className="v2-meta-type mt-3">
+                  Match skeletons to expected content. Avoid page spinners for small updates.
+                  Reduced motion is respected.
                 </p>
               </div>
             </div>
-            <DemoTable />
-          </Card>
-          <ResponsiveGrid>
-            <Card>
-              <h3 className="mb-4 font-semibold">Loading a section</h3>
-              <div role="status" aria-label="Loading table examples" className="space-y-3">
-                <Skeleton className="h-8 w-2/3" />
-                <Skeleton className="h-10 w-full" />
-                <Skeleton className="h-10 w-full" />
-              </div>
-            </Card>
-            <Card>
-              <EmptyState title="Nothing to display">
-                Empty results remain useful: explain what belongs here and suggest a relevant next
-                step.
-              </EmptyState>
-            </Card>
-            <Card>
-              <h3 className="mb-3 font-semibold">Display, not calculation</h3>
-              <dl className="space-y-2 text-sm">
-                <div>
-                  <dt className="text-muted-foreground">Date only</dt>
-                  <dd>{formatDateOnly('2026-10-05')}</dd>
-                </div>
-                <div>
-                  <dt className="text-muted-foreground">UTC instant in Bangkok</dt>
-                  <dd>{formatInstant('2026-10-05T02:30:00Z')}</dd>
-                </div>
-                <div>
-                  <dt className="text-muted-foreground">Sample display formats</dt>
-                  <dd>
-                    {formatInteger(1250)} · {formatPercent(0.1)} · {formatThb(30000)}
-                  </dd>
-                </div>
-              </dl>
-            </Card>
-          </ResponsiveGrid>
-        </Section>
-        <Section id="feedback" title="06 / Feedback & recovery">
-          <ResponsiveGrid>
-            <Alert intent="success" title="Success">
-              A completed action should give clear feedback.
-            </Alert>
-            <Alert intent="warning" title="Requires review">
-              Review information before continuing. A visual intent does not imply a business
-              violation.
-            </Alert>
-            <Alert intent="danger" title="Unable to reach the service">
-              Check your connection and retry when you are ready.
-            </Alert>
-          </ResponsiveGrid>
-          <Card>
-            <Tabs
-              tabs={[
-                {
-                  value: 'access',
-                  label: 'Access states',
-                  content: (
-                    <div className="grid gap-4 md:grid-cols-2">
-                      <Alert title="Sign in required">
-                        An expired session requires authentication.
-                      </Alert>
-                      <Alert intent="warning" title="Access unavailable">
-                        Ask an authorized administrator if you need this capability.
-                      </Alert>
-                    </div>
-                  ),
-                },
-                {
-                  value: 'recovery',
-                  label: 'Recovery states',
-                  content: (
-                    <div className="grid gap-4 md:grid-cols-2">
-                      <Alert intent="warning" title="Item changed">
-                        Refresh and review the current version before trying again.
-                      </Alert>
-                      <Alert title="Item not found">
-                        Return to the list to choose another item.
-                      </Alert>
-                    </div>
-                  ),
-                },
-              ]}
-            />
-            <div className="mt-5">
-              <Spinner label="Loading an example" />
+            <div className="v2-action-samples">
+              <Dialog
+                trigger={<Button variant="outline">Open specimen dialog</Button>}
+                title="Display preferences"
+                description="Demonstration only. Focus stays within the dialog and returns to its trigger."
+              >
+                <FormField id="v2-dialog-name" label="Example label">
+                  {(props) => <Input {...props} />}
+                </FormField>
+              </Dialog>
+              <AlertDialog
+                trigger={<Button variant="outline">Open confirmation</Button>}
+                title="Confirm demonstration"
+                description="This demonstrates a destructive confirmation. No data is deleted."
+                onConfirm={() => notify('Confirmation specimen only. No data deleted.')}
+              />
             </div>
-          </Card>
-        </Section>
-        <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-5 text-xs text-muted-foreground">
-          <span>SIAMIS · Design system foundation</span>
-          <a
-            href="#identity"
-            className="inline-flex min-h-11 items-center gap-2 underline-offset-4 hover:underline"
-          >
-            Back to identity
-            <ArrowUpRight className="size-3" aria-hidden="true" />
-          </a>
-        </footer>
-      </PageContainer>
-    </>
+          </section>
+          <section id="patterns" className="v2-section">
+            <div className="v2-section-heading">
+              <h2>Different workflows. One product.</h2>
+              <p>
+                Archetypes compose the same primitives; they do not prescribe one dashboard layout.
+              </p>
+            </div>
+            <Tabs
+              label="Platform page archetypes"
+              tabs={archetypes.map((pattern) => ({
+                value: pattern.value,
+                label: pattern.label,
+                content: (
+                  <div className="v2-pattern">
+                    <h3>{pattern.title}</h3>
+                    <p>{pattern.description}</p>
+                    <ol>
+                      {pattern.parts.map((part, index) => (
+                        <li key={part}>
+                          <span>0{index + 1}</span>
+                          {part}
+                        </li>
+                      ))}
+                    </ol>
+                  </div>
+                ),
+              }))}
+            />
+            <RecordSummary
+              title="Record identity specimen"
+              metadata="EXAMPLE-ONLY · no school entity connected"
+              status={<Badge>Draft specimen</Badge>}
+              actions={
+                <Button
+                  variant="outline"
+                  onClick={() => notify('Contextual action specimen only.')}
+                >
+                  Contextual action
+                </Button>
+              }
+            />
+            <div className="v2-record-sections">
+              <div>
+                <h3 className="v2-subheading">Structured details</h3>
+                <dl>
+                  <dt>Record context</dt>
+                  <dd>Provided by the relevant backend</dd>
+                  <dt>Related information</dt>
+                  <dd>Separate sections where justified</dd>
+                </dl>
+              </div>
+              <div>
+                <h3 className="v2-subheading">History foundation</h3>
+                <ol className="v2-history">
+                  <li>
+                    <strong>Historical event specimen</strong>
+                    <p>Actor, timestamp and meaningful change; never inferred.</p>
+                  </li>
+                  <li>
+                    <strong>Earlier event specimen</strong>
+                    <p>Preserve historical facts and provenance.</p>
+                  </li>
+                </ol>
+              </div>
+            </div>
+          </section>
+          <footer className="v2-footer">
+            SIAMIS V2.1 · Master foundation · Product-owner approved{' '}
+            <a href="#overview">Back to top</a>
+          </footer>
+        </main>
+      </div>
+    </div>
   );
 }
