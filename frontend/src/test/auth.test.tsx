@@ -197,6 +197,22 @@ describe('F3 authoritative session and account access', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Try again' }));
     expect(await screen.findByLabelText(/^Username/)).toBeInTheDocument();
   });
+  it('keeps the public login page visible when its session probe is unavailable', async () => {
+    unavailable = true;
+    setup('/login');
+    expect(await screen.findByLabelText(/^Username/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/^Password/)).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Try again' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Protected workspace' })).not.toBeInTheDocument();
+  });
+
+  it('keeps protected routes fail-closed when the session probe is unavailable', async () => {
+    unavailable = true;
+    setup('/hr/employees');
+    expect(await screen.findByRole('button', { name: 'Try again' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Protected workspace' })).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/^Username/)).not.toBeInTheDocument();
+  });
   it('signs in through CSRF-protected username contract and restores safe destination', async () => {
     setup('/login?returnTo=/hr/employees');
     await signIn();

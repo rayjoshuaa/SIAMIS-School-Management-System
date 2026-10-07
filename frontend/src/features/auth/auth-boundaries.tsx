@@ -6,8 +6,9 @@ import { Alert } from '../../components/ui/feedback';
 import { Button } from '../../components/ui/button';
 export function SessionBoundary() {
   const { state, refresh } = useAuth();
+  const location = useLocation();
   if (state.status === 'bootstrapping') return <ShellLoading />;
-  if (state.status === 'error')
+  if (state.status === 'error' && location.pathname !== '/login')
     return (
       <main className="mx-auto max-w-lg p-6">
         <Alert intent="danger" title="We couldn't connect to SIAMIS.">
