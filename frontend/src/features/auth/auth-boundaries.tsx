@@ -4,20 +4,25 @@ import { activeRoute } from '../../app/router/navigation';
 import { ShellLoading } from '../../components/layout/shell-states';
 import { Alert } from '../../components/ui/feedback';
 import { Button } from '../../components/ui/button';
+import { AuthSurface } from './auth-layout';
+import { AuthHeader, AuthStatus } from './auth-presentation';
 export function SessionBoundary() {
   const { state, refresh } = useAuth();
   const location = useLocation();
   if (state.status === 'bootstrapping') return <ShellLoading />;
   if (state.status === 'error' && location.pathname !== '/login')
     return (
-      <main className="mx-auto max-w-lg p-6">
-        <Alert intent="danger" title="We couldn't connect to SIAMIS.">
-          Please try again. Your credentials have not been rejected.
-        </Alert>
-        <Button className="mt-4" onClick={() => void refresh()}>
-          Try again
-        </Button>
-      </main>
+      <AuthSurface>
+        <div className="auth-content">
+          <AuthHeader title="We couldn't connect to SIAMIS." />
+          <AuthStatus intent="connection">
+            Please try again. Your credentials have not been rejected.
+          </AuthStatus>
+          <Button className="auth-submit" onClick={() => void refresh()}>
+            Try again
+          </Button>
+        </div>
+      </AuthSurface>
     );
   return <Outlet />;
 }
