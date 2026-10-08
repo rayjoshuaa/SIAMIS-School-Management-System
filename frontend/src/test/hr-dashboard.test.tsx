@@ -337,3 +337,49 @@ describe('V2.4 premium HR overview', () => {
     ).toBeInTheDocument();
   });
 });
+
+describe('V3.4 HR dashboard presentation', () => {
+  it('uses compact supported metrics and puts attendance review before leave in reading order', async () => {
+    setup();
+    await screen.findByText('Test Employee');
+    expect(screen.getByRole('region', { name: 'HR areas' })).toBeInTheDocument();
+    const attendance = screen.getByRole('region', { name: 'Attendance attention · today' });
+    const leave = screen.getByRole('region', { name: 'Pending leave requests' });
+    expect(
+      attendance.compareDocumentPosition(leave) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    for (const name of ['Workforce overview', "Today's attendance", 'Pending leave requests']) {
+      expect(screen.getByRole('region', { name }).querySelector('.ui-metrics')).toHaveAttribute(
+        'data-density',
+        'compact',
+      );
+    }
+    expect(attendance).toHaveTextContent('Staleness is a source change, not an HR violation.');
+    expect(screen.getByRole('region', { name: "Today's attendance" })).toHaveTextContent(
+      'not current-presence or payroll-deduction totals',
+    );
+  });
+  it('links the directory through its existing read capability without introducing commands', async () => {
+    setup();
+    await screen.findByText('Test Employee');
+    const directory = screen.getByRole('link', { name: 'Employees' });
+    expect(directory).toHaveAttribute('href', '/hr/employees');
+    expect(
+      screen.queryByRole('button', { name: /approve|finalize|create/i }),
+    ).not.toBeInTheDocument();
+    await userEvent.click(directory);
+    expect(
+      await screen.findByRole('heading', { name: 'Employee placeholder' }),
+    ).toBeInTheDocument();
+  });
+  it('does not expose directory actions to reporting-only users', async () => {
+    capabilities = ['Reporting.Read'];
+    setup();
+    await screen.findByText('2026-10-07 · Asia/Bangkok');
+    expect(screen.queryByRole('link', { name: 'Employees' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Open Attendance' })).not.toBeInTheDocument();
+    expect(calls.filter((path) => !path.includes('/auth/'))).toEqual([
+      '/api/attendance/today?page=1&pageSize=1',
+    ]);
+  });
+});

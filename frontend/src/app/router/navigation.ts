@@ -40,9 +40,9 @@ export const routes: RouteMeta[] = [
   },
   {
     path: '/hr',
-    label: 'Human Resources',
+    label: 'HR Dashboard',
     breadcrumb: 'HR',
-    description: 'Operational overview of employees, attendance and HR activity.',
+    description: 'Workforce records, today’s attendance and work awaiting review.',
     icon: Building2,
     group: 'hr',
     capability: 'Reporting.Read',

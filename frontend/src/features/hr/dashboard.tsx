@@ -105,6 +105,7 @@ export function HrDashboard() {
             ) : (
               <>
                 <MetricStrip
+                  density="compact"
                   items={[
                     {
                       label: 'Employee records',
@@ -139,6 +140,7 @@ export function HrDashboard() {
             ) : (
               <>
                 <MetricStrip
+                  density="compact"
                   items={[
                     {
                       label: 'Effective employees',
@@ -180,52 +182,6 @@ export function HrDashboard() {
         )}
       </div>
       <div className="hr-overview-workload">
-        {can(user, 'Leave.Read') && (
-          <Region title="Pending leave requests" context="Review workload · latest five requests">
-            {leave.isPending ? (
-              <Spinner label="Loading pending leave" />
-            ) : leave.isError ? (
-              <RequestError error={leave.error} retry={() => void leave.refetch()} />
-            ) : (
-              <>
-                <MetricStrip
-                  items={[
-                    {
-                      label: 'Pending requests',
-                      value: leave.data.totalCount,
-                      context: 'Total reported by the server',
-                    },
-                  ]}
-                />
-                {leave.data.totalCount === 0 ? (
-                  <SystemState kind="empty" title="No Pending leave requests.">
-                    New Pending requests will appear here.
-                  </SystemState>
-                ) : (
-                  <QueueList
-                    label="Recent pending leave requests"
-                    items={leave.data.items.map((item) => ({
-                      id: item.leaveId,
-                      title: item.employeeName,
-                      metadata: `${item.employeeNumber} · ${item.leaveTypeName} · ${item.startDate} – ${item.endDate}`,
-                      status: <span className="hr-overview-status">{item.status}</span>,
-                    }))}
-                  />
-                )}
-                {leave.data.totalCount > leave.data.items.length && (
-                  <p className="hr-overview-note">
-                    Showing the latest {leave.data.items.length} of {leave.data.totalCount}{' '}
-                    requests.
-                  </p>
-                )}
-                <p className="hr-overview-note">
-                  Review actions depend on your permissions. Leave operations are not yet connected
-                  in the frontend.
-                </p>
-              </>
-            )}
-          </Region>
-        )}
         {can(user, 'Reporting.Read') && (
           <Region
             title="Attendance attention · today"
@@ -276,11 +232,58 @@ export function HrDashboard() {
             )}
           </Region>
         )}
+        {can(user, 'Leave.Read') && (
+          <Region title="Pending leave requests" context="Review workload · latest five requests">
+            {leave.isPending ? (
+              <Spinner label="Loading pending leave" />
+            ) : leave.isError ? (
+              <RequestError error={leave.error} retry={() => void leave.refetch()} />
+            ) : (
+              <>
+                <MetricStrip
+                  density="compact"
+                  items={[
+                    {
+                      label: 'Pending requests',
+                      value: leave.data.totalCount,
+                      context: 'Total reported by the server',
+                    },
+                  ]}
+                />
+                {leave.data.totalCount === 0 ? (
+                  <SystemState kind="empty" title="No Pending leave requests.">
+                    New Pending requests will appear here.
+                  </SystemState>
+                ) : (
+                  <QueueList
+                    label="Recent pending leave requests"
+                    items={leave.data.items.map((item) => ({
+                      id: item.leaveId,
+                      title: item.employeeName,
+                      metadata: `${item.employeeNumber} · ${item.leaveTypeName} · ${item.startDate} – ${item.endDate}`,
+                      status: <span className="hr-overview-status">{item.status}</span>,
+                    }))}
+                  />
+                )}
+                {leave.data.totalCount > leave.data.items.length && (
+                  <p className="hr-overview-note">
+                    Showing the latest {leave.data.items.length} of {leave.data.totalCount}{' '}
+                    requests.
+                  </p>
+                )}
+                <p className="hr-overview-note">
+                  Review actions depend on your permissions. Leave operations are not yet connected
+                  in the frontend.
+                </p>
+              </>
+            )}
+          </Region>
+        )}
       </div>
       <section className="hr-overview-areas" aria-label="HR areas">
         <div>
           <h2>HR areas</h2>
-          <p>Permitted destinations. Operational screens remain interface foundations.</p>
+          <p>Open a permitted HR workspace. Some destinations are not yet connected.</p>
         </div>
         <nav aria-label="HR area shortcuts">
           {shortcuts.map((route) => (
