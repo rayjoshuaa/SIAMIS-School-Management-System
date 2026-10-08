@@ -40,9 +40,9 @@ export const routes: RouteMeta[] = [
   },
   {
     path: '/hr',
-    label: 'HR Overview',
+    label: 'Human Resources',
     breadcrumb: 'HR',
-    description: 'People, employment and school operations.',
+    description: 'Operational overview of employees, attendance and HR activity.',
     icon: Building2,
     group: 'hr',
     capability: 'Reporting.Read',
@@ -167,6 +167,34 @@ export function visibleRoutes(capabilities: readonly string[]) {
   );
 }
 export function activeRoute(path: string) {
+  if (path.startsWith('/hr/attendance/')) {
+    const parent = routes.find((route) => route.path === '/hr/attendance')!;
+    return {
+      ...parent,
+      path,
+      label: 'Attendance review',
+      breadcrumb: 'Attendance review',
+      capability: 'Attendance.Read',
+    };
+  }
+  if (path.startsWith('/hr/employees/')) {
+    const parent = routes.find((route) => route.path === '/hr/employees')!;
+    const action = path.split('/')[4];
+    const isCreate = path === '/hr/employees/new';
+    const labels: Record<string, string> = {
+      edit: 'Edit employee',
+      'employment-change': 'Employment change',
+      rehire: 'Rehire employee',
+      'end-employment': 'End employment',
+    };
+    return {
+      ...parent,
+      path,
+      label: isCreate ? 'Create employee' : (labels[action] ?? 'Employee 360'),
+      breadcrumb: isCreate ? 'Create employee' : (labels[action] ?? 'Employee 360'),
+      capability: isCreate || action ? 'Employee.Manage' : 'Employee.Read',
+    };
+  }
   return routes.find((route) => route.path === path);
 }
 export function hrIsActive(path: string) {
@@ -227,6 +255,8 @@ export function availableModules(capabilities: readonly string[]) {
   return workspaceModules.filter((module) => moduleDestinations(module, capabilities).length > 0);
 }
 export function currentModule(path: string) {
+  if (path.startsWith('/hr/employees/') || path.startsWith('/hr/attendance/'))
+    return workspaceModules.find((module) => module.id === 'hr');
   return workspaceModules.find((module) => module.destinations.includes(path));
 }
 export function destinationLabel(route: RouteMeta) {

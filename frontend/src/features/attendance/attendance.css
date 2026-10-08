@@ -1,0 +1,34 @@
+.attendance-workspace {
+  display: grid;
+  gap: var(--space-6);
+  min-width: 0;
+}
+.attendance-workspace > *,
+.attendance-filters > * {
+  min-width: 0;
+}
+.attendance-filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
+  align-items: end;
+  gap: var(--space-4);
+}
+.attendance-table {
+  min-width: 720px;
+}
+.attendance-workspace .employee-facts dd {
+  overflow-wrap: anywhere;
+}
+.attendance-workspace details > summary {
+  cursor: pointer;
+  min-height: 44px;
+  padding-block: var(--space-3);
+  font-weight: 600;
+}
+.attendance-workspace details + details {
+  border-top: 1px solid var(--border);
+}
+.attendance-workspace .attendance-interval {
+  overflow-wrap: anywhere;
+  font-size: 0.875rem;
+}

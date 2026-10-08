@@ -34,6 +34,7 @@ builder.Services.AddScoped<IEmployeeCompensationService, EmployeeCompensationSer
 builder.Services.AddScoped<IEmployeeHistoryService, EmployeeHistoryService>();
 builder.Services.AddScoped<IEmployeeAttendanceService, EmployeeAttendanceService>();
 builder.Services.AddScoped<IAttendanceFoundationService, AttendanceFoundationService>();
+builder.Services.AddScoped<IEmployeeClockService, EmployeeClockService>();
 builder.Services.AddScoped<IAttendanceDayService, AttendanceDayService>();
 builder.Services.AddScoped<IAttendanceReviewService, AttendanceReviewService>();
 builder.Services.AddSingleton(TimeProvider.System);

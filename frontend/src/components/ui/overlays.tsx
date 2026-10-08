@@ -1,4 +1,4 @@
-import type { ReactNode, ComponentProps } from 'react';
+import { useEffect, useRef, useState, type ReactNode, type ComponentProps } from 'react';
 import {
   Dialog as D,
   AlertDialog as A,
@@ -23,6 +23,10 @@ export function Dialog({
   dismissible = true,
   onCloseAutoFocus,
   onOpenAutoFocus,
+  size,
+  footer,
+  dirty = false,
+  pending = false,
 }: {
   trigger?: ReactNode;
   title: string;
@@ -34,9 +38,39 @@ export function Dialog({
   dismissible?: boolean;
   onCloseAutoFocus?: ComponentProps<typeof D.Content>['onCloseAutoFocus'];
   onOpenAutoFocus?: ComponentProps<typeof D.Content>['onOpenAutoFocus'];
+  size?: 'sm' | 'md' | 'lg';
+  footer?: ReactNode;
+  dirty?: boolean;
+  pending?: boolean;
 }) {
+  const [internalOpen, setInternalOpen] = useState(false);
+  const [discardRequested, setDiscardRequested] = useState(false);
+  const isOpen = open ?? internalOpen;
+  const [previousOpen, setPreviousOpen] = useState(isOpen);
+  // A caller may close after saving. Do not carry a discard prompt into a later opening.
+  if (previousOpen !== isOpen) {
+    setPreviousOpen(isOpen);
+    if (!isOpen && discardRequested) setDiscardRequested(false);
+  }
+  const returnFocus = useRef<HTMLElement | null>(null);
+  const keepEditing = useRef<HTMLButtonElement | null>(null);
+  useEffect(() => {
+    if (discardRequested) keepEditing.current?.focus();
+  }, [discardRequested]);
+  const canDismiss = dismissible && !pending;
+  const changeOpen = (next: boolean) => {
+    if (!next && !canDismiss) return;
+    if (!next && dirty) {
+      returnFocus.current = document.activeElement as HTMLElement;
+      setDiscardRequested(true);
+      return;
+    }
+    setDiscardRequested(false);
+    setInternalOpen(next);
+    onOpenChange?.(next);
+  };
   return (
-    <D.Root open={open} onOpenChange={onOpenChange}>
+    <D.Root open={isOpen} onOpenChange={changeOpen}>
       {trigger && <D.Trigger asChild>{trigger}</D.Trigger>}
       <D.Portal>
         <D.Overlay className={overlay} data-overlay-backdrop />
@@ -44,39 +78,82 @@ export function Dialog({
           onCloseAutoFocus={onCloseAutoFocus}
           onOpenAutoFocus={onOpenAutoFocus}
           onEscapeKeyDown={(event) => {
-            if (!dismissible) event.preventDefault();
+            if (!canDismiss) event.preventDefault();
           }}
           onPointerDownOutside={(event) => {
-            if (!dismissible) event.preventDefault();
+            if (!canDismiss) event.preventDefault();
           }}
           onInteractOutside={(event) => {
-            if (!dismissible) event.preventDefault();
+            if (!canDismiss) event.preventDefault();
           }}
           className={cn(
             floating,
+            'ui-overlay-panel p-0',
             sheet
-              ? 'fixed inset-y-0 right-0 w-full max-w-lg overflow-y-auto rounded-none'
-              : 'fixed top-1/2 left-1/2 max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 overflow-y-auto',
+              ? 'fixed inset-y-0 right-0 w-full max-w-lg rounded-none'
+              : 'fixed top-1/2 left-1/2 max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2',
           )}
+          data-size={size}
+          data-sheet={sheet}
+          aria-busy={pending || undefined}
+          style={
+            size
+              ? {
+                  maxWidth: `var(--${sheet ? 'drawer' : 'modal'}-${sheet && size === 'sm' ? 'md' : size})`,
+                }
+              : undefined
+          }
         >
-          <div className="sticky top-0 z-10 bg-surface pb-3 pr-12">
+          <div className="ui-overlay-header">
             <D.Title className="text-lg font-semibold">{title}</D.Title>
             <D.Description className="mt-2 text-sm text-muted-foreground">
               {description}
             </D.Description>
             <D.Close asChild>
               <Button
-                disabled={!dismissible}
+                disabled={!canDismiss}
                 aria-label="Close"
                 variant="ghost"
                 icon
-                className="absolute top-0 right-0"
+                className="absolute top-3 right-3"
               >
                 <X className="size-4" />
               </Button>
             </D.Close>
           </div>
-          <div className="mt-4">{children}</div>
+          <div className="ui-overlay-body">
+            {discardRequested && (
+              <div role="alert" className="ui-overlay-discard">
+                <p className="font-semibold">Discard unsaved changes?</p>
+                <p className="mt-1 text-sm">Your changes have not been saved.</p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <Button
+                    ref={keepEditing}
+                    variant="outline"
+                    onClick={() => {
+                      setDiscardRequested(false);
+                      returnFocus.current?.focus();
+                    }}
+                  >
+                    Keep editing
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    disabled={pending}
+                    onClick={() => {
+                      setDiscardRequested(false);
+                      setInternalOpen(false);
+                      onOpenChange?.(false);
+                    }}
+                  >
+                    Discard changes
+                  </Button>
+                </div>
+              </div>
+            )}
+            {children}
+          </div>
+          {footer && <div className="ui-overlay-footer">{footer}</div>}
         </D.Content>
       </D.Portal>
     </D.Root>

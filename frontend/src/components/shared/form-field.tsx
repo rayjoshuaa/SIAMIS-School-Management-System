@@ -24,7 +24,7 @@ export function FormField({
     [hint ? `${id}-hint` : null, error ? `${id}-error` : null].filter(Boolean).join(' ') ||
     undefined;
   return (
-    <div className="flex flex-col">
+    <div className="ui-form-field flex flex-col">
       <Label htmlFor={id}>
         {label}
         {required && (
@@ -42,7 +42,7 @@ export function FormField({
         })}
       </div>
       {hint && (
-        <p id={`${id}-hint`} className="mt-1.5 text-xs text-muted-foreground">
+        <p id={`${id}-hint`} className="ui-field-hint mt-1.5 text-muted-foreground">
           {hint}
         </p>
       )}

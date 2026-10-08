@@ -73,6 +73,7 @@ public sealed class SIAMISDbContext(DbContextOptions<SIAMISDbContext> options, I
     public DbSet<EmployeeHistory> EmployeeHistory => Set<EmployeeHistory>();
     public DbSet<EmployeeAttendance> Attendance => Set<EmployeeAttendance>();
     public DbSet<AttendanceEvent> AttendanceEvents => Set<AttendanceEvent>();
+    public DbSet<EmployeeClockSession> EmployeeClockSessions => Set<EmployeeClockSession>();
     public DbSet<EmployeeLeave> EmployeeLeaves => Set<EmployeeLeave>();
     public DbSet<EmployeePerformance> EmployeePerformanceRecords => Set<EmployeePerformance>();
 
@@ -132,6 +133,13 @@ public sealed class SIAMISDbContext(DbContextOptions<SIAMISDbContext> options, I
     private void UpdateTimestamps()
     {
         AttributeActor();
+        foreach (var entry in ChangeTracker.Entries<EmployeeClockSession>())
+        {
+            if (entry.State == EntityState.Deleted || entry.State == EntityState.Modified &&
+                (entry.Properties.Any(p => p.IsModified && p.Metadata.Name != nameof(EmployeeClockSession.OutEventId))
+                 || entry.Property(x => x.OutEventId).OriginalValue.HasValue || !entry.Entity.OutEventId.HasValue))
+                throw new InvalidOperationException("Clock sessions permit only one append-only closure; opening provenance is immutable.");
+        }
         if (ChangeTracker.Entries<AttendanceEvent>().Any(x => x.State is EntityState.Modified or EntityState.Deleted))
             throw new InvalidOperationException("Attendance events are immutable observation evidence.");
         if (ChangeTracker.Entries<AttendanceReviewAction>().Any(x => x.State is EntityState.Modified or EntityState.Deleted)

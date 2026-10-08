@@ -2,21 +2,30 @@ import type { ReactNode } from 'react';
 import { Tabs as T } from 'radix-ui';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from './button';
+import { cn } from '../../lib/utils/cn';
 export function Tabs({
   tabs,
   label = 'Views',
+  overflow = 'wrap',
 }: {
   tabs: { value: string; label: string; content: ReactNode }[];
   label?: string;
+  overflow?: 'wrap' | 'scroll';
 }) {
   return (
     <T.Root defaultValue={tabs[0]?.value}>
-      <T.List aria-label={label} className="mb-4 flex flex-wrap gap-1 border-b border-border">
+      <T.List
+        aria-label={label}
+        className={cn(
+          'ui-tabs-list mb-4 flex gap-1 border-b border-border',
+          overflow === 'scroll' ? 'overflow-x-auto' : 'flex-wrap',
+        )}
+      >
         {tabs.map((tab) => (
           <T.Trigger
             key={tab.value}
             value={tab.value}
-            className="ui-tab min-h-11 border-b-2 border-transparent px-4 text-sm text-muted-foreground data-[state=active]:border-primary data-[state=active]:text-primary"
+            className="ui-tab min-h-11 shrink-0 border-b-2 border-transparent px-4 text-sm text-muted-foreground data-[state=active]:border-primary data-[state=active]:text-primary"
           >
             {tab.label}
           </T.Trigger>
@@ -63,7 +72,10 @@ export function Pagination({
   onPage: (page: number) => void;
 }) {
   return (
-    <nav aria-label="Pagination" className="flex flex-wrap items-center justify-between gap-3">
+    <nav
+      aria-label="Pagination"
+      className="ui-pagination flex flex-wrap items-center justify-between gap-3"
+    >
       <p className="text-sm text-muted-foreground" aria-live="polite">
         Page {page} of {pages}
       </p>

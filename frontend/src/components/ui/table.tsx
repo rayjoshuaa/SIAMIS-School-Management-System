@@ -8,14 +8,21 @@ export function Table({ className, ...props }: ComponentProps<'table'>) {
     />
   );
 }
-export function TableHeader(props: ComponentProps<'thead'>) {
-  return <thead className="border-b border-border bg-muted text-muted-foreground" {...props} />;
+export function TableHeader({ className, ...props }: ComponentProps<'thead'>) {
+  return (
+    <thead
+      className={cn('border-b border-border bg-muted text-muted-foreground', className)}
+      {...props}
+    />
+  );
 }
-export function TableRow(props: ComponentProps<'tr'>) {
-  return <tr className="ui-table-row border-b border-border last:border-0" {...props} />;
+export function TableRow({ className, ...props }: ComponentProps<'tr'>) {
+  return (
+    <tr className={cn('ui-table-row border-b border-border last:border-0', className)} {...props} />
+  );
 }
-export function TableHead(props: ComponentProps<'th'>) {
-  return <th scope="col" className="font-medium" {...props} />;
+export function TableHead({ className, ...props }: ComponentProps<'th'>) {
+  return <th scope="col" className={cn('font-medium', className)} {...props} />;
 }
 export function TableCell(props: ComponentProps<'td'>) {
   return <td {...props} />;

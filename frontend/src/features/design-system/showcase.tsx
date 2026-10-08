@@ -5,16 +5,11 @@ import { Checkbox, Input, Label, RadioGroup, Select, Switch } from '../../compon
 import { Alert, Badge, Skeleton, Spinner } from '../../components/ui/feedback';
 import { AlertDialog, Dialog, Tooltip } from '../../components/ui/overlays';
 import { Tabs } from '../../components/ui/navigation';
-import {
-  MetricStrip,
-  QueueList,
-  RecordSummary,
-  SystemState,
-  WorkspaceHeader,
-} from '../../components/shared/workspace';
+import { QueueList, RecordSummary, SystemState } from '../../components/shared/workspace';
 import { FormField } from '../../components/shared/form-field';
 import { DemoForm } from './demo-form';
 import { DemoTable } from './demo-table';
+import { PremiumWorkspace } from './premium-workspace';
 import { useNotify } from '../../app/providers/notifications';
 import './showcase.css';
 
@@ -126,7 +121,7 @@ export default function Showcase() {
           <a href="#overview" className="v2-wordmark">
             SIAMIS <span>Siam International School</span>
           </a>
-          <span className="v2-development">V2.1 · Development showcase</span>
+          <span className="v2-development">V3.1 · Development showcase</span>
         </div>
       </header>
       <div className="v2-layout">
@@ -148,51 +143,7 @@ export default function Showcase() {
         </aside>
         <main id="v2-main" className="v2-main">
           <section id="overview">
-            <WorkspaceHeader
-              context="SIAMIS / Frontend V2"
-              title="A precise foundation for school operations"
-              description="One design language for academic, administrative and operational work. Consistent quality, without prescribing identical pages."
-              actions={
-                <Button
-                  variant="outline"
-                  onClick={() =>
-                    notify('Design-system specimen only. No API request or school data changes.')
-                  }
-                >
-                  <Check aria-hidden="true" className="size-4" />
-                  Preview feedback
-                </Button>
-              }
-            />
-            <p className="v2-specimen-note">
-              Development specimens only. All examples are fictional component states, not school
-              records or operational metrics.
-            </p>
-            <MetricStrip
-              items={[
-                { label: 'Component specimens', value: '04', context: 'Local table examples only' },
-                { label: 'Page archetypes', value: '10', context: 'Different workflow structures' },
-                {
-                  label: 'Runtime school metrics',
-                  value: '—',
-                  context: 'Not queried in this showcase',
-                },
-              ]}
-            />
-            <div className="v2-principles">
-              <div>
-                <h2>Clear hierarchy</h2>
-                <p>Typography and alignment lead. Containers serve a purpose.</p>
-              </div>
-              <div>
-                <h2>Useful density</h2>
-                <p>Readable controls and compact data. Space for actual work.</p>
-              </div>
-              <div>
-                <h2>Honest states</h2>
-                <p>Empty, unavailable and restricted mean different things.</p>
-              </div>
-            </div>
+            <PremiumWorkspace />
           </section>
           <section id="language" className="v2-section">
             <div className="v2-section-heading">
@@ -513,6 +464,7 @@ export default function Showcase() {
             </div>
             <Tabs
               label="Platform page archetypes"
+              overflow="scroll"
               tabs={archetypes.map((pattern) => ({
                 value: pattern.value,
                 label: pattern.label,
@@ -571,7 +523,7 @@ export default function Showcase() {
             </div>
           </section>
           <footer className="v2-footer">
-            SIAMIS V2.1 · Master foundation · Product-owner approved{' '}
+            SIAMIS V3.1 · Foundation · Awaiting product-owner visual review{' '}
             <a href="#overview">Back to top</a>
           </footer>
         </main>

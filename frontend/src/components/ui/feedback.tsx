@@ -21,8 +21,8 @@ export function Card({ className, ...props }: ComponentProps<'div'>) {
     />
   );
 }
-export function Separator(props: ComponentProps<typeof S.Root>) {
-  return <S.Root className="my-4 h-px w-full bg-border" {...props} />;
+export function Separator({ className, ...props }: ComponentProps<typeof S.Root>) {
+  return <S.Root className={cn('my-4 h-px w-full bg-border', className)} {...props} />;
 }
 export function Alert({
   intent = 'info',
@@ -34,7 +34,9 @@ export function Alert({
   children: ReactNode;
 }) {
   return (
-    <div className={cn('rounded-md border border-current/20 p-4 text-sm', intents[intent])}>
+    <div
+      className={cn('ui-alert rounded-md border border-current/20 p-4 text-sm', intents[intent])}
+    >
       <p className="font-semibold">{title}</p>
       <div className="mt-1">{children}</div>
     </div>
@@ -78,7 +80,7 @@ export function EmptyState({
     <div className="flex flex-col items-center gap-3 rounded-md border border-dashed border-border px-5 py-10 text-center">
       <Inbox aria-hidden="true" className="size-6 text-muted-foreground" />
       <h3 className="font-semibold">{title}</h3>
-      <p className="max-w-sm text-sm text-muted-foreground">{children}</p>
+      <div className="max-w-sm text-sm text-muted-foreground">{children}</div>
       {action}
     </div>
   );

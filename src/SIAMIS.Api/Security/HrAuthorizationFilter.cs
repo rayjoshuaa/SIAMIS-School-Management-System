@@ -34,7 +34,7 @@ public sealed class HrAuthorizationFilter(IAuthorizationService authorization, I
             "EmployeeDocuments" or "HrDocuments" => read ? "HRDocuments.Read" : "HRDocuments.Manage",
             "AttendanceReporting" => action.ActionName == "Queue" ? "Attendance.Read" : "Reporting.Read",
             "HrOverview" => "Reporting.Read",
-            "SelfService" => "SelfService",
+            "SelfService" or "EmployeeClock" => "SelfService",
             "AttendanceReview" => read ? "Attendance.Read" : action.ActionName is "FinalizeDay" or "Reopen" or "Confirm" ? "Attendance.Finalize" : "Attendance.Manage",
             "AttendanceFoundation" or "AttendanceDays" or "EmployeeAttendance" => read ? "Attendance.Read" : "Attendance.Manage",
             "LeaveEvidenceSandwich" => "Leave.Evidence",

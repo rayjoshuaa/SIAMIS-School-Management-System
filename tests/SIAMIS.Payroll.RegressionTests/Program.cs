@@ -14,6 +14,11 @@ using SIAMIS.Infrastructure.Data;
 using SIAMIS.Infrastructure.Services;
 
 // Dependency-free focused regression runner. No database connections or writes.
+if (args.Contains("--f72-isolated-tests", StringComparer.Ordinal))
+{
+    await F72ClockTests.RunAsync();
+    return;
+}
 if(args.Contains("--d14-database-tests",StringComparer.Ordinal))
 {
     await D14DatabaseTests.RunAsync();
@@ -196,6 +201,9 @@ Console.WriteLine($"PASS: {checks - beforeD9D} D9D review assertions.");
 var beforeD9B = checks;
 D9BFoundationTests.Run(Check, model);
 Console.WriteLine($"PASS: {checks - beforeD9B} D9B foundation assertions.");
+var beforeF72 = checks;
+F72ClockContractTests.Run(Check, model);
+Console.WriteLine($"PASS: {checks - beforeF72} F7.2 contract/model/immutability assertions.");
 foreach (var payment in new[] { "Unknown", "Regular", "Special" })
 {
     basic.PitPaymentTreatment = earning.PitPaymentTreatment = payment;

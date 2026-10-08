@@ -2,6 +2,119 @@
   font-size: var(--text-body);
   line-height: var(--line-body);
 }
+/* V3.1 demonstrates the new composition contract without migrating feature pages. */
+@layer components {
+  .v31-workspace {
+    padding-inline: 0;
+  }
+  .v31-demo-note {
+    color: var(--muted-foreground);
+    font-size: var(--text-meta);
+    margin-top: 0;
+  }
+  .v31-records {
+    min-width: 0;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-panel);
+  }
+  .v31-section-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    padding: var(--space-4) var(--space-6);
+    border-bottom: 1px solid var(--border);
+  }
+  .v31-section-title h2 {
+    font-size: var(--text-section);
+    font-weight: var(--weight-heading);
+  }
+  .v31-section-title p,
+  .v31-section-title > span {
+    color: var(--muted-foreground);
+    font-size: var(--text-meta);
+  }
+  .v31-toolbar {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(10rem, 1fr) minmax(10rem, 1fr);
+    align-items: start;
+    padding: var(--space-4) var(--space-6);
+  }
+  .v31-table {
+    min-width: 48rem;
+  }
+  .v31-table td {
+    padding-block: var(--space-3);
+  }
+  .v31-table th:first-child {
+    width: 35%;
+  }
+  .v31-record-id {
+    display: block;
+    color: var(--muted-foreground);
+    font-size: var(--text-meta);
+    margin-top: var(--space-1);
+  }
+  .v31-pagination {
+    padding: var(--space-3) var(--space-6);
+  }
+  .v31-form {
+    display: grid;
+    gap: var(--space-4);
+  }
+  .v31-context-note {
+    padding: var(--space-3);
+    background: var(--surface-muted);
+    color: var(--muted-foreground);
+    font-size: var(--text-meta);
+  }
+  .v31-loading {
+    display: grid;
+    gap: var(--space-3);
+    padding: var(--space-6);
+  }
+  .v31-inspection {
+    display: grid;
+    gap: var(--space-4);
+    font-size: var(--text-body);
+    line-height: var(--line-body);
+  }
+  .v31-inspection h3 {
+    font-size: var(--text-section);
+    font-weight: var(--weight-heading);
+  }
+  .v31-inspection dt {
+    color: var(--muted-foreground);
+    font-size: var(--text-meta);
+  }
+  .v31-inspection dd {
+    margin-bottom: var(--space-4);
+  }
+  .v31-inspection li {
+    border-left: 2px solid var(--border);
+    padding: var(--space-2) var(--space-3);
+  }
+  @media (max-width: 1279px) {
+    .v31-toolbar {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .v31-toolbar > :first-child {
+      grid-column: 1 / -1;
+    }
+  }
+  @media (max-width: 639px) {
+    .v31-toolbar {
+      grid-template-columns: minmax(0, 1fr);
+      padding: var(--space-4);
+    }
+    .v31-section-title,
+    .v31-pagination {
+      padding: var(--space-4);
+    }
+  }
+}
 .v2-showcase section[id] {
   scroll-margin-top: var(--space-6);
 }

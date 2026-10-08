@@ -63,7 +63,7 @@ export function ShellNavigation({ onNavigate }: { onNavigate?: () => void }) {
             <NavLink
               key={route.path}
               to={route.path}
-              end
+              end={route.path !== '/hr/employees' && route.path !== '/hr/attendance'}
               onClick={onNavigate}
               className="shell-destination"
             >

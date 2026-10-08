@@ -2,6 +2,26 @@ import type { ReactNode, ComponentProps } from 'react';
 import { CircleAlert, Inbox, Search, Settings2, Shield, Unplug } from 'lucide-react';
 import { cn } from '../../lib/utils/cn';
 
+// The frame owns outer gutters and section rhythm; its header adds no second inset.
+export function ContentFrame({
+  width = 'workspace',
+  density = 'comfortable',
+  className,
+  ...props
+}: ComponentProps<'div'> & {
+  width?: 'workspace' | 'reading' | 'form';
+  density?: 'comfortable' | 'compact';
+}) {
+  return (
+    <div
+      className={cn('ui-content-frame', className)}
+      data-width={width}
+      data-density={density}
+      {...props}
+    />
+  );
+}
+
 export function WorkspaceHeader({
   title,
   description,
@@ -36,11 +56,13 @@ export function TableViewport({ label, children }: { label: string; children: Re
 }
 export function MetricStrip({
   items,
+  density = 'comfortable',
 }: {
   items: { label: string; value: ReactNode; context: string }[];
+  density?: 'comfortable' | 'compact';
 }) {
   return (
-    <dl className="ui-metrics">
+    <dl className="ui-metrics" data-density={density}>
       {items.map((item) => (
         <div key={item.label}>
           <dt>{item.label}</dt>
@@ -103,7 +125,7 @@ export function SystemState({
       <Icon aria-hidden="true" />
       <div className="min-w-0">
         <h3>{title}</h3>
-        <p>{children}</p>
+        <div className="ui-state-description">{children}</div>
         {action && <div className="mt-3">{action}</div>}
       </div>
     </div>

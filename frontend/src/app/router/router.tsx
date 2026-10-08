@@ -3,6 +3,7 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { ShellError, ShellLoading, ShellNotFound } from '../../components/layout/shell-states';
 import { ModulePlaceholder } from '../../features/shell/placeholder';
 import { SchoolDashboard } from '../../features/shell/dashboard';
+import { HrDashboard } from '../../features/hr/dashboard';
 import { AuthProvider } from '../providers/auth-provider';
 import {
   SessionBoundary,
@@ -27,6 +28,29 @@ const ShellEntry = lazy(() => import('../../components/layout/shell-entry'));
 const UserAccounts = lazy(() =>
   import('../../features/administration/user-accounts').then((module) => ({
     default: module.UserAccounts,
+  })),
+);
+const EmployeeDirectory = lazy(() =>
+  import('../../features/employees/directory').then((module) => ({
+    default: module.EmployeeDirectory,
+  })),
+);
+const EmployeeProfile = lazy(() =>
+  import('../../features/employees/profile').then((module) => ({
+    default: module.EmployeeProfile,
+  })),
+);
+const EmployeeForm = lazy(() =>
+  import('../../features/employees/form').then((module) => ({ default: module.EmployeeForm })),
+);
+const AttendanceWorkspace = lazy(() =>
+  import('../../features/attendance/workspace').then((module) => ({
+    default: module.AttendanceWorkspace,
+  })),
+);
+const AttendanceReview = lazy(() =>
+  import('../../features/attendance/review').then((module) => ({
+    default: module.AttendanceReview,
   })),
 );
 captureCredentialLink();
@@ -79,12 +103,34 @@ const router = createBrowserRouter([
                     element:
                       route.path === paths.dashboard ? (
                         <SchoolDashboard />
+                      ) : route.path === paths.hr ? (
+                        <HrDashboard />
                       ) : route.path === '/hr/security' ? (
                         <UserAccounts />
+                      ) : route.path === '/hr/employees' ? (
+                        <EmployeeDirectory />
+                      ) : route.path === '/hr/attendance' ? (
+                        <AttendanceWorkspace />
                       ) : (
                         <ModulePlaceholder />
                       ),
                   })),
+                  { path: '/hr/employees/new', element: <EmployeeForm mode="create" /> },
+                  { path: '/hr/attendance/:employeeId/:date', element: <AttendanceReview /> },
+                  { path: '/hr/employees/:employeeId', element: <EmployeeProfile /> },
+                  { path: '/hr/employees/:employeeId/edit', element: <EmployeeForm mode="edit" /> },
+                  {
+                    path: '/hr/employees/:employeeId/employment-change',
+                    element: <EmployeeForm mode="employment-change" />,
+                  },
+                  {
+                    path: '/hr/employees/:employeeId/end-employment',
+                    element: <EmployeeForm mode="end-employment" />,
+                  },
+                  {
+                    path: '/hr/employees/:employeeId/rehire',
+                    element: <EmployeeForm mode="rehire" />,
+                  },
                   { path: '*', element: <ShellNotFound /> },
                 ],
               },

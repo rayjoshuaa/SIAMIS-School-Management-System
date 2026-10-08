@@ -11,10 +11,10 @@ internal sealed class AttendanceEventConfiguration : IEntityTypeConfiguration<At
         b.ToTable("AttendanceEvents", t =>
         {
             t.HasCheckConstraint("CK_AttendanceEvent_Direction", "[Direction] IN ('In','Out','Unknown')");
-            t.HasCheckConstraint("CK_AttendanceEvent_Source", "[Source] IN ('ManualAuthorized','Device','Imported')");
+            t.HasCheckConstraint("CK_AttendanceEvent_Source", "[Source] IN ('ManualAuthorized','Device','Imported','EmployeeClock')");
             t.HasCheckConstraint("CK_AttendanceEvent_TimeZone", "[BusinessTimeZone] = 'Asia/Bangkok'");
             t.HasCheckConstraint("CK_AttendanceEvent_EmploymentReadiness", "[EmploymentReadiness] IN ('Ready','NotEmployed','ConfigurationConflict')");
-            t.HasCheckConstraint("CK_AttendanceEvent_SourceFields", "([Source] = 'ManualAuthorized' AND [ManualRequestKey] IS NOT NULL AND [ManualRequestKey] <> '00000000-0000-0000-0000-000000000000' AND [Reason] IS NOT NULL AND LEN(LTRIM(RTRIM([Reason]))) > 0 AND [SourceKey] IS NULL AND [ExternalEventId] IS NULL) OR ([Source] IN ('Device','Imported') AND [SourceKey] IS NOT NULL AND LEN(LTRIM(RTRIM([SourceKey]))) > 0 AND [ExternalEventId] IS NOT NULL AND LEN(LTRIM(RTRIM([ExternalEventId]))) > 0 AND [ManualRequestKey] IS NULL)");
+            t.HasCheckConstraint("CK_AttendanceEvent_SourceFields", "([Source] = 'ManualAuthorized' AND [ManualRequestKey] IS NOT NULL AND [ManualRequestKey] <> '00000000-0000-0000-0000-000000000000' AND [Reason] IS NOT NULL AND LEN(LTRIM(RTRIM([Reason]))) > 0 AND [SourceKey] IS NULL AND [ExternalEventId] IS NULL) OR ([Source] IN ('Device','Imported') AND [SourceKey] IS NOT NULL AND LEN(LTRIM(RTRIM([SourceKey]))) > 0 AND [ExternalEventId] IS NOT NULL AND LEN(LTRIM(RTRIM([ExternalEventId]))) > 0 AND [ManualRequestKey] IS NULL) OR ([Source] = 'EmployeeClock' AND [Direction] IN ('In','Out') AND [ActorId] IS NOT NULL AND [SourceKey] IS NOT NULL AND LEN(LTRIM(RTRIM([SourceKey]))) > 0 AND [ExternalEventId] IS NOT NULL AND LEN(LTRIM(RTRIM([ExternalEventId]))) > 0 AND [ManualRequestKey] IS NULL AND [OriginalSourceTimestamp] IS NULL AND [Reason] IS NULL AND [EmployeeWasInactive] = 0 AND [EmploymentReadiness] = 'Ready' AND [OccurredAtUtc] = [ReceivedAtUtc])");
         });
         b.HasKey(x => x.AttendanceEventId);
         b.Property(x => x.OccurredAtUtc).HasColumnType("datetime2(7)");

@@ -153,13 +153,13 @@ describe('V2 platform foundation', () => {
         <Showcase />
       </Providers>,
     );
-    expect(screen.getByText('V2.1 · Development showcase')).toBeInTheDocument();
+    expect(screen.getByText('V3.1 · Development showcase')).toBeInTheDocument();
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
     expect(screen.getAllByRole('tab')).toHaveLength(10);
     await userEvent.click(screen.getByRole('tab', { name: 'Academic' }));
     expect(
       screen.getByRole('heading', { name: 'Class and subject work in context' }),
     ).toBeInTheDocument();
-    expect(screen.getByText(/not school records or operational metrics/)).toBeInTheDocument();
+    expect(screen.getByText(/Synthetic demonstration data only/)).toBeInTheDocument();
   });
 });

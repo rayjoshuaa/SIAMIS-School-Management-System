@@ -18,13 +18,21 @@ export function Textarea({ className, ...props }: ComponentProps<'textarea'>) {
     <textarea className={cn(fieldStyle, 'min-h-28 read-only:bg-muted', className)} {...props} />
   );
 }
-export function Label(props: ComponentProps<typeof L.Root>) {
-  return <L.Root className="block text-sm leading-5 font-semibold" {...props} />;
+export function Label({ className, ...props }: ComponentProps<typeof L.Root>) {
+  return (
+    <L.Root
+      className={cn('ui-label block text-sm leading-5 font-semibold', className)}
+      {...props}
+    />
+  );
 }
-export function Checkbox(props: ComponentProps<typeof C.Root>) {
+export function Checkbox({ className, ...props }: ComponentProps<typeof C.Root>) {
   return (
     <C.Root
-      className="ui-choice group flex size-11 items-center justify-center rounded-md disabled:opacity-50"
+      className={cn(
+        'ui-choice group flex size-11 items-center justify-center rounded-md disabled:opacity-50',
+        className,
+      )}
       {...props}
     >
       <span className="flex size-5 items-center justify-center rounded-sm border border-input bg-surface group-data-[state=checked]:border-primary group-data-[state=checked]:bg-primary group-data-[state=checked]:text-primary-foreground">
@@ -35,10 +43,13 @@ export function Checkbox(props: ComponentProps<typeof C.Root>) {
     </C.Root>
   );
 }
-export function Switch(props: ComponentProps<typeof S.Root>) {
+export function Switch({ className, ...props }: ComponentProps<typeof S.Root>) {
   return (
     <S.Root
-      className="ui-choice group inline-flex h-11 w-12 items-center rounded-md disabled:opacity-50"
+      className={cn(
+        'ui-choice group inline-flex h-11 w-12 items-center rounded-md disabled:opacity-50',
+        className,
+      )}
       {...props}
     >
       <span className="flex h-7 w-12 items-center rounded-full border border-input bg-muted p-0.5 group-data-[state=checked]:bg-primary">
@@ -49,10 +60,11 @@ export function Switch(props: ComponentProps<typeof S.Root>) {
 }
 export function RadioGroup({
   options,
+  className,
   ...props
 }: ComponentProps<typeof R.Root> & { options: { value: string; label: string }[] }) {
   return (
-    <R.Root className="flex flex-wrap gap-4" {...props}>
+    <R.Root className={cn('flex flex-wrap gap-4', className)} {...props}>
       {options.map((option) => (
         <label key={option.value} className="flex items-center gap-2 text-sm">
           <R.Item
@@ -74,19 +86,30 @@ export function Select({
   placeholder = 'Select an option',
   label,
   id,
+  'aria-describedby': describedBy,
+  'aria-invalid': invalid,
+  'aria-required': required,
+  className,
   ...props
 }: ComponentProps<typeof SelectPrimitive.Root> & {
   options: { value: string; label: string }[];
   placeholder?: string;
   label: string;
   id?: string;
+  'aria-describedby'?: string;
+  'aria-invalid'?: ComponentProps<'button'>['aria-invalid'];
+  'aria-required'?: boolean;
+  className?: string;
 }) {
   return (
     <SelectPrimitive.Root {...props}>
       <SelectPrimitive.Trigger
         id={id}
         aria-label={label}
-        className={cn(fieldStyle, 'flex items-center justify-between gap-3')}
+        aria-describedby={describedBy}
+        aria-invalid={invalid}
+        aria-required={required}
+        className={cn(fieldStyle, 'flex items-center justify-between gap-3', className)}
       >
         <SelectPrimitive.Value placeholder={placeholder} />
         <SelectPrimitive.Icon>

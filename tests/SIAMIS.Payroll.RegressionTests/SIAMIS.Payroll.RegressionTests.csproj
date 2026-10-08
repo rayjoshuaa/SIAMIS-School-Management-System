@@ -1,5 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup><OutputType>Exe</OutputType></PropertyGroup>
   <ItemGroup><ProjectReference Include="../../src/SIAMIS.Infrastructure/SIAMIS.Infrastructure.csproj" /></ItemGroup>
+  <ItemGroup><ProjectReference Include="../../src/SIAMIS.Api/SIAMIS.Api.csproj" /></ItemGroup>
   <ItemGroup><FrameworkReference Include="Microsoft.AspNetCore.App" /></ItemGroup>
 </Project>
