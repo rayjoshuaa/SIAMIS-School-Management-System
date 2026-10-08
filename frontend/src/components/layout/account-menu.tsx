@@ -41,7 +41,7 @@ export function AccountMenu() {
         <M.Content
           align="end"
           sideOffset={8}
-          className="z-50 w-72 max-w-[calc(100vw-2rem)] rounded-md border border-border bg-surface p-2 shadow-[var(--shadow-overlay)]"
+          className="ui-floating z-50 w-72 max-w-[calc(100vw-2rem)] rounded-md border border-border bg-surface p-2 shadow-[var(--shadow-overlay)]"
         >
           <M.Label className="break-words px-3 py-2 text-sm font-semibold">
             {session.userName}
@@ -50,26 +50,13 @@ export function AccountMenu() {
             </span>
           </M.Label>
           <M.Separator className="my-2 h-px bg-border" />
-          {['Profile', 'Account settings'].map((label) => (
-            <M.Item
-              key={label}
-              aria-label={label}
-              disabled
-              className="flex min-h-11 items-center justify-between px-3 text-sm text-muted-foreground"
-            >
-              {label}
-              <span aria-hidden="true" className="text-xs">
-                Unavailable
-              </span>
-            </M.Item>
-          ))}
           <M.Item
             disabled={busy}
             onSelect={(event) => {
               event.preventDefault();
               void signOut();
             }}
-            className="flex min-h-11 cursor-pointer items-center rounded-md px-3 text-sm data-[highlighted]:bg-muted"
+            className="ui-menu-item flex min-h-11 cursor-pointer items-center rounded-md px-3 text-sm data-[highlighted]:bg-muted"
           >
             {busy ? 'Signing out…' : 'Sign out'}
           </M.Item>

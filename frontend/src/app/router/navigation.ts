@@ -181,3 +181,54 @@ export function breadcrumbs(path: string, capabilities: readonly string[]) {
     { label: route.breadcrumb },
   ];
 }
+
+// Module membership is presentation metadata. Existing route capabilities and
+// backend authorization remain authoritative; empty future modules stay hidden.
+export type WorkspaceModule = {
+  id: string;
+  label: string;
+  icon: LucideIcon;
+  destinations: readonly string[];
+};
+export const workspaceModules: WorkspaceModule[] = [
+  { id: 'workspace', label: 'Workspace', icon: LayoutDashboard, destinations: ['/'] },
+  {
+    id: 'school',
+    label: 'School Management',
+    icon: GraduationCap,
+    destinations: ['/school-management'],
+  },
+  { id: 'admissions', label: 'Admissions & CRM', icon: ContactRound, destinations: [] },
+  {
+    id: 'hr',
+    label: 'Human Resources',
+    icon: Building2,
+    destinations: [
+      '/hr',
+      '/hr/employees',
+      '/hr/attendance',
+      '/hr/leave',
+      '/hr/payroll',
+      '/hr/documents',
+    ],
+  },
+  { id: 'finance', label: 'Accounting & Finance', icon: Landmark, destinations: [] },
+  { id: 'learning', label: 'Professional Development', icon: BookOpen, destinations: [] },
+  { id: 'communication', label: 'Communication', icon: ContactRound, destinations: [] },
+  { id: 'projects', label: 'Projects & Tasks', icon: ListTodo, destinations: [] },
+  { id: 'reports', label: 'Reports', icon: ChartNoAxesCombined, destinations: [] },
+  { id: 'system', label: 'Administration', icon: Settings, destinations: ['/hr/security'] },
+];
+export function moduleDestinations(module: WorkspaceModule, capabilities: readonly string[]) {
+  const visible = visibleRoutes(capabilities);
+  return module.destinations.flatMap((path) => visible.filter((route) => route.path === path));
+}
+export function availableModules(capabilities: readonly string[]) {
+  return workspaceModules.filter((module) => moduleDestinations(module, capabilities).length > 0);
+}
+export function currentModule(path: string) {
+  return workspaceModules.find((module) => module.destinations.includes(path));
+}
+export function destinationLabel(route: RouteMeta) {
+  return route.path === '/hr' || route.path === '/school-management' ? 'Overview' : route.label;
+}

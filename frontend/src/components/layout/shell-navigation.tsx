@@ -1,173 +1,84 @@
-import { useId, useState } from 'react';
-import { NavLink, useLocation, matchPath } from 'react-router-dom';
-import { ChevronDown } from 'lucide-react';
+import { NavLink, useLocation } from 'react-router-dom';
+import { DropdownMenu as M } from 'radix-ui';
+import { Check, ChevronsUpDown } from 'lucide-react';
 import { Button } from '../ui/button';
-import { Tooltip } from '../ui/overlays';
 import {
-  visibleRoutes,
-  hrIsActive,
-  modules,
-  schoolNavigation,
-  paths,
-  type RouteMeta,
+  availableModules,
+  currentModule,
+  moduleDestinations,
+  destinationLabel,
 } from '../../app/router/navigation';
 import { useNavigationSession } from '../../lib/auth/navigation-session';
-import { cn } from '../../lib/utils/cn';
-export function ShellNavigation({
-  collapsed = false,
-  onNavigate,
-  onExpand,
-}: {
-  collapsed?: boolean;
-  onNavigate?: () => void;
-  onExpand?: () => void;
-}) {
+export function ShellNavigation({ onNavigate }: { onNavigate?: () => void }) {
   const session = useNavigationSession();
   const { pathname } = useLocation();
-  const [hrExpanded, setHrExpanded] = useState(true);
-  const [schoolExpanded, setSchoolExpanded] = useState(false);
-  const groupId = useId();
-  const visible = visibleRoutes(session.capabilities);
-  const hr = visible.filter((route) => route.group === 'hr');
-  function item(route: RouteMeta, nested = false) {
-    const link = (
-      <NavLink
-        key={route.path}
-        to={route.path}
-        end
-        onClick={onNavigate}
-        aria-label={
-          collapsed
-            ? route.label
-            : nested && route.path === paths.school
-              ? 'School Management overview'
-              : undefined
-        }
-        className={cn(
-          'flex min-h-11 min-w-0 items-center gap-2 rounded-md border-l-2 border-transparent px-3 py-2 text-sm hover:bg-muted',
-          nested && 'pl-5',
-          collapsed && 'justify-center px-2',
-          matchPath({ path: route.path, end: true }, pathname) &&
-            'border-primary bg-sidebar-active font-semibold text-primary',
-        )}
-      >
-        <route.icon className="size-4 shrink-0" aria-hidden="true" />
-        {!collapsed && (
-          <span className="min-w-0 break-words">
-            {nested && route.path === paths.school ? 'Overview' : route.label}
-          </span>
-        )}
-      </NavLink>
-    );
-    return collapsed ? (
-      <Tooltip key={route.path} label={route.label}>
-        {link}
-      </Tooltip>
-    ) : (
-      link
-    );
-  }
+  const available = availableModules(session.capabilities);
+  const current = currentModule(pathname);
+  const selected = available.find((module) => module.id === current?.id) ?? available[0];
   return (
-    <nav aria-label="Main navigation" className="space-y-1">
-      {visible.filter((route) => route.group === 'workspace').map((route) => item(route))}
-      {!collapsed && (
-        <p className="px-3 pt-3 pb-1 text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">
-          School platform
-        </p>
-      )}
-      {modules.map((module) => {
-        if (module.id === 'hr' && hr.length === 0) return null;
-        const school = module.id === 'school';
-        const humanResources = module.id === 'hr';
-        const group = school || humanResources;
-        const active = school ? pathname === paths.school : humanResources && hrIsActive(pathname);
-        const expanded = school ? schoolExpanded : hrExpanded;
-        const label = `${module.label}${active ? ', current module' : ''}`;
-        const trigger = (
+    <div className="shell-navigation">
+      <M.Root>
+        <M.Trigger asChild>
           <Button
-            variant="ghost"
-            icon={collapsed}
-            aria-label={collapsed ? `${label}${!group ? ', planned' : ''}` : label}
-            aria-disabled={!group || undefined}
-            aria-expanded={group ? !collapsed && expanded : undefined}
-            aria-controls={group && !collapsed ? `${groupId}-${module.id}` : undefined}
-            onClick={
-              group
-                ? () => {
-                    if (collapsed) {
-                      onExpand?.();
-                      if (school) setSchoolExpanded(true);
-                      else setHrExpanded(true);
-                    } else if (school) setSchoolExpanded(!expanded);
-                    else setHrExpanded(!expanded);
-                  }
-                : undefined
-            }
-            className={cn(
-              'w-full justify-start gap-2 border-l-2 border-transparent px-3 text-sm font-medium',
-              collapsed && 'justify-center px-2',
-              active && 'border-primary bg-sidebar-active font-semibold text-primary',
-              !group && 'text-muted-foreground',
-            )}
+            variant="outline"
+            className="shell-module-trigger"
+            aria-label={`Switch module: ${selected?.label ?? 'Workspace'}`}
           >
-            <module.icon aria-hidden="true" className="size-4 shrink-0" />
-            {!collapsed && (
-              <>
-                <span className="min-w-0 flex-1 text-left break-words">{module.label}</span>
-                {group ? (
-                  <ChevronDown
-                    aria-hidden="true"
-                    className={cn('size-3.5 shrink-0', !expanded && '-rotate-90')}
-                  />
-                ) : (
-                  <span aria-hidden="true" className="size-1.5 shrink-0 rounded-full bg-border" />
-                )}
-              </>
-            )}
+            {selected && <selected.icon aria-hidden="true" className="size-5 shrink-0" />}
+            <span>
+              <small>Current module</small>
+              <strong>{selected?.label ?? 'Workspace'}</strong>
+            </span>
+            <ChevronsUpDown aria-hidden="true" className="size-4 shrink-0" />
           </Button>
-        );
-        return (
-          <div key={module.id} data-active={active}>
-            {collapsed ? (
-              <Tooltip label={`${module.label}${module.status === 'planned' ? ' — planned' : ''}`}>
-                {trigger}
-              </Tooltip>
-            ) : (
-              trigger
-            )}
-            {!collapsed && group && expanded && (
-              <div id={`${groupId}-${module.id}`} className="ml-4 border-l border-border pl-1">
-                {school ? (
-                  <>
-                    {visible
-                      .filter((route) => route.path === paths.school)
-                      .map((route) => item(route, true))}
-                    <p className="px-5 py-1 text-xs text-muted-foreground">Planned destinations</p>
-                    {schoolNavigation.map((name) => (
-                      <button
-                        key={name}
-                        type="button"
-                        disabled
-                        title="Planned — not available yet"
-                        className="flex min-h-11 w-full items-center px-5 py-2 text-left text-sm text-muted-foreground"
-                      >
-                        {name}
-                      </button>
-                    ))}
-                  </>
-                ) : (
-                  hr.map((route) => item(route, true))
-                )}
-              </div>
-            )}
-          </div>
-        );
-      })}
-      {!collapsed && (
-        <p className="px-3 pt-3 text-xs text-muted-foreground">
-          Planned modules are not available yet.
-        </p>
+        </M.Trigger>
+        <M.Portal>
+          <M.Content align="start" sideOffset={4} className="ui-floating shell-module-menu">
+            <M.Label className="shell-menu-label">Switch module</M.Label>
+            {available.map((module) => (
+              <M.Item key={module.id} asChild>
+                <NavLink
+                  to={moduleDestinations(module, session.capabilities)[0].path}
+                  onClick={onNavigate}
+                  className="ui-menu-item shell-module-item"
+                >
+                  <module.icon aria-hidden="true" className="size-4 shrink-0" />
+                  <span>{module.label}</span>
+                  {selected?.id === module.id && (
+                    <>
+                      <Check aria-hidden="true" className="size-4" />
+                      <span className="sr-only">Current module</span>
+                    </>
+                  )}
+                </NavLink>
+              </M.Item>
+            ))}
+          </M.Content>
+        </M.Portal>
+      </M.Root>
+      <nav aria-label="Module navigation">
+        <p className="shell-navigation-label">{selected?.label ?? 'Workspace'}</p>
+        {selected &&
+          moduleDestinations(selected, session.capabilities).map((route) => (
+            <NavLink
+              key={route.path}
+              to={route.path}
+              end
+              onClick={onNavigate}
+              className="shell-destination"
+            >
+              <route.icon aria-hidden="true" className="size-5 shrink-0" />
+              <span>{destinationLabel(route)}</span>
+            </NavLink>
+          ))}
+      </nav>
+      {selected?.id !== 'workspace' && (
+        <nav aria-label="Workspace navigation" className="shell-workspace-link">
+          <NavLink to="/" end onClick={onNavigate} className="shell-destination">
+            Workspace overview
+          </NavLink>
+        </nav>
       )}
-    </nav>
+    </div>
   );
 }

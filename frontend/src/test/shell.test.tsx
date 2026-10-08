@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import { render as renderUi, screen } from '@testing-library/react';
 import { AuthContext } from '../lib/auth/auth-context';
@@ -11,6 +11,8 @@ import {
   breadcrumbs,
   modules,
   schoolNavigation,
+  availableModules,
+  moduleDestinations,
 } from '../app/router/navigation';
 import { NavigationSessionProvider } from '../lib/auth/navigation-session';
 import { ShellNavigation } from '../components/layout/shell-navigation';
@@ -46,6 +48,15 @@ const identity = {
   mode: 'authenticated' as const,
   capabilities: ['Employee.Read', 'Reporting.Read'],
 };
+beforeEach(() =>
+  vi.stubGlobal(
+    'matchMedia',
+    vi
+      .fn()
+      .mockReturnValue({ matches: false, addEventListener: vi.fn(), removeEventListener: vi.fn() }),
+  ),
+);
+afterEach(() => vi.unstubAllGlobals());
 describe('navigation contract', () => {
   it('keeps the primary action and provides secondary overflow actions', async () => {
     const action = vi.fn();
@@ -108,16 +119,13 @@ describe('navigation contract', () => {
     );
     await userEvent.click(screen.getByRole('button', { name: `Account menu: ${name}` }));
     expect(screen.getByRole('menu')).toHaveTextContent(name);
-    expect(screen.getByRole('menuitem', { name: 'Profile' })).toHaveAttribute(
-      'aria-disabled',
-      'true',
-    );
+    expect(screen.queryByRole('menuitem', { name: 'Profile' })).not.toBeInTheDocument();
     await userEvent.click(screen.getByRole('menuitem', { name: 'Sign out' }));
     expect(logout).toHaveBeenCalled();
   });
   it('closes mobile navigation on a destination selection', async () => {
     render(
-      <MemoryRouter>
+      <MemoryRouter initialEntries={['/hr/employees']}>
         <NavigationSessionProvider value={identity}>
           <Tooltip.Provider>
             <MobileNavigation />
@@ -165,16 +173,16 @@ describe('navigation contract', () => {
       </MemoryRouter>,
     );
     expect(screen.getByRole('link', { name: 'Employees' })).toHaveAttribute('aria-current', 'page');
-    expect(screen.getByRole('button', { name: 'Human Resources, current module' })).toHaveAttribute(
+    expect(screen.getByRole('button', { name: 'Switch module: Human Resources' })).toHaveAttribute(
       'aria-expanded',
-      'true',
+      'false',
     );
     expect(screen.queryByRole('link', { name: 'Payroll' })).not.toBeInTheDocument();
   });
-  it('collapses groups and calls the mobile navigation callback', async () => {
+  it('switches module context and calls the navigation callback', async () => {
     const navigate = vi.fn();
     render(
-      <MemoryRouter>
+      <MemoryRouter initialEntries={['/hr/employees']}>
         <NavigationSessionProvider value={identity}>
           <Tooltip.Provider>
             <ShellNavigation onNavigate={navigate} />
@@ -182,32 +190,32 @@ describe('navigation contract', () => {
         </NavigationSessionProvider>
       </MemoryRouter>,
     );
-    await userEvent.click(screen.getByRole('button', { name: 'Human Resources' }));
-    expect(screen.queryByRole('link', { name: 'Employees' })).not.toBeInTheDocument();
-    await userEvent.click(screen.getByRole('button', { name: 'Human Resources' }));
     await userEvent.click(screen.getByRole('link', { name: 'Employees' }));
     expect(navigate).toHaveBeenCalledOnce();
+    await userEvent.click(screen.getByRole('button', { name: 'Switch module: Human Resources' }));
+    await userEvent.click(screen.getByRole('menuitem', { name: 'School Management' }));
+    expect(
+      screen.getByRole('button', { name: 'Switch module: School Management' }),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Employees' })).not.toBeInTheDocument();
   });
-  it('keeps collapsed module icons accessible and expands HR without exposing nested icons', async () => {
-    const expand = vi.fn();
+  it('keeps the module switcher keyboard accessible and omits unavailable modules', async () => {
     render(
       <MemoryRouter>
         <NavigationSessionProvider value={identity}>
           <Tooltip.Provider>
-            <ShellNavigation collapsed onExpand={expand} />
+            <ShellNavigation />
           </Tooltip.Provider>
         </NavigationSessionProvider>
       </MemoryRouter>,
     );
     expect(screen.queryByRole('link', { name: 'Employees' })).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Human Resources' })).toHaveClass(
-      'inline-flex',
-      'min-h-11',
-      'justify-center',
-    );
-    expect(screen.getByRole('link', { name: 'Dashboard' })).toHaveClass('bg-sidebar-active');
-    await userEvent.click(screen.getByRole('button', { name: 'Human Resources' }));
-    expect(expand).toHaveBeenCalledOnce();
+    expect(screen.getByRole('link', { name: 'Dashboard' })).toHaveAttribute('aria-current', 'page');
+    await userEvent.click(screen.getByRole('button', { name: 'Switch module: Workspace' }));
+    expect(screen.getByRole('menuitem', { name: 'Human Resources' })).toBeInTheDocument();
+    expect(
+      screen.queryByRole('menuitem', { name: 'Accounting & Finance' }),
+    ).not.toBeInTheDocument();
   });
   it('models the whole school platform without inventing business routes', () => {
     expect(modules.map((m) => m.label)).toEqual([
@@ -234,19 +242,14 @@ describe('navigation contract', () => {
         </NavigationSessionProvider>
       </MemoryRouter>,
     );
-    await userEvent.click(screen.getByRole('button', { name: 'School Management' }));
-    expect(screen.getByRole('button', { name: 'Results & Report Cards' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Students' })).toBeDisabled();
-    expect(screen.getByRole('link', { name: 'School Management overview' })).toHaveAttribute(
+    await userEvent.click(screen.getByRole('button', { name: 'Switch module: Workspace' }));
+    await userEvent.click(screen.getByRole('menuitem', { name: 'School Management' }));
+    expect(screen.queryByRole('link', { name: 'Students' })).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Overview' })).toHaveAttribute(
       'href',
       '/school-management',
     );
-    expect(screen.getByRole('button', { name: 'Accounting & Finance' })).toHaveAttribute(
-      'aria-disabled',
-      'true',
-    );
-    await userEvent.click(screen.getByRole('button', { name: 'School Management' }));
-    expect(screen.queryByRole('button', { name: 'Students' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Accounting & Finance' })).not.toBeInTheDocument();
   });
   it('supports long planned school navigation inside the mobile drawer', async () => {
     render(
@@ -259,9 +262,8 @@ describe('navigation contract', () => {
       </MemoryRouter>,
     );
     await userEvent.click(screen.getByRole('button', { name: 'Open navigation' }));
-    await userEvent.click(screen.getByRole('button', { name: 'School Management' }));
-    expect(screen.getByRole('button', { name: 'Student Documents' })).toBeDisabled();
-    await userEvent.click(screen.getByRole('link', { name: 'School Management overview' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Switch module: Workspace' }));
+    await userEvent.click(screen.getByRole('menuitem', { name: 'School Management' }));
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
   it('shows school dashboard structure with honest empty metrics and no fake actions', () => {
@@ -283,7 +285,7 @@ describe('navigation contract', () => {
     expect(screen.queryByRole('button')).not.toBeInTheDocument();
     expect(screen.getByText('No actions available')).toBeInTheDocument();
   });
-  it('persists only a UI collapse preference', async () => {
+  it('renders a compact shell without fake header controls or changing storage', async () => {
     vi.stubGlobal(
       'matchMedia',
       vi.fn().mockReturnValue({
@@ -305,13 +307,10 @@ describe('navigation contract', () => {
         </NavigationSessionProvider>
       </MemoryRouter>,
     );
-    expect(screen.getByLabelText('Academic session not connected')).toHaveTextContent(
-      'Not connected',
-    );
-    await userEvent.click(screen.getByRole('button', { name: 'Collapse sidebar' }));
-    expect(localStorage.getItem('siamis.ui.sidebar.v1')).toBe('collapsed');
-    expect(screen.getByRole('button', { name: 'Expand sidebar' })).toBeInTheDocument();
-    localStorage.removeItem('siamis.ui.sidebar.v1');
+    expect(screen.queryByLabelText('Academic session not connected')).not.toBeInTheDocument();
+    expect(screen.queryByRole('searchbox')).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Skip to content' })).toHaveAttribute('href', '#main');
+    expect(localStorage.getItem('siamis.ui.sidebar.v1')).toBeNull();
     vi.unstubAllGlobals();
   });
   it('provides safe loading and not-found recovery', () => {
@@ -323,5 +322,17 @@ describe('navigation contract', () => {
     );
     expect(screen.getByRole('status')).toHaveAccessibleName('Preparing your workspace');
     expect(screen.getByRole('link', { name: 'Return to Dashboard' })).toHaveAttribute('href', '/');
+  });
+  it('omits confidential payroll/documents destinations and derives access from capabilities', () => {
+    const available = availableModules(['Employee.Read']);
+    expect(available.map((module) => module.id)).toEqual(['workspace', 'school', 'hr']);
+    const hr = available.find((module) => module.id === 'hr')!;
+    expect(moduleDestinations(hr, ['Employee.Read']).map((route) => route.path)).toEqual([
+      '/hr/employees',
+    ]);
+    expect(availableModules(['Security.Manage']).some((module) => module.id === 'system')).toBe(
+      true,
+    );
+    expect(availableModules([]).some((module) => module.id === 'hr')).toBe(false);
   });
 });
