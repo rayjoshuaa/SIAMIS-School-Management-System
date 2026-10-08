@@ -26,7 +26,6 @@ export function ShellNavigation({ onNavigate }: { onNavigate?: () => void }) {
           >
             {selected && <selected.icon aria-hidden="true" className="size-5 shrink-0" />}
             <span>
-              <small>Current module</small>
               <strong>{selected?.label ?? 'Workspace'}</strong>
             </span>
             <ChevronsUpDown aria-hidden="true" className="size-4 shrink-0" />
@@ -57,7 +56,7 @@ export function ShellNavigation({ onNavigate }: { onNavigate?: () => void }) {
         </M.Portal>
       </M.Root>
       <nav aria-label="Module navigation">
-        <p className="shell-navigation-label">{selected?.label ?? 'Workspace'}</p>
+        <p className="shell-navigation-label">Destinations</p>
         {selected &&
           moduleDestinations(selected, session.capabilities).map((route) => (
             <NavLink

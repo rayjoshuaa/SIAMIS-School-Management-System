@@ -8,7 +8,7 @@ import { ShellLoading, ShellError } from './shell-states';
 import { NavigationSessionProvider } from '../../lib/auth/navigation-session';
 import { activeRoute } from '../../app/router/navigation';
 import { ApplicationHeader } from './application-header';
-import { WorkspaceHeader } from '../shared/workspace';
+import { ContentFrame, WorkspaceHeader } from '../shared/workspace';
 import { ErrorBoundary } from '../shared/error-boundary';
 import { useAuth } from '../../lib/auth/auth-context';
 import './application-shell.css';
@@ -30,6 +30,10 @@ export function ShellSession({ children }: { children: ReactNode }) {
 export function AppShell({ actions }: { actions?: ReactNode }) {
   const { pathname } = useLocation();
   const route = activeRoute(pathname);
+  // Width is presentation only; route permissions and feature state stay unchanged.
+  const employeeForm =
+    /^\/hr\/employees\/(new|[^/]+\/(edit|employment-change|rehire|end-employment))$/.test(pathname);
+  const detail = pathname.startsWith('/hr/employees/') || pathname.startsWith('/hr/attendance/');
   useEffect(() => {
     document.title = `${activeRoute(pathname)?.label ?? 'Page not found'} · SIAMIS`;
   }, [pathname]);
@@ -46,16 +50,18 @@ export function AppShell({ actions }: { actions?: ReactNode }) {
       <div className="shell-workspace">
         <ApplicationHeader navigation={<MobileNavigation />} account={<AccountMenu />} />
         <main id="main" tabIndex={-1} className="shell-content">
-          <WorkspaceHeader
-            title={route?.label ?? 'Page not found'}
-            description={route?.description ?? 'Choose another workspace to continue.'}
-            actions={actions}
-          />
-          <ErrorBoundary key={pathname} fallback={<ShellError />}>
-            <Suspense fallback={<ShellLoading />}>
-              <Outlet />
-            </Suspense>
-          </ErrorBoundary>
+          <ContentFrame width={employeeForm ? 'form' : detail ? 'reading' : 'workspace'}>
+            <WorkspaceHeader
+              title={route?.label ?? 'Page not found'}
+              description={route?.description ?? 'Choose another workspace to continue.'}
+              actions={actions}
+            />
+            <ErrorBoundary key={pathname} fallback={<ShellError />}>
+              <Suspense fallback={<ShellLoading />}>
+                <Outlet />
+              </Suspense>
+            </ErrorBoundary>
+          </ContentFrame>
         </main>
       </div>
     </div>
