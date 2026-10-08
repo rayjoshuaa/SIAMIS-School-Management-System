@@ -106,9 +106,9 @@ export const routes: RouteMeta[] = [
   },
   {
     path: '/hr/security',
-    label: 'Accounts & Security',
-    breadcrumb: 'Accounts & Security',
-    description: 'Account administration and security.',
+    label: 'User Accounts',
+    breadcrumb: 'User Accounts',
+    description: 'Account provisioning, assigned roles and activation.',
     icon: ShieldCheck,
     group: 'hr',
     capability: 'Security.Manage',

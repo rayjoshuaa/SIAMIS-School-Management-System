@@ -24,6 +24,11 @@ const Showcase = import.meta.env.DEV
   ? lazy(() => import('../../features/design-system/showcase'))
   : null;
 const ShellEntry = lazy(() => import('../../components/layout/shell-entry'));
+const UserAccounts = lazy(() =>
+  import('../../features/administration/user-accounts').then((module) => ({
+    default: module.UserAccounts,
+  })),
+);
 captureCredentialLink();
 const router = createBrowserRouter([
   ...(Showcase
@@ -72,7 +77,13 @@ const router = createBrowserRouter([
                   ...routes.map((route) => ({
                     path: route.path,
                     element:
-                      route.path === paths.dashboard ? <SchoolDashboard /> : <ModulePlaceholder />,
+                      route.path === paths.dashboard ? (
+                        <SchoolDashboard />
+                      ) : route.path === '/hr/security' ? (
+                        <UserAccounts />
+                      ) : (
+                        <ModulePlaceholder />
+                      ),
                   })),
                   { path: '*', element: <ShellNotFound /> },
                 ],

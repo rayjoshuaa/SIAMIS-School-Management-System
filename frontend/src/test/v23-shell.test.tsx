@@ -87,7 +87,7 @@ describe('V2.3 workspace shell', () => {
     expect(
       screen.getByRole('button', { name: 'Switch module: Administration' }),
     ).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Accounts & Security' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: 'User Accounts' })).toHaveAttribute(
       'href',
       '/hr/security',
     );
