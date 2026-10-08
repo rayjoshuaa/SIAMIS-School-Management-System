@@ -481,7 +481,7 @@ function EmployeeEditor({
               </div>
             </section>
           )}
-          <div className="flex flex-wrap gap-3">
+          <div className="employee-form-actions">
             <Button type="submit" loading={mutation.isPending}>
               {mode === 'end-employment' ? 'Review end of employment' : 'Save employee'}
             </Button>

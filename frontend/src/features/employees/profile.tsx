@@ -3,6 +3,8 @@ import { useAuth } from '../../lib/auth/auth-context';
 import { Table, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/table';
 import { Tabs } from '../../components/ui/navigation';
 import { TableViewport } from '../../components/shared/workspace';
+import { Avatar, Badge } from '../../components/ui/feedback';
+import { Pencil } from 'lucide-react';
 import { employeeName } from './contracts';
 import { masterLabel, useEmployee, useHistory, useMasters } from './data';
 import { ContactSummary, EmploymentSummary, Facts, QueryState } from './presentation';
@@ -27,22 +29,38 @@ export function EmployeeProfile() {
   const value = employee.data;
   const manage = state.user?.capabilities.includes('Employee.Manage');
   return (
-    <div className="employee-workspace">
+    <div className="employee-workspace employee-profile">
       <Link className="ui-link" to="/hr/employees">
         ← Employee directory
       </Link>
       {params.get('notice') === 'saved' && <p role="status">Employee saved successfully.</p>}
-      <header className="employee-toolbar">
-        <div>
-          <h2 className="text-lg font-semibold">{employeeName(value)}</h2>
-          <p className="text-sm text-muted-foreground">
-            {value.employeeNumber}
-            {value.preferredName ? ` · ${value.preferredName}` : ''}
-          </p>
+      <header className="employee-toolbar employee-profile-header">
+        <div className="employee-identity">
+          <span aria-hidden="true">
+            <Avatar name={employeeName(value)} />
+          </span>
+          <div>
+            <h2 className="text-lg font-semibold">{employeeName(value)}</h2>
+            <p className="text-sm text-muted-foreground">
+              {value.employeeNumber}
+              {value.preferredName ? ` · ${value.preferredName}` : ''}
+            </p>
+            <div className="employee-identity-status">
+              <Badge>Record {value.isActive ? 'active' : 'inactive'}</Badge>
+              <span className="employee-context">
+                Employment: {value.currentEmployment?.employmentStatus ?? 'No current employment'}
+              </span>
+            </div>
+          </div>
         </div>
         {manage && (
-          <div className="flex flex-wrap gap-3">
-            <Link className="ui-link inline-flex min-h-11 items-center" to="edit">
+          <div className="employee-profile-actions">
+            <Link
+              className="ui-button employee-action employee-action-outline"
+              to="edit"
+              data-density="compact"
+            >
+              <Pencil aria-hidden="true" className="size-4" />
               Edit profile
             </Link>
             {value.currentEmployment && value.isActive ? (
@@ -67,6 +85,7 @@ export function EmployeeProfile() {
       </header>
       <Tabs
         label="Employee 360 sections"
+        overflow="scroll"
         tabs={[
           { value: 'overview', label: 'Overview', content: <EmploymentSummary employee={value} /> },
           {

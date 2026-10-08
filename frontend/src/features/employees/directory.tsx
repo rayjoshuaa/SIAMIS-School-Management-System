@@ -1,9 +1,11 @@
 import { useRef, useState } from 'react';
+import { Plus, Eye } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '../../lib/auth/auth-context';
 import { api } from '../../lib/api/client';
 import { Button } from '../../components/ui/button';
+import { Badge } from '../../components/ui/feedback';
 import { Input } from '../../components/ui/controls';
 import { FormField } from '../../components/shared/form-field';
 import { Table, TableHeader, TableRow, TableHead, TableCell } from '../../components/ui/table';
@@ -82,15 +84,18 @@ export function EmployeeDirectory() {
       </SystemState>
     );
   return (
-    <div className="employee-workspace">
+    <div className="employee-workspace employee-directory">
       <div className="employee-toolbar">
-        <p className="text-sm text-muted-foreground">Employee records and employment context</p>
+        <p className="employee-context">Search records and review employment context.</p>
         {capabilities.includes('Employee.Manage') && (
           <Link
-            className="ui-link inline-flex min-h-11 items-center font-semibold"
+            className="ui-button ui-button-primary employee-action"
+            data-variant="primary"
+            data-density="compact"
             to="/hr/employees/new"
           >
-            Create employee →
+            <Plus aria-hidden="true" className="size-4" />
+            Create employee
           </Link>
         )}
       </div>
@@ -101,6 +106,7 @@ export function EmployeeDirectory() {
       )}
       <form
         className="employee-filters"
+        aria-label="Employee directory filters"
         onSubmit={(event) => {
           event.preventDefault();
           change('search', search.trim());
@@ -236,16 +242,20 @@ export function EmployeeDirectory() {
                         <TableCell>
                           {employee.employmentStatus ?? 'No current employment'}
                         </TableCell>
-                        <TableCell>{employee.isActive ? 'Active' : 'Inactive'}</TableCell>
+                        <TableCell>
+                          <Badge>{employee.isActive ? 'Active' : 'Inactive'}</Badge>
+                        </TableCell>
                         <TableCell>
                           <Button
                             variant="ghost"
+                            density="compact"
                             aria-label={`Quick view ${employee.employeeNumber}`}
                             onClick={(event) => {
                               trigger.current = event.currentTarget;
                               setSelected(employee.employeeId);
                             }}
                           >
+                            <Eye aria-hidden="true" className="size-4" />
                             Quick view
                           </Button>
                         </TableCell>
@@ -275,6 +285,7 @@ export function EmployeeDirectory() {
           if (!open) setSelected(null);
         }}
         title="Employee quick view"
+        size="md"
         description="Employee record and current employment information."
         onCloseAutoFocus={(event) => {
           event.preventDefault();

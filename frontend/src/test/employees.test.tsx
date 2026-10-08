@@ -148,6 +148,54 @@ beforeEach(() => {
     }),
   );
 });
+
+describe('V3.5 employee workspace presentation', () => {
+  it('keeps labelled filters and primary creation navigation without inventing sorting', async () => {
+    setup();
+    await screen.findByText('FIXTURE-001');
+    const filters = screen.getByRole('form', { name: 'Employee directory filters' });
+    expect(within(filters).getByLabelText('Search employees')).toBeInTheDocument();
+    const create = screen.getByRole('link', { name: 'Create employee' });
+    expect(create).toHaveAttribute('href', '/hr/employees/new');
+    expect(create).toHaveAttribute('data-variant', 'primary');
+    expect(screen.queryByRole('button', { name: /sort/i })).not.toBeInTheDocument();
+    expect(calls.some((call) => call.path.includes('sort'))).toBe(false);
+  });
+  it('uses the approved drawer width and preserves inspection-only behavior', async () => {
+    setup();
+    await userEvent.click(await screen.findByRole('button', { name: 'Quick view FIXTURE-001' }));
+    const drawer = await screen.findByRole('dialog', { name: 'Employee quick view' });
+    expect(drawer).toHaveAttribute('data-size', 'md');
+    expect(
+      await within(drawer).findByRole('region', { name: 'Dates and reporting' }),
+    ).toBeVisible();
+    expect(calls.every((call) => call.method === 'GET')).toBe(true);
+    expect(within(drawer).queryByRole('button', { name: /save|approve/i })).not.toBeInTheDocument();
+  });
+  it('separates record and employment identity and keeps supported profile tabs keyboard accessible', async () => {
+    capabilities = ['Employee.Read'];
+    setup(`/hr/employees/${id}`);
+    const overview = await screen.findByRole('tab', { name: 'Overview' });
+    expect(screen.getByText('Record active')).toBeVisible();
+    expect(screen.getByText('Employment: Active')).toBeVisible();
+    expect(screen.getByRole('region', { name: 'Employment information' })).toHaveTextContent(
+      'Teaching',
+    );
+    expect(screen.getByRole('region', { name: 'Dates and reporting' })).toHaveTextContent(
+      '2026-01-01',
+    );
+    expect(screen.queryByRole('link', { name: 'Edit profile' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'End employment' })).not.toBeInTheDocument();
+    overview.focus();
+    await userEvent.keyboard('{ArrowRight}');
+    const account = screen.getByRole('tab', { name: 'Account access' });
+    expect(account).toHaveFocus();
+    expect(account).toHaveAttribute('aria-selected', 'true');
+    await userEvent.click(screen.getByRole('tab', { name: 'Personal & contacts' }));
+    expect(await screen.findByText('No contact information recorded.')).toBeVisible();
+    expect(calls.some((call) => call.path.startsWith('/api/admin/'))).toBe(false);
+  });
+});
 afterEach(() => vi.unstubAllGlobals());
 function setup(path = '/hr/employees') {
   const cache = createQueryClient();
@@ -308,7 +356,7 @@ describe('F5 employee workspace', () => {
     capabilities = ['Employee.Read'];
     const router = setup();
     await screen.findByText('FIXTURE-001');
-    expect(screen.queryByRole('link', { name: 'Create employee →' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Create employee' })).not.toBeInTheDocument();
     await router.navigate('/hr/employees/new');
     expect(await screen.findByText('Access denied')).toBeInTheDocument();
   });
