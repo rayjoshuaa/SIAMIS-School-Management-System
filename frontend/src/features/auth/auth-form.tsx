@@ -1,11 +1,12 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, Navigate, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { Eye, EyeOff } from 'lucide-react';
 import { FormField } from '../../components/shared/form-field';
 import { Input } from '../../components/ui/controls';
 import { Button } from '../../components/ui/button';
-import { Alert } from '../../components/ui/feedback';
+import { SystemState } from '../../components/shared/workspace';
+import { AuthHeader, AuthStatus } from './auth-presentation';
 import { api } from '../../lib/api/client';
 import { ApiError } from '../../lib/api/errors';
 import { useAuth } from '../../lib/auth/auth-context';
@@ -22,7 +23,7 @@ type Values = {
 };
 const titles: Record<Mode, string> = {
   login: 'Sign in to SIAMIS',
-  activate: 'Activate your account',
+  activate: 'Set up your SIAMIS account',
   forgot: 'Forgot your password?',
   reset: 'Reset your password',
   change: 'Change your password',
@@ -34,7 +35,6 @@ export default function AuthForm({ mode }: { mode: Mode }) {
   const [success, setSuccess] = useState(false);
   const [visible, setVisible] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
-  const heading = useRef<HTMLHeadingElement>(null);
   const {
     register,
     handleSubmit,
@@ -49,7 +49,6 @@ export default function AuthForm({ mode }: { mode: Mode }) {
   });
   useEffect(() => {
     if (mode === 'login') setFocus('userName');
-    else heading.current?.focus();
   }, [mode, success, setFocus]);
   const newPassword = ['activate', 'reset', 'change'].includes(mode);
   const credential = mode === 'activate' || mode === 'reset';
@@ -75,29 +74,36 @@ export default function AuthForm({ mode }: { mode: Mode }) {
   if (mode === 'change' && !state.user?.requiresPasswordChange) return <Navigate to="/" replace />;
   if (success)
     return (
-      <div className="space-y-4">
-        <h1 ref={heading} tabIndex={-1} className="text-2xl font-semibold">
-          {mode === 'forgot' ? 'Check your email' : 'Password established'}
-        </h1>
-        <p role="status" className="text-sm">
+      <div className="auth-content">
+        <AuthHeader
+          title={
+            mode === 'forgot'
+              ? 'Check your email'
+              : mode === 'activate'
+                ? 'Account setup complete'
+                : 'Password updated'
+          }
+        />
+        <AuthStatus intent="success">
           {mode === 'forgot'
             ? 'If an eligible account matches the information provided, password reset instructions have been issued.'
             : mode === 'activate'
               ? 'Your account has been activated. You can now sign in.'
               : 'Your password has been reset. Sign in with your new password.'}
-        </p>
+        </AuthStatus>
         <LoginLink />
       </div>
     );
   if (credential && !link)
     return (
-      <div className="space-y-4">
-        <h1 ref={heading} tabIndex={-1} className="text-2xl font-semibold">
-          {titles[mode]}
-        </h1>
-        <Alert intent="warning" title="This link is unavailable">
+      <div className="auth-content">
+        <AuthHeader title={titles[mode]} />
+        <SystemState kind="configuration" title="This link is unavailable">
           Use the complete link provided to you. It may be missing or no longer valid.
-        </Alert>
+          {mode === 'activate'
+            ? ' Contact your school administrator if you need a new activation link.'
+            : ' Return to sign in and use Forgot password? to request a new recovery link.'}
+        </SystemState>
         <LoginLink />
       </div>
     );
@@ -134,34 +140,31 @@ export default function AuthForm({ mode }: { mode: Mode }) {
               : mode === 'forgot'
                 ? 'Unable to request recovery. Please try again.'
                 : 'Unable to complete this password operation. Check your password or request a new link.';
-      setError('root', { message });
+      setError('root', {
+        type:
+          e?.status === 429
+            ? 'throttled'
+            : e && (e.kind === 'network' || e.kind === 'server')
+              ? 'connection'
+              : 'authentication',
+        message,
+      });
     }
   }
   return (
-    <div className={mode === 'login' ? 'space-y-4' : 'space-y-5'}>
-      <div className={mode === 'login' ? 'text-center' : undefined}>
-        <h1
-          ref={mode === 'login' ? undefined : heading}
-          tabIndex={mode === 'login' ? undefined : -1}
-          className={mode === 'login' ? 'text-lg font-semibold' : 'text-2xl font-semibold'}
-        >
-          {titles[mode]}
-        </h1>
-        <p className={`${mode === 'login' ? 'mt-1' : 'mt-2'} text-sm text-muted-foreground`}>
-          {mode === 'login'
-            ? 'Use your school account to continue.'
-            : mode === 'forgot'
-              ? 'Enter the verified email associated with your account.'
-              : 'Choose a password of 12–256 characters. No specific character combination is required.'}
-        </p>
-      </div>
+    <div className="auth-content">
+      <AuthHeader title={titles[mode]}>
+        {mode === 'login'
+          ? 'Use your school account to continue.'
+          : mode === 'forgot'
+            ? 'Enter the verified email associated with your account.'
+            : 'Choose a password of 12–256 characters. No specific character combination is required.'}
+      </AuthHeader>
       {mode === 'login' && state.status === 'expired' && (
-        <p role="status" className="text-sm">
-          Your session has ended. Please sign in again.
-        </p>
+        <AuthStatus intent="info">Your session has ended. Please sign in again.</AuthStatus>
       )}
       <form
-        className={mode === 'login' ? 'space-y-3' : 'space-y-4'}
+        className="auth-form"
         onSubmit={(event) => {
           if (mode === 'login') clearErrors('root');
           void handleSubmit(submit)(event);
@@ -237,7 +240,7 @@ export default function AuthForm({ mode }: { mode: Mode }) {
             error={errors.password?.message}
           >
             {(props) => (
-              <div className="flex gap-2">
+              <div className="auth-password-field">
                 <Input
                   {...props}
                   type={visible ? 'text' : 'password'}
@@ -254,7 +257,8 @@ export default function AuthForm({ mode }: { mode: Mode }) {
                 <Button
                   type="button"
                   icon
-                  variant="outline"
+                  variant="ghost"
+                  className="auth-password-toggle"
                   aria-label={visible ? 'Hide password' : 'Show password'}
                   aria-pressed={visible}
                   onClick={() => setVisible(!visible)}
@@ -286,21 +290,32 @@ export default function AuthForm({ mode }: { mode: Mode }) {
           </FormField>
         )}
         {errors.root?.message && (
-          <Alert intent="danger" title="Account access">
-            <p role={mode === 'login' ? 'alert' : undefined}>{errors.root.message}</p>
-          </Alert>
+          <AuthStatus
+            intent={
+              errors.root.type === 'throttled'
+                ? 'warning'
+                : errors.root.type === 'connection'
+                  ? 'connection'
+                  : 'error'
+            }
+          >
+            {errors.root.message}
+          </AuthStatus>
         )}
         {mode === 'login' && (
-          <div className="flex justify-end">
-            <Link
-              to="/forgot-password"
-              className="inline-flex min-h-11 items-center text-sm text-primary underline"
-            >
+          <div className="auth-recovery-link">
+            <Link to="/forgot-password" className="auth-secondary-link">
               Forgot password?
             </Link>
           </div>
         )}
-        <Button type="submit" disabled={isSubmitting} className="w-full">
+        <Button
+          type="submit"
+          disabled={isSubmitting}
+          loading={isSubmitting}
+          aria-busy={isSubmitting || undefined}
+          className="auth-submit w-full"
+        >
           {isSubmitting
             ? 'Please wait…'
             : mode === 'login'
