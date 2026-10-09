@@ -1,0 +1,1556 @@
+[
+  {
+    "page": "attendance",
+    "controls": [
+      {
+        "height": 44,
+        "label": "attendance-date",
+        "top": 310.1000061035156
+      },
+      {
+        "height": 44,
+        "label": "Department",
+        "top": 310.1000061035156
+      },
+      {
+        "height": 44,
+        "label": "Designation",
+        "top": 310.1000061035156
+      },
+      {
+        "height": 44,
+        "label": " Refresh attendance",
+        "top": 310.1000061035156
+      }
+    ],
+    "heading": "Attendance Management",
+    "pageWidth": 1920,
+    "statuses": [
+      {
+        "background": "rgb(241, 240, 237)",
+        "color": "rgb(94, 98, 107)",
+        "intent": "neutral",
+        "text": "Live day"
+      },
+      {
+        "background": "rgb(250, 243, 227)",
+        "color": "rgb(128, 91, 21)",
+        "intent": "warning",
+        "text": "Requires review"
+      },
+      {
+        "background": "rgb(241, 240, 237)",
+        "color": "rgb(94, 98, 107)",
+        "intent": "neutral",
+        "text": "Live day"
+      },
+      {
+        "background": "rgb(250, 243, 227)",
+        "color": "rgb(128, 91, 21)",
+        "intent": "warning",
+        "text": "Requires review"
+      }
+    ],
+    "width": 1920
+  },
+  {
+    "page": "attendance",
+    "controls": [
+      {
+        "height": 44,
+        "label": "attendance-date",
+        "top": 310.1000061035156
+      },
+      {
+        "height": 44,
+        "label": "Department",
+        "top": 310.1000061035156
+      },
+      {
+        "height": 44,
+        "label": "Designation",
+        "top": 310.1000061035156
+      },
+      {
+        "height": 44,
+        "label": " Refresh attendance",
+        "top": 310.1000061035156
+      }
+    ],
+    "heading": "Attendance Management",
+    "pageWidth": 1425,
+    "statuses": [
+      {
+        "background": "rgb(241, 240, 237)",
+        "color": "rgb(94, 98, 107)",
+        "intent": "neutral",
+        "text": "Live day"
+      },
+      {
+        "background": "rgb(250, 243, 227)",
+        "color": "rgb(128, 91, 21)",
+        "intent": "warning",
+        "text": "Requires review"
+      },
+      {
+        "background": "rgb(241, 240, 237)",
+        "color": "rgb(94, 98, 107)",
+        "intent": "neutral",
+        "text": "Live day"
+      },
+      {
+        "background": "rgb(250, 243, 227)",
+        "color": "rgb(128, 91, 21)",
+        "intent": "warning",
+        "text": "Requires review"
+      }
+    ],
+    "width": 1440
+  },
+  {
+    "page": "attendance",
+    "controls": [
+      {
+        "height": 44,
+        "label": "attendance-date",
+        "top": 310.1000061035156
+      },
+      {
+        "height": 44,
+        "label": "Department",
+        "top": 310.1000061035156
+      },
+      {
+        "height": 44,
+        "label": "Designation",
+        "top": 310.1000061035156
+      },
+      {
+        "height": 44,
+        "label": " Refresh attendance",
+        "top": 310.1000061035156
+      }
+    ],
+    "heading": "Attendance Management",
+    "pageWidth": 1265,
+    "statuses": [
+      {
+        "background": "rgb(241, 240, 237)",
+        "color": "rgb(94, 98, 107)",
+        "intent": "neutral",
+        "text": "Live day"
+      },
+      {
+        "background": "rgb(250, 243, 227)",
+        "color": "rgb(128, 91, 21)",
+        "intent": "warning",
+        "text": "Requires review"
+      },
+      {
+        "background": "rgb(241, 240, 237)",
+        "color": "rgb(94, 98, 107)",
+        "intent": "neutral",
+        "text": "Live day"
+      },
+      {
+        "background": "rgb(250, 243, 227)",
+        "color": "rgb(128, 91, 21)",
+        "intent": "warning",
+        "text": "Requires review"
+      }
+    ],
+    "width": 1280
+  },
+  {
+    "page": "attendance",
+    "controls": [
+      {
+        "height": 44,
+        "label": "attendance-date",
+        "top": 329.6000061035156
+      },
+      {
+        "height": 44,
+        "label": "Department",
+        "top": 329.6000061035156
+      },
+      {
+        "height": 44,
+        "label": "Designation",
+        "top": 329.6000061035156
+      },
+      {
+        "height": 44,
+        "label": " Refresh attendance",
+        "top": 436.6000061035156
+      }
+    ],
+    "heading": "Attendance Management",
+    "pageWidth": 1009,
+    "statuses": [
+      {
+        "background": "rgb(241, 240, 237)",
+        "color": "rgb(94, 98, 107)",
+        "intent": "neutral",
+        "text": "Live day"
+      },
+      {
+        "background": "rgb(250, 243, 227)",
+        "color": "rgb(128, 91, 21)",
+        "intent": "warning",
+        "text": "Requires review"
+      },
+      {
+        "background": "rgb(241, 240, 237)",
+        "color": "rgb(94, 98, 107)",
+        "intent": "neutral",
+        "text": "Live day"
+      },
+      {
+        "background": "rgb(250, 243, 227)",
+        "color": "rgb(128, 91, 21)",
+        "intent": "warning",
+        "text": "Requires review"
+      }
+    ],
+    "width": 1024
+  },
+  {
+    "page": "attendance",
+    "controls": [
+      {
+        "height": 44,
+        "label": "attendance-date",
+        "top": 329.6000061035156
+      },
+      {
+        "height": 44,
+        "label": "Department",
+        "top": 329.6000061035156
+      },
+      {
+        "height": 44,
+        "label": "Designation",
+        "top": 329.6000061035156
+      },
+      {
+        "height": 44,
+        "label": " Refresh attendance",
+        "top": 436.6000061035156
+      }
+    ],
+    "heading": "Attendance Management",
+    "pageWidth": 753,
+    "statuses": [
+      {
+        "background": "rgb(241, 240, 237)",
+        "color": "rgb(94, 98, 107)",
+        "intent": "neutral",
+        "text": "Live day"
+      },
+      {
+        "background": "rgb(250, 243, 227)",
+        "color": "rgb(128, 91, 21)",
+        "intent": "warning",
+        "text": "Requires review"
+      },
+      {
+        "background": "rgb(241, 240, 237)",
+        "color": "rgb(94, 98, 107)",
+        "intent": "neutral",
+        "text": "Live day"
+      },
+      {
+        "background": "rgb(250, 243, 227)",
+        "color": "rgb(128, 91, 21)",
+        "intent": "warning",
+        "text": "Requires review"
+      }
+    ],
+    "width": 768
+  },
+  {
+    "page": "attendance",
+    "controls": [
+      {
+        "height": 44,
+        "label": "attendance-date",
+        "top": 418.1000061035156
+      },
+      {
+        "height": 44,
+        "label": "Department",
+        "top": 525.6000366210938
+      },
+      {
+        "height": 44,
+        "label": "Designation",
+        "top": 613.6000366210938
+      },
+      {
+        "height": 44,
+        "label": " Refresh attendance",
+        "top": 681.6000366210938
+      }
+    ],
+    "heading": "Attendance Management",
+    "pageWidth": 375,
+    "statuses": [
+      {
+        "background": "rgb(241, 240, 237)",
+        "color": "rgb(94, 98, 107)",
+        "intent": "neutral",
+        "text": "Live day"
+      },
+      {
+        "background": "rgb(250, 243, 227)",
+        "color": "rgb(128, 91, 21)",
+        "intent": "warning",
+        "text": "Requires review"
+      },
+      {
+        "background": "rgb(241, 240, 237)",
+        "color": "rgb(94, 98, 107)",
+        "intent": "neutral",
+        "text": "Live day"
+      },
+      {
+        "background": "rgb(250, 243, 227)",
+        "color": "rgb(128, 91, 21)",
+        "intent": "warning",
+        "text": "Requires review"
+      }
+    ],
+    "width": 390
+  },
+  {
+    "page": "employees",
+    "controls": [
+      {
+        "height": 44,
+        "label": "employee-search",
+        "top": 265.8000183105469
+      },
+      {
+        "height": 44,
+        "label": " Search",
+        "top": 265.8000183105469
+      },
+      {
+        "height": 44,
+        "label": "Department",
+        "top": 353.8000183105469
+      },
+      {
+        "height": 44,
+        "label": "Designation",
+        "top": 353.8000183105469
+      },
+      {
+        "height": 44,
+        "label": "Employment status",
+        "top": 353.8000183105469
+      },
+      {
+        "height": 44,
+        "label": "filter-active",
+        "top": 353.8000183105469
+      }
+    ],
+    "heading": "Employees",
+    "pageWidth": 1920,
+    "statuses": [
+      {
+        "background": "rgb(237, 245, 240)",
+        "color": "rgb(34, 99, 71)",
+        "intent": "success",
+        "text": "Active"
+      },
+      {
+        "background": "rgb(241, 240, 237)",
+        "color": "rgb(94, 98, 107)",
+        "intent": "neutral",
+        "text": "Inactive"
+      }
+    ],
+    "width": 1920
+  },
+  {
+    "page": "employees",
+    "controls": [
+      {
+        "height": 44,
+        "label": "employee-search",
+        "top": 265.8000183105469
+      },
+      {
+        "height": 44,
+        "label": " Search",
+        "top": 265.8000183105469
+      },
+      {
+        "height": 44,
+        "label": "Department",
+        "top": 353.8000183105469
+      },
+      {
+        "height": 44,
+        "label": "Designation",
+        "top": 353.8000183105469
+      },
+      {
+        "height": 44,
+        "label": "Employment status",
+        "top": 353.8000183105469
+      },
+      {
+        "height": 44,
+        "label": "filter-active",
+        "top": 353.8000183105469
+      }
+    ],
+    "heading": "Employees",
+    "pageWidth": 1440,
+    "statuses": [
+      {
+        "background": "rgb(237, 245, 240)",
+        "color": "rgb(34, 99, 71)",
+        "intent": "success",
+        "text": "Active"
+      },
+      {
+        "background": "rgb(241, 240, 237)",
+        "color": "rgb(94, 98, 107)",
+        "intent": "neutral",
+        "text": "Inactive"
+      }
+    ],
+    "width": 1440
+  },
+  {
+    "page": "employees",
+    "controls": [
+      {
+        "height": 44,
+        "label": "employee-search",
+        "top": 265.8000183105469
+      },
+      {
+        "height": 44,
+        "label": " Search",
+        "top": 265.8000183105469
+      },
+      {
+        "height": 44,
+        "label": "Department",
+        "top": 353.8000183105469
+      },
+      {
+        "height": 44,
+        "label": "Designation",
+        "top": 353.8000183105469
+      },
+      {
+        "height": 44,
+        "label": "Employment status",
+        "top": 353.8000183105469
+      },
+      {
+        "height": 44,
+        "label": "filter-active",
+        "top": 353.8000183105469
+      }
+    ],
+    "heading": "Employees",
+    "pageWidth": 1280,
+    "statuses": [
+      {
+        "background": "rgb(237, 245, 240)",
+        "color": "rgb(34, 99, 71)",
+        "intent": "success",
+        "text": "Active"
+      },
+      {
+        "background": "rgb(241, 240, 237)",
+        "color": "rgb(94, 98, 107)",
+        "intent": "neutral",
+        "text": "Inactive"
+      }
+    ],
+    "width": 1280
+  },
+  {
+    "page": "employees",
+    "controls": [
+      {
+        "height": 44,
+        "label": "employee-search",
+        "top": 265.8000183105469
+      },
+      {
+        "height": 44,
+        "label": " Search",
+        "top": 265.8000183105469
+      },
+      {
+        "height": 44,
+        "label": "Department",
+        "top": 353.8000183105469
+      },
+      {
+        "height": 44,
+        "label": "Designation",
+        "top": 353.8000183105469
+      },
+      {
+        "height": 44,
+        "label": "Employment status",
+        "top": 353.8000183105469
+      },
+      {
+        "height": 44,
+        "label": "filter-active",
+        "top": 441.8000183105469
+      }
+    ],
+    "heading": "Employees",
+    "pageWidth": 1009,
+    "statuses": [
+      {
+        "background": "rgb(237, 245, 240)",
+        "color": "rgb(34, 99, 71)",
+        "intent": "success",
+        "text": "Active"
+      },
+      {
+        "background": "rgb(241, 240, 237)",
+        "color": "rgb(94, 98, 107)",
+        "intent": "neutral",
+        "text": "Inactive"
+      }
+    ],
+    "width": 1024
+  },
+  {
+    "page": "employees",
+    "controls": [
+      {
+        "height": 44,
+        "label": "employee-search",
+        "top": 265.8000183105469
+      },
+      {
+        "height": 44,
+        "label": " Search",
+        "top": 265.8000183105469
+      },
+      {
+        "height": 44,
+        "label": "Department",
+        "top": 353.8000183105469
+      },
+      {
+        "height": 44,
+        "label": "Designation",
+        "top": 353.8000183105469
+      },
+      {
+        "height": 44,
+        "label": "Employment status",
+        "top": 353.8000183105469
+      },
+      {
+        "height": 44,
+        "label": "filter-active",
+        "top": 441.8000183105469
+      }
+    ],
+    "heading": "Employees",
+    "pageWidth": 768,
+    "statuses": [
+      {
+        "background": "rgb(237, 245, 240)",
+        "color": "rgb(34, 99, 71)",
+        "intent": "success",
+        "text": "Active"
+      },
+      {
+        "background": "rgb(241, 240, 237)",
+        "color": "rgb(94, 98, 107)",
+        "intent": "neutral",
+        "text": "Inactive"
+      }
+    ],
+    "width": 768
+  },
+  {
+    "page": "employees",
+    "controls": [
+      {
+        "height": 44,
+        "label": "employee-search",
+        "top": 305.3000183105469
+      },
+      {
+        "height": 44,
+        "label": " Search",
+        "top": 305.3000183105469
+      },
+      {
+        "height": 44,
+        "label": "Department",
+        "top": 393.3000183105469
+      },
+      {
+        "height": 44,
+        "label": "Designation",
+        "top": 481.3000183105469
+      },
+      {
+        "height": 44,
+        "label": "Employment status",
+        "top": 569.2999877929688
+      },
+      {
+        "height": 44,
+        "label": "filter-active",
+        "top": 657.2999877929688
+      }
+    ],
+    "heading": "Employees",
+    "pageWidth": 375,
+    "statuses": [
+      {
+        "background": "rgb(237, 245, 240)",
+        "color": "rgb(34, 99, 71)",
+        "intent": "success",
+        "text": "Active"
+      },
+      {
+        "background": "rgb(241, 240, 237)",
+        "color": "rgb(94, 98, 107)",
+        "intent": "neutral",
+        "text": "Inactive"
+      }
+    ],
+    "width": 390
+  },
+  {
+    "page": "employee360",
+    "controls": [],
+    "heading": "Employee 360",
+    "pageWidth": 1920,
+    "statuses": [
+      {
+        "background": "rgb(237, 245, 240)",
+        "color": "rgb(34, 99, 71)",
+        "intent": "success",
+        "text": "Record active"
+      }
+    ],
+    "width": 1920
+  },
+  {
+    "page": "employee360",
+    "controls": [],
+    "heading": "Employee 360",
+    "pageWidth": 1440,
+    "statuses": [
+      {
+        "background": "rgb(237, 245, 240)",
+        "color": "rgb(34, 99, 71)",
+        "intent": "success",
+        "text": "Record active"
+      }
+    ],
+    "width": 1440
+  },
+  {
+    "page": "employee360",
+    "controls": [],
+    "heading": "Employee 360",
+    "pageWidth": 1280,
+    "statuses": [
+      {
+        "background": "rgb(237, 245, 240)",
+        "color": "rgb(34, 99, 71)",
+        "intent": "success",
+        "text": "Record active"
+      }
+    ],
+    "width": 1280
+  },
+  {
+    "page": "employee360",
+    "controls": [],
+    "heading": "Employee 360",
+    "pageWidth": 1009,
+    "statuses": [
+      {
+        "background": "rgb(237, 245, 240)",
+        "color": "rgb(34, 99, 71)",
+        "intent": "success",
+        "text": "Record active"
+      }
+    ],
+    "width": 1024
+  },
+  {
+    "page": "employee360",
+    "controls": [],
+    "heading": "Employee 360",
+    "pageWidth": 768,
+    "statuses": [
+      {
+        "background": "rgb(237, 245, 240)",
+        "color": "rgb(34, 99, 71)",
+        "intent": "success",
+        "text": "Record active"
+      }
+    ],
+    "width": 768
+  },
+  {
+    "page": "employee360",
+    "controls": [],
+    "heading": "Employee 360",
+    "pageWidth": 375,
+    "statuses": [
+      {
+        "background": "rgb(237, 245, 240)",
+        "color": "rgb(34, 99, 71)",
+        "intent": "success",
+        "text": "Record active"
+      }
+    ],
+    "width": 390
+  },
+  {
+    "page": "employment-lifecycle",
+    "controls": [],
+    "heading": "Employment change",
+    "pageWidth": 1920,
+    "statuses": [],
+    "width": 1920
+  },
+  {
+    "page": "employment-lifecycle",
+    "controls": [],
+    "heading": "Employment change",
+    "pageWidth": 1425,
+    "statuses": [],
+    "width": 1440
+  },
+  {
+    "page": "employment-lifecycle",
+    "controls": [],
+    "heading": "Employment change",
+    "pageWidth": 1265,
+    "statuses": [],
+    "width": 1280
+  },
+  {
+    "page": "employment-lifecycle",
+    "controls": [],
+    "heading": "Employment change",
+    "pageWidth": 1009,
+    "statuses": [],
+    "width": 1024
+  },
+  {
+    "page": "employment-lifecycle",
+    "controls": [],
+    "heading": "Employment change",
+    "pageWidth": 753,
+    "statuses": [],
+    "width": 768
+  },
+  {
+    "page": "employment-lifecycle",
+    "controls": [],
+    "heading": "Employment change",
+    "pageWidth": 375,
+    "statuses": [],
+    "width": 390
+  },
+  {
+    "page": "user-accounts",
+    "controls": [],
+    "heading": "User Accounts",
+    "pageWidth": 1920,
+    "statuses": [
+      {
+        "background": "rgb(241, 240, 237)",
+        "color": "rgb(94, 98, 107)",
+        "intent": "neutral",
+        "text": "SystemAdmin"
+      },
+      {
+        "background": "rgb(237, 245, 240)",
+        "color": "rgb(34, 99, 71)",
+        "intent": "success",
+        "text": "Active"
+      },
+      {
+        "background": "rgb(241, 240, 237)",
+        "color": "rgb(94, 98, 107)",
+        "intent": "neutral",
+        "text": "HRAdmin"
+      },
+      {
+        "background": "rgb(237, 245, 240)",
+        "color": "rgb(34, 99, 71)",
+        "intent": "success",
+        "text": "Active"
+      },
+      {
+        "background": "rgb(241, 240, 237)",
+        "color": "rgb(94, 98, 107)",
+        "intent": "neutral",
+        "text": "Employee"
+      },
+      {
+        "background": "rgb(237, 245, 240)",
+        "color": "rgb(34, 99, 71)",
+        "intent": "success",
+        "text": "Active"
+      },
+      {
+        "background": "rgb(241, 240, 237)",
+        "color": "rgb(94, 98, 107)",
+        "intent": "neutral",
+        "text": "HRAdmin"
+      },
+      {
+        "background": "rgb(237, 245, 240)",
+        "color": "rgb(34, 99, 71)",
+        "intent": "success",
+        "text": "Active"
+      },
+      {
+        "background": "rgb(241, 240, 237)",
+        "color": "rgb(94, 98, 107)",
+        "intent": "neutral",
+        "text": "Management"
+      },
+      {
+        "background": "rgb(237, 245, 240)",
+        "color": "rgb(34, 99, 71)",
+        "intent": "success",
+        "text": "Active"
+      },
+      {
+        "background": "rgb(241, 240, 237)",
+        "color": "rgb(94, 98, 107)",
+        "intent": "neutral",
+        "text": "PayrollAdmin"
+      },
+      {
+        "background": "rgb(237, 245, 240)",
+        "color": "rgb(34, 99, 71)",
+        "intent": "success",
+        "text": "Active"
+      },
+      {
+        "background": "rgb(241, 240, 237)",
+        "color": "rgb(94, 98, 107)",
+        "intent": "neutral",
+        "text": "SystemAdmin"
+      },
+      {
+        "background": "rgb(237, 245, 240)",
+        "color": "rgb(34, 99, 71)",
+        "intent": "success",
+        "text": "Active"
+      },
+      {
+        "background": "rgb(241, 240, 237)",
+        "color": "rgb(94, 98, 107)",
+        "intent": "neutral",
+        "text": "SystemAdmin"
+      },
+      {
+        "background": "rgb(241, 240, 237)",
+        "color": "rgb(94, 98, 107)",
+        "intent": "neutral",
+        "text": "HRAdmin"
+      },
+      {
+        "background": "rgb(237, 245, 240)",
+        "color": "rgb(34, 99, 71)",
+        "intent": "success",
+        "text": "Active"
+      }
+    ],
+    "width": 1920
+  },
+  {
+    "page": "user-accounts",
+    "controls": [],
+    "heading": "User Accounts",
+    "pageWidth": 1440,
+    "statuses": [
+      {
+        "background": "rgb(241, 240, 237)",
+        "color": "rgb(94, 98, 107)",
+        "intent": "neutral",
+        "text": "SystemAdmin"
+      },
+      {
+        "background": "rgb(237, 245, 240)",
+        "color": "rgb(34, 99, 71)",
+        "intent": "success",
+        "text": "Active"
+      },
+      {
+        "background": "rgb(241, 240, 237)",
+        "color": "rgb(94, 98, 107)",
+        "intent": "neutral",
+        "text": "HRAdmin"
+      },
+      {
+        "background": "rgb(237, 245, 240)",
+        "color": "rgb(34, 99, 71)",
+        "intent": "success",
+        "text": "Active"
+      },
+      {
+        "background": "rgb(241, 240, 237)",
+        "color": "rgb(94, 98, 107)",
+        "intent": "neutral",
+        "text": "Employee"
+      },
+      {
+        "background": "rgb(237, 245, 240)",
+        "color": "rgb(34, 99, 71)",
+        "intent": "success",
+        "text": "Active"
+      },
+      {
+        "background": "rgb(241, 240, 237)",
+        "color": "rgb(94, 98, 107)",
+        "intent": "neutral",
+        "text": "HRAdmin"
+      },
+      {
+        "background": "rgb(237, 245, 240)",
+        "color": "rgb(34, 99, 71)",
+        "intent": "success",
+        "text": "Active"
+      },
+      {
+        "background": "rgb(241, 240, 237)",
+        "color": "rgb(94, 98, 107)",
+        "intent": "neutral",
+        "text": "Management"
+      },
+      {
+        "background": "rgb(237, 245, 240)",
+        "color": "rgb(34, 99, 71)",
+        "intent": "success",
+        "text": "Active"
+      },
+      {
+        "background": "rgb(241, 240, 237)",
+        "color": "rgb(94, 98, 107)",
+        "intent": "neutral",
+        "text": "PayrollAdmin"
+      },
+      {
+        "background": "rgb(237, 245, 240)",
+        "color": "rgb(34, 99, 71)",
+        "intent": "success",
+        "text": "Active"
+      },
+      {
+        "background": "rgb(241, 240, 237)",
+        "color": "rgb(94, 98, 107)",
+        "intent": "neutral",
+        "text": "SystemAdmin"
+      },
+      {
+        "background": "rgb(237, 245, 240)",
+        "color": "rgb(34, 99, 71)",
+        "intent": "success",
+        "text": "Active"
+      },
+      {
+        "background": "rgb(241, 240, 237)",
+        "color": "rgb(94, 98, 107)",
+        "intent": "neutral",
+        "text": "SystemAdmin"
+      },
+      {
+        "background": "rgb(241, 240, 237)",
+        "color": "rgb(94, 98, 107)",
+        "intent": "neutral",
+        "text": "HRAdmin"
+      },
+      {
+        "background": "rgb(237, 245, 240)",
+        "color": "rgb(34, 99, 71)",
+        "intent": "success",
+        "text": "Active"
+      }
+    ],
+    "width": 1440
+  },
+  {
+    "page": "user-accounts",
+    "controls": [],
+    "heading": "User Accounts",
+    "pageWidth": 1280,
+    "statuses": [
+      {
+        "background": "rgb(241, 240, 237)",
+        "color": "rgb(94, 98, 107)",
+        "intent": "neutral",
+        "text": "SystemAdmin"
+      },
+      {
+        "background": "rgb(237, 245, 240)",
+        "color": "rgb(34, 99, 71)",
+        "intent": "success",
+        "text": "Active"
+      },
+      {
+        "background": "rgb(241, 240, 237)",
+        "color": "rgb(94, 98, 107)",
+        "intent": "neutral",
+        "text": "HRAdmin"
+      },
+      {
+        "background": "rgb(237, 245, 240)",
+        "color": "rgb(34, 99, 71)",
+        "intent": "success",
+        "text": "Active"
+      },
+      {
+        "background": "rgb(241, 240, 237)",
+        "color": "rgb(94, 98, 107)",
+        "intent": "neutral",
+        "text": "Employee"
+      },
+      {
+        "background": "rgb(237, 245, 240)",
+        "color": "rgb(34, 99, 71)",
+        "intent": "success",
+        "text": "Active"
+      },
+      {
+        "background": "rgb(241, 240, 237)",
+        "color": "rgb(94, 98, 107)",
+        "intent": "neutral",
+        "text": "HRAdmin"
+      },
+      {
+        "background": "rgb(237, 245, 240)",
+        "color": "rgb(34, 99, 71)",
+        "intent": "success",
+        "text": "Active"
+      },
+      {
+        "background": "rgb(241, 240, 237)",
+        "color": "rgb(94, 98, 107)",
+        "intent": "neutral",
+        "text": "Management"
+      },
+      {
+        "background": "rgb(237, 245, 240)",
+        "color": "rgb(34, 99, 71)",
+        "intent": "success",
+        "text": "Active"
+      },
+      {
+        "background": "rgb(241, 240, 237)",
+        "color": "rgb(94, 98, 107)",
+        "intent": "neutral",
+        "text": "PayrollAdmin"
+      },
+      {
+        "background": "rgb(237, 245, 240)",
+        "color": "rgb(34, 99, 71)",
+        "intent": "success",
+        "text": "Active"
+      },
+      {
+        "background": "rgb(241, 240, 237)",
+        "color": "rgb(94, 98, 107)",
+        "intent": "neutral",
+        "text": "SystemAdmin"
+      },
+      {
+        "background": "rgb(237, 245, 240)",
+        "color": "rgb(34, 99, 71)",
+        "intent": "success",
+        "text": "Active"
+      },
+      {
+        "background": "rgb(241, 240, 237)",
+        "color": "rgb(94, 98, 107)",
+        "intent": "neutral",
+        "text": "SystemAdmin"
+      },
+      {
+        "background": "rgb(241, 240, 237)",
+        "color": "rgb(94, 98, 107)",
+        "intent": "neutral",
+        "text": "HRAdmin"
+      },
+      {
+        "background": "rgb(237, 245, 240)",
+        "color": "rgb(34, 99, 71)",
+        "intent": "success",
+        "text": "Active"
+      }
+    ],
+    "width": 1280
+  },
+  {
+    "page": "user-accounts",
+    "controls": [],
+    "heading": "User Accounts",
+    "pageWidth": 1009,
+    "statuses": [
+      {
+        "background": "rgb(241, 240, 237)",
+        "color": "rgb(94, 98, 107)",
+        "intent": "neutral",
+        "text": "SystemAdmin"
+      },
+      {
+        "background": "rgb(237, 245, 240)",
+        "color": "rgb(34, 99, 71)",
+        "intent": "success",
+        "text": "Active"
+      },
+      {
+        "background": "rgb(241, 240, 237)",
+        "color": "rgb(94, 98, 107)",
+        "intent": "neutral",
+        "text": "HRAdmin"
+      },
+      {
+        "background": "rgb(237, 245, 240)",
+        "color": "rgb(34, 99, 71)",
+        "intent": "success",
+        "text": "Active"
+      },
+      {
+        "background": "rgb(241, 240, 237)",
+        "color": "rgb(94, 98, 107)",
+        "intent": "neutral",
+        "text": "Employee"
+      },
+      {
+        "background": "rgb(237, 245, 240)",
+        "color": "rgb(34, 99, 71)",
+        "intent": "success",
+        "text": "Active"
+      },
+      {
+        "background": "rgb(241, 240, 237)",
+        "color": "rgb(94, 98, 107)",
+        "intent": "neutral",
+        "text": "HRAdmin"
+      },
+      {
+        "background": "rgb(237, 245, 240)",
+        "color": "rgb(34, 99, 71)",
+        "intent": "success",
+        "text": "Active"
+      },
+      {
+        "background": "rgb(241, 240, 237)",
+        "color": "rgb(94, 98, 107)",
+        "intent": "neutral",
+        "text": "Management"
+      },
+      {
+        "background": "rgb(237, 245, 240)",
+        "color": "rgb(34, 99, 71)",
+        "intent": "success",
+        "text": "Active"
+      },
+      {
+        "background": "rgb(241, 240, 237)",
+        "color": "rgb(94, 98, 107)",
+        "intent": "neutral",
+        "text": "PayrollAdmin"
+      },
+      {
+        "background": "rgb(237, 245, 240)",
+        "color": "rgb(34, 99, 71)",
+        "intent": "success",
+        "text": "Active"
+      },
+      {
+        "background": "rgb(241, 240, 237)",
+        "color": "rgb(94, 98, 107)",
+        "intent": "neutral",
+        "text": "SystemAdmin"
+      },
+      {
+        "background": "rgb(237, 245, 240)",
+        "color": "rgb(34, 99, 71)",
+        "intent": "success",
+        "text": "Active"
+      },
+      {
+        "background": "rgb(241, 240, 237)",
+        "color": "rgb(94, 98, 107)",
+        "intent": "neutral",
+        "text": "SystemAdmin"
+      },
+      {
+        "background": "rgb(241, 240, 237)",
+        "color": "rgb(94, 98, 107)",
+        "intent": "neutral",
+        "text": "HRAdmin"
+      },
+      {
+        "background": "rgb(237, 245, 240)",
+        "color": "rgb(34, 99, 71)",
+        "intent": "success",
+        "text": "Active"
+      }
+    ],
+    "width": 1024
+  },
+  {
+    "page": "user-accounts",
+    "controls": [],
+    "heading": "User Accounts",
+    "pageWidth": 768,
+    "statuses": [
+      {
+        "background": "rgb(241, 240, 237)",
+        "color": "rgb(94, 98, 107)",
+        "intent": "neutral",
+        "text": "SystemAdmin"
+      },
+      {
+        "background": "rgb(237, 245, 240)",
+        "color": "rgb(34, 99, 71)",
+        "intent": "success",
+        "text": "Active"
+      },
+      {
+        "background": "rgb(241, 240, 237)",
+        "color": "rgb(94, 98, 107)",
+        "intent": "neutral",
+        "text": "HRAdmin"
+      },
+      {
+        "background": "rgb(237, 245, 240)",
+        "color": "rgb(34, 99, 71)",
+        "intent": "success",
+        "text": "Active"
+      },
+      {
+        "background": "rgb(241, 240, 237)",
+        "color": "rgb(94, 98, 107)",
+        "intent": "neutral",
+        "text": "Employee"
+      },
+      {
+        "background": "rgb(237, 245, 240)",
+        "color": "rgb(34, 99, 71)",
+        "intent": "success",
+        "text": "Active"
+      },
+      {
+        "background": "rgb(241, 240, 237)",
+        "color": "rgb(94, 98, 107)",
+        "intent": "neutral",
+        "text": "HRAdmin"
+      },
+      {
+        "background": "rgb(237, 245, 240)",
+        "color": "rgb(34, 99, 71)",
+        "intent": "success",
+        "text": "Active"
+      },
+      {
+        "background": "rgb(241, 240, 237)",
+        "color": "rgb(94, 98, 107)",
+        "intent": "neutral",
+        "text": "Management"
+      },
+      {
+        "background": "rgb(237, 245, 240)",
+        "color": "rgb(34, 99, 71)",
+        "intent": "success",
+        "text": "Active"
+      },
+      {
+        "background": "rgb(241, 240, 237)",
+        "color": "rgb(94, 98, 107)",
+        "intent": "neutral",
+        "text": "PayrollAdmin"
+      },
+      {
+        "background": "rgb(237, 245, 240)",
+        "color": "rgb(34, 99, 71)",
+        "intent": "success",
+        "text": "Active"
+      },
+      {
+        "background": "rgb(241, 240, 237)",
+        "color": "rgb(94, 98, 107)",
+        "intent": "neutral",
+        "text": "SystemAdmin"
+      },
+      {
+        "background": "rgb(237, 245, 240)",
+        "color": "rgb(34, 99, 71)",
+        "intent": "success",
+        "text": "Active"
+      },
+      {
+        "background": "rgb(241, 240, 237)",
+        "color": "rgb(94, 98, 107)",
+        "intent": "neutral",
+        "text": "SystemAdmin"
+      },
+      {
+        "background": "rgb(241, 240, 237)",
+        "color": "rgb(94, 98, 107)",
+        "intent": "neutral",
+        "text": "HRAdmin"
+      },
+      {
+        "background": "rgb(237, 245, 240)",
+        "color": "rgb(34, 99, 71)",
+        "intent": "success",
+        "text": "Active"
+      }
+    ],
+    "width": 768
+  },
+  {
+    "page": "user-accounts",
+    "controls": [],
+    "heading": "User Accounts",
+    "pageWidth": 375,
+    "statuses": [
+      {
+        "background": "rgb(241, 240, 237)",
+        "color": "rgb(94, 98, 107)",
+        "intent": "neutral",
+        "text": "SystemAdmin"
+      },
+      {
+        "background": "rgb(237, 245, 240)",
+        "color": "rgb(34, 99, 71)",
+        "intent": "success",
+        "text": "Active"
+      },
+      {
+        "background": "rgb(241, 240, 237)",
+        "color": "rgb(94, 98, 107)",
+        "intent": "neutral",
+        "text": "HRAdmin"
+      },
+      {
+        "background": "rgb(237, 245, 240)",
+        "color": "rgb(34, 99, 71)",
+        "intent": "success",
+        "text": "Active"
+      },
+      {
+        "background": "rgb(241, 240, 237)",
+        "color": "rgb(94, 98, 107)",
+        "intent": "neutral",
+        "text": "Employee"
+      },
+      {
+        "background": "rgb(237, 245, 240)",
+        "color": "rgb(34, 99, 71)",
+        "intent": "success",
+        "text": "Active"
+      },
+      {
+        "background": "rgb(241, 240, 237)",
+        "color": "rgb(94, 98, 107)",
+        "intent": "neutral",
+        "text": "HRAdmin"
+      },
+      {
+        "background": "rgb(237, 245, 240)",
+        "color": "rgb(34, 99, 71)",
+        "intent": "success",
+        "text": "Active"
+      },
+      {
+        "background": "rgb(241, 240, 237)",
+        "color": "rgb(94, 98, 107)",
+        "intent": "neutral",
+        "text": "Management"
+      },
+      {
+        "background": "rgb(237, 245, 240)",
+        "color": "rgb(34, 99, 71)",
+        "intent": "success",
+        "text": "Active"
+      },
+      {
+        "background": "rgb(241, 240, 237)",
+        "color": "rgb(94, 98, 107)",
+        "intent": "neutral",
+        "text": "PayrollAdmin"
+      },
+      {
+        "background": "rgb(237, 245, 240)",
+        "color": "rgb(34, 99, 71)",
+        "intent": "success",
+        "text": "Active"
+      },
+      {
+        "background": "rgb(241, 240, 237)",
+        "color": "rgb(94, 98, 107)",
+        "intent": "neutral",
+        "text": "SystemAdmin"
+      },
+      {
+        "background": "rgb(237, 245, 240)",
+        "color": "rgb(34, 99, 71)",
+        "intent": "success",
+        "text": "Active"
+      },
+      {
+        "background": "rgb(241, 240, 237)",
+        "color": "rgb(94, 98, 107)",
+        "intent": "neutral",
+        "text": "SystemAdmin"
+      },
+      {
+        "background": "rgb(241, 240, 237)",
+        "color": "rgb(94, 98, 107)",
+        "intent": "neutral",
+        "text": "HRAdmin"
+      },
+      {
+        "background": "rgb(237, 245, 240)",
+        "color": "rgb(34, 99, 71)",
+        "intent": "success",
+        "text": "Active"
+      }
+    ],
+    "width": 390
+  },
+  {
+    "page": "hr-dashboard",
+    "controls": [],
+    "heading": "HR Dashboard",
+    "pageWidth": 1920,
+    "statuses": [],
+    "width": 1920
+  },
+  {
+    "page": "hr-dashboard",
+    "controls": [],
+    "heading": "HR Dashboard",
+    "pageWidth": 1425,
+    "statuses": [],
+    "width": 1440
+  },
+  {
+    "page": "hr-dashboard",
+    "controls": [],
+    "heading": "HR Dashboard",
+    "pageWidth": 1265,
+    "statuses": [],
+    "width": 1280
+  },
+  {
+    "page": "hr-dashboard",
+    "controls": [],
+    "heading": "HR Dashboard",
+    "pageWidth": 1009,
+    "statuses": [],
+    "width": 1024
+  },
+  {
+    "page": "hr-dashboard",
+    "controls": [],
+    "heading": "HR Dashboard",
+    "pageWidth": 753,
+    "statuses": [],
+    "width": 768
+  },
+  {
+    "page": "hr-dashboard",
+    "controls": [],
+    "heading": "HR Dashboard",
+    "pageWidth": 375,
+    "statuses": [],
+    "width": 390
+  },
+  {
+    "page": "attendance-review",
+    "controls": [],
+    "essentialVisible": [
+      "Day review\nNot finalized\nEmployee ID\n8422a4e8-faa7-480c-a1ae-4b3347378c34\nBusiness date\n2026-10-09\nBusiness time zone\nAsia/Bangkok\nReview case\nNo review case\nLatest historical revision\nNone\nAbsence confirmed\nNo\nAvailable evidence events\n0\nValidation and reopening\nCurrently validated\nNo\nStale sources\nNo\nExplicit reopening required\nNo\nReopened\nNo",
+      "Review actions\nRefresh review\n\nInspect the calculation and evidence below, then record a reasoned decision. Only permitted actions are shown.\n\nEvidence & decisions\nRecord manual evidence\nAdd correction evidence\nInclude / exclude evidence\nConfirm potential absence\nFinalize or reopen\n\nFinalization freezes a revision. The server checks coverage and unresolved findings.\n\nFinalize day\nFinalization safeguards\n\nFinalization eligibility is validated by the backend: resolved blocking findings, authoritative coverage and explicit confirmation of an unambiguous potential absence where applicable. No force-finalize or bulk period finalization is supported. New manual observations may make a historical revision stale; they never rewrite it."
+    ],
+    "heading": "Attendance Management",
+    "pageWidth": 1905,
+    "width": 1920
+  },
+  {
+    "page": "attendance-review",
+    "controls": [],
+    "essentialVisible": [
+      "Day review\nNot finalized\nEmployee ID\n8422a4e8-faa7-480c-a1ae-4b3347378c34\nBusiness date\n2026-10-09\nBusiness time zone\nAsia/Bangkok\nReview case\nNo review case\nLatest historical revision\nNone\nAbsence confirmed\nNo\nAvailable evidence events\n0\nValidation and reopening\nCurrently validated\nNo\nStale sources\nNo\nExplicit reopening required\nNo\nReopened\nNo",
+      "Review actions\nRefresh review\n\nInspect the calculation and evidence below, then record a reasoned decision. Only permitted actions are shown.\n\nEvidence & decisions\nRecord manual evidence\nAdd correction evidence\nInclude / exclude evidence\nConfirm potential absence\nFinalize or reopen\n\nFinalization freezes a revision. The server checks coverage and unresolved findings.\n\nFinalize day\nFinalization safeguards\n\nFinalization eligibility is validated by the backend: resolved blocking findings, authoritative coverage and explicit confirmation of an unambiguous potential absence where applicable. No force-finalize or bulk period finalization is supported. New manual observations may make a historical revision stale; they never rewrite it."
+    ],
+    "heading": "Attendance Management",
+    "pageWidth": 1425,
+    "width": 1440
+  },
+  {
+    "page": "attendance-review",
+    "controls": [],
+    "essentialVisible": [
+      "Day review\nNot finalized\nEmployee ID\n8422a4e8-faa7-480c-a1ae-4b3347378c34\nBusiness date\n2026-10-09\nBusiness time zone\nAsia/Bangkok\nReview case\nNo review case\nLatest historical revision\nNone\nAbsence confirmed\nNo\nAvailable evidence events\n0\nValidation and reopening\nCurrently validated\nNo\nStale sources\nNo\nExplicit reopening required\nNo\nReopened\nNo",
+      "Review actions\nRefresh review\n\nInspect the calculation and evidence below, then record a reasoned decision. Only permitted actions are shown.\n\nEvidence & decisions\nRecord manual evidence\nAdd correction evidence\nInclude / exclude evidence\nConfirm potential absence\nFinalize or reopen\n\nFinalization freezes a revision. The server checks coverage and unresolved findings.\n\nFinalize day\nFinalization safeguards\n\nFinalization eligibility is validated by the backend: resolved blocking findings, authoritative coverage and explicit confirmation of an unambiguous potential absence where applicable. No force-finalize or bulk period finalization is supported. New manual observations may make a historical revision stale; they never rewrite it."
+    ],
+    "heading": "Attendance Management",
+    "pageWidth": 1265,
+    "width": 1280
+  },
+  {
+    "page": "attendance-review",
+    "controls": [],
+    "essentialVisible": [
+      "Day review\nNot finalized\nEmployee ID\n8422a4e8-faa7-480c-a1ae-4b3347378c34\nBusiness date\n2026-10-09\nBusiness time zone\nAsia/Bangkok\nReview case\nNo review case\nLatest historical revision\nNone\nAbsence confirmed\nNo\nAvailable evidence events\n0\nValidation and reopening\nCurrently validated\nNo\nStale sources\nNo\nExplicit reopening required\nNo\nReopened\nNo",
+      "Review actions\nRefresh review\n\nInspect the calculation and evidence below, then record a reasoned decision. Only permitted actions are shown.\n\nEvidence & decisions\nRecord manual evidence\nAdd correction evidence\nInclude / exclude evidence\nConfirm potential absence\nFinalize or reopen\n\nFinalization freezes a revision. The server checks coverage and unresolved findings.\n\nFinalize day\nFinalization safeguards\n\nFinalization eligibility is validated by the backend: resolved blocking findings, authoritative coverage and explicit confirmation of an unambiguous potential absence where applicable. No force-finalize or bulk period finalization is supported. New manual observations may make a historical revision stale; they never rewrite it."
+    ],
+    "heading": "Attendance Management",
+    "pageWidth": 1009,
+    "width": 1024
+  },
+  {
+    "page": "attendance-review",
+    "controls": [],
+    "essentialVisible": [
+      "Day review\nNot finalized\nEmployee ID\n8422a4e8-faa7-480c-a1ae-4b3347378c34\nBusiness date\n2026-10-09\nBusiness time zone\nAsia/Bangkok\nReview case\nNo review case\nLatest historical revision\nNone\nAbsence confirmed\nNo\nAvailable evidence events\n0\nValidation and reopening\nCurrently validated\nNo\nStale sources\nNo\nExplicit reopening required\nNo\nReopened\nNo",
+      "Review actions\nRefresh review\n\nInspect the calculation and evidence below, then record a reasoned decision. Only permitted actions are shown.\n\nEvidence & decisions\nRecord manual evidence\nAdd correction evidence\nInclude / exclude evidence\nConfirm potential absence\nFinalize or reopen\n\nFinalization freezes a revision. The server checks coverage and unresolved findings.\n\nFinalize day\nFinalization safeguards\n\nFinalization eligibility is validated by the backend: resolved blocking findings, authoritative coverage and explicit confirmation of an unambiguous potential absence where applicable. No force-finalize or bulk period finalization is supported. New manual observations may make a historical revision stale; they never rewrite it."
+    ],
+    "heading": "Attendance Management",
+    "pageWidth": 753,
+    "width": 768
+  },
+  {
+    "page": "attendance-review",
+    "controls": [],
+    "essentialVisible": [
+      "Day review\nNot finalized\nEmployee ID\n8422a4e8-faa7-480c-a1ae-4b3347378c34\nBusiness date\n2026-10-09\nBusiness time zone\nAsia/Bangkok\nReview case\nNo review case\nLatest historical revision\nNone\nAbsence confirmed\nNo\nAvailable evidence events\n0\nValidation and reopening\nCurrently validated\nNo\nStale sources\nNo\nExplicit reopening required\nNo\nReopened\nNo",
+      "Review actions\nRefresh review\n\nInspect the calculation and evidence below, then record a reasoned decision. Only permitted actions are shown.\n\nEvidence & decisions\nRecord manual evidence\nAdd correction evidence\nInclude / exclude evidence\nConfirm potential absence\nFinalize or reopen\n\nFinalization freezes a revision. The server checks coverage and unresolved findings.\n\nFinalize day\nFinalization safeguards\n\nFinalization eligibility is validated by the backend: resolved blocking findings, authoritative coverage and explicit confirmation of an unambiguous potential absence where applicable. No force-finalize or bulk period finalization is supported. New manual observations may make a historical revision stale; they never rewrite it."
+    ],
+    "heading": "Attendance Management",
+    "pageWidth": 375,
+    "width": 390
+  }
+]

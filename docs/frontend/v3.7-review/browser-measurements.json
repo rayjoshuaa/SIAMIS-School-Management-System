@@ -1,0 +1,356 @@
+[
+  {
+    "screen": "correction-after",
+    "width": 1920,
+    "height": 1080,
+    "dialogs": [
+      {
+        "bodyHeight": 435,
+        "bodyScroll": 435,
+        "height": 678.6000366210938,
+        "width": 512
+      }
+    ],
+    "focused": "Cancel",
+    "pageWidth": 1920,
+    "viewportWidth": 1920
+  },
+  {
+    "screen": "correction-after",
+    "width": 1440,
+    "height": 900,
+    "dialogs": [
+      {
+        "bodyHeight": 435,
+        "bodyScroll": 435,
+        "height": 678.6000366210938,
+        "width": 512
+      }
+    ],
+    "focused": "Cancel",
+    "pageWidth": 1440,
+    "viewportWidth": 1440
+  },
+  {
+    "screen": "correction-after",
+    "width": 1280,
+    "height": 800,
+    "dialogs": [
+      {
+        "bodyHeight": 435,
+        "bodyScroll": 435,
+        "height": 678.6000366210938,
+        "width": 512
+      }
+    ],
+    "focused": "Cancel",
+    "pageWidth": 1280,
+    "viewportWidth": 1280
+  },
+  {
+    "screen": "correction-after",
+    "width": 1024,
+    "height": 768,
+    "dialogs": [
+      {
+        "bodyHeight": 435,
+        "bodyScroll": 435,
+        "height": 678.6000366210938,
+        "width": 512
+      }
+    ],
+    "focused": "Cancel",
+    "pageWidth": 1024,
+    "viewportWidth": 1024
+  },
+  {
+    "screen": "correction-after",
+    "width": 768,
+    "height": 1024,
+    "dialogs": [
+      {
+        "bodyHeight": 435,
+        "bodyScroll": 435,
+        "height": 678.6000366210938,
+        "width": 512
+      }
+    ],
+    "focused": "Cancel",
+    "pageWidth": 768,
+    "viewportWidth": 768
+  },
+  {
+    "screen": "correction-after",
+    "width": 390,
+    "height": 844,
+    "dialogs": [
+      {
+        "bodyHeight": 459,
+        "bodyScroll": 459,
+        "height": 726.1000366210938,
+        "width": 358.3999938964844
+      }
+    ],
+    "focused": "Cancel",
+    "pageWidth": 390,
+    "viewportWidth": 390
+  },
+  {
+    "screen": "review-after",
+    "width": 1920,
+    "height": 1080,
+    "dialogs": [],
+    "focused": "Attendance workspace",
+    "pageWidth": 1905,
+    "viewportWidth": 1920
+  },
+  {
+    "screen": "review-after",
+    "width": 1440,
+    "height": 900,
+    "dialogs": [],
+    "focused": "Attendance workspace",
+    "pageWidth": 1425,
+    "viewportWidth": 1440
+  },
+  {
+    "screen": "review-after",
+    "width": 1280,
+    "height": 800,
+    "dialogs": [],
+    "focused": "Attendance workspace",
+    "pageWidth": 1265,
+    "viewportWidth": 1280
+  },
+  {
+    "screen": "review-after",
+    "width": 1024,
+    "height": 768,
+    "dialogs": [],
+    "focused": "Attendance workspace",
+    "pageWidth": 1009,
+    "viewportWidth": 1024
+  },
+  {
+    "screen": "review-after",
+    "width": 768,
+    "height": 1024,
+    "dialogs": [],
+    "focused": "Attendance workspace",
+    "pageWidth": 753,
+    "viewportWidth": 768
+  },
+  {
+    "screen": "review-after",
+    "width": 390,
+    "height": 844,
+    "dialogs": [],
+    "focused": "Attendance workspace",
+    "pageWidth": 375,
+    "viewportWidth": 390
+  },
+  {
+    "screen": "workspace-after",
+    "width": 1920,
+    "height": 1080,
+    "dialogs": [],
+    "focused": "\n    Skip to contentSIAMISSiam International SchoolHuman ResourcesDestinationsOverviewEmployeesAtten",
+    "pageWidth": 1920,
+    "viewportWidth": 1920
+  },
+  {
+    "screen": "workspace-after",
+    "width": 1440,
+    "height": 900,
+    "dialogs": [],
+    "focused": "\n    Skip to contentSIAMISSiam International SchoolHuman ResourcesDestinationsOverviewEmployeesAtten",
+    "pageWidth": 1425,
+    "viewportWidth": 1440
+  },
+  {
+    "screen": "workspace-after",
+    "width": 1280,
+    "height": 800,
+    "dialogs": [],
+    "focused": "\n    Skip to contentSIAMISSiam International SchoolHuman ResourcesDestinationsOverviewEmployeesAtten",
+    "pageWidth": 1265,
+    "viewportWidth": 1280
+  },
+  {
+    "screen": "workspace-after",
+    "width": 1024,
+    "height": 768,
+    "dialogs": [],
+    "focused": "\n    Skip to contentSIAMISSiam International SchoolHuman ResourcesDestinationsOverviewEmployeesAtten",
+    "pageWidth": 1009,
+    "viewportWidth": 1024
+  },
+  {
+    "screen": "workspace-after",
+    "width": 768,
+    "height": 1024,
+    "dialogs": [],
+    "focused": "\n    Skip to contentSIAMISSiam International SchoolHuman ResourcesDestinationsOverviewEmployeesAtten",
+    "pageWidth": 753,
+    "viewportWidth": 768
+  },
+  {
+    "screen": "workspace-after",
+    "width": 390,
+    "height": 844,
+    "dialogs": [],
+    "focused": "\n    Skip to contentSIAMISSiam International SchoolHuman ResourcesDestinationsOverviewEmployeesAtten",
+    "pageWidth": 375,
+    "viewportWidth": 390
+  },
+  {
+    "screen": "inspection-after",
+    "width": 1920,
+    "height": 1080,
+    "dialogs": [
+      {
+        "bodyHeight": 905,
+        "bodyScroll": 924,
+        "height": 1080,
+        "width": 640
+      }
+    ],
+    "focused": "Close",
+    "pageWidth": 1920,
+    "viewportWidth": 1920
+  },
+  {
+    "screen": "inspection-after",
+    "width": 1440,
+    "height": 900,
+    "dialogs": [
+      {
+        "bodyHeight": 725,
+        "bodyScroll": 924,
+        "height": 900,
+        "width": 640
+      }
+    ],
+    "focused": "Close",
+    "pageWidth": 1440,
+    "viewportWidth": 1440
+  },
+  {
+    "screen": "inspection-after",
+    "width": 1280,
+    "height": 800,
+    "dialogs": [
+      {
+        "bodyHeight": 625,
+        "bodyScroll": 924,
+        "height": 800,
+        "width": 640
+      }
+    ],
+    "focused": "Close",
+    "pageWidth": 1280,
+    "viewportWidth": 1280
+  },
+  {
+    "screen": "inspection-after",
+    "width": 1024,
+    "height": 768,
+    "dialogs": [
+      {
+        "bodyHeight": 593,
+        "bodyScroll": 924,
+        "height": 768,
+        "width": 640
+      }
+    ],
+    "focused": "Close",
+    "pageWidth": 1024,
+    "viewportWidth": 1024
+  },
+  {
+    "screen": "inspection-after",
+    "width": 768,
+    "height": 1024,
+    "dialogs": [
+      {
+        "bodyHeight": 849,
+        "bodyScroll": 924,
+        "height": 1024,
+        "width": 640
+      }
+    ],
+    "focused": "Close",
+    "pageWidth": 768,
+    "viewportWidth": 768
+  },
+  {
+    "screen": "inspection-after",
+    "width": 390,
+    "height": 844,
+    "dialogs": [
+      {
+        "bodyHeight": 657,
+        "bodyScroll": 1299,
+        "height": 844,
+        "width": 390.3999938964844
+      }
+    ],
+    "focused": "Close",
+    "pageWidth": 390,
+    "viewportWidth": 390
+  },
+  {
+    "screen": "queue-after",
+    "width": 1920,
+    "height": 1080,
+    "dialogs": [],
+    "focused": "Review queue",
+    "pageWidth": 1920,
+    "viewportWidth": 1920
+  },
+  {
+    "screen": "queue-after",
+    "width": 1440,
+    "height": 900,
+    "dialogs": [],
+    "focused": "Review queue",
+    "pageWidth": 1425,
+    "viewportWidth": 1440
+  },
+  {
+    "screen": "queue-after",
+    "width": 1280,
+    "height": 800,
+    "dialogs": [],
+    "focused": "Review queue",
+    "pageWidth": 1265,
+    "viewportWidth": 1280
+  },
+  {
+    "screen": "queue-after",
+    "width": 1024,
+    "height": 768,
+    "dialogs": [],
+    "focused": "Review queue",
+    "pageWidth": 1009,
+    "viewportWidth": 1024
+  },
+  {
+    "screen": "queue-after",
+    "width": 768,
+    "height": 1024,
+    "dialogs": [],
+    "focused": "Review queue",
+    "pageWidth": 753,
+    "viewportWidth": 768
+  },
+  {
+    "screen": "queue-after",
+    "width": 390,
+    "height": 844,
+    "dialogs": [],
+    "focused": "Review queue",
+    "pageWidth": 375,
+    "viewportWidth": 390
+  }
+]

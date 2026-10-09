@@ -1,4 +1,4 @@
-import type { ComponentProps } from 'react';
+import { useId, type ComponentProps } from 'react';
 import {
   Checkbox as C,
   RadioGroup as R,
@@ -121,7 +121,11 @@ export function Select({
       <SelectPrimitive.Portal>
         <SelectPrimitive.Content
           position="popper"
-          className="ui-floating z-50 max-h-80 min-w-[var(--radix-select-trigger-width)] overflow-auto rounded-md border border-border bg-surface p-1 shadow-[var(--shadow-overlay)]"
+          side="bottom"
+          align="start"
+          sideOffset={4}
+          collisionPadding={8}
+          className="ui-floating ui-select-menu z-50 overflow-auto rounded-md border border-border bg-surface p-1 shadow-[var(--shadow-overlay)]"
         >
           <SelectPrimitive.Viewport>
             {options.map((option) => (
@@ -140,5 +144,29 @@ export function Select({
         </SelectPrimitive.Content>
       </SelectPrimitive.Portal>
     </SelectPrimitive.Root>
+  );
+}
+
+// Radix reserves the empty string. Keep the existing filter's empty-value contract.
+export function FilterSelect({
+  value,
+  onChange,
+  options,
+  ...props
+}: Omit<ComponentProps<typeof Select>, 'value' | 'onValueChange' | 'options'> & {
+  value: string;
+  onChange: (value: string) => void;
+  options: { value: string; label: string }[];
+}) {
+  const identity = useId();
+  let empty = `empty-filter-${identity}`;
+  while (options.some((option) => option.value === empty)) empty += '-';
+  return (
+    <Select
+      {...props}
+      value={value || empty}
+      onValueChange={(selected) => onChange(selected === empty ? '' : selected)}
+      options={options.map((option) => ({ ...option, value: option.value || empty }))}
+    />
   );
 }

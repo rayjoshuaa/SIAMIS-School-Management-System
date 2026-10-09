@@ -1,4 +1,9 @@
-import type { ReactNode, ComponentProps } from 'react';
+import {
+  createElement,
+  type ReactNode,
+  type ComponentPropsWithoutRef,
+  type ComponentProps,
+} from 'react';
 import { CircleAlert, Inbox, Search, Settings2, Shield, Unplug } from 'lucide-react';
 import { cn } from '../../lib/utils/cn';
 
@@ -46,6 +51,14 @@ export function WorkspaceHeader({
 }
 export function FilterBar({ className, ...props }: ComponentProps<'div'>) {
   return <div className={cn('ui-filter-bar', className)} {...props} />;
+}
+// Three shared rows keep controls aligned even when only one field has help text.
+export function FilterToolbar({
+  as: Tag = 'div',
+  className,
+  ...props
+}: ComponentPropsWithoutRef<'form'> & { as?: 'div' | 'form' }) {
+  return createElement(Tag, { ...props, className: cn('ui-filter-toolbar', className) });
 }
 export function TableViewport({ label, children }: { label: string; children: ReactNode }) {
   return (

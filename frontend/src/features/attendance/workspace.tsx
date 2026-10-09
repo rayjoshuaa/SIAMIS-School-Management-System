@@ -1,19 +1,20 @@
+import { RefreshCw, Search } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../../lib/api/client';
 import { useAuth } from '../../lib/auth/auth-context';
 import { Button, LinkButton } from '../../components/ui/button';
-import { Input } from '../../components/ui/controls';
+import { Input, FilterSelect } from '../../components/ui/controls';
 import { Tabs, Pagination } from '../../components/ui/navigation';
 import { Sheet } from '../../components/ui/overlays';
 import { FormField } from '../../components/shared/form-field';
-import { MetricStrip } from '../../components/shared/workspace';
+import { FilterToolbar, MetricStrip } from '../../components/shared/workspace';
 import { Facts } from '../employees/presentation';
 import type { EmployeePage, Master } from '../employees/contracts';
 import type { History, Legacy, Overview, Row, Summary } from './contracts';
 import { CoverageFacts, Findings, Rows, QueryState } from './presentation';
-import { duration, payrollBoundary } from './format';
+import { attendanceLabel, duration, payrollBoundary } from './format';
 import '../employees/employees.css';
 import './attendance.css';
 
@@ -22,7 +23,7 @@ export function AttendanceWorkspace() {
   const reporting = state.user?.capabilities.includes('Reporting.Read');
   return (
     <div className="attendance-workspace">
-      <p className="text-sm text-muted-foreground">{payrollBoundary}</p>
+      <p className="attendance-boundary">{payrollBoundary}</p>
       <Tabs
         label="Attendance views"
         tabs={[
@@ -55,20 +56,30 @@ function SelectField({
 }) {
   return (
     <FormField id={id} label={label}>
-      {(props) => (
-        <select
-          {...props}
-          className="ui-control min-h-11 w-full px-3 py-2"
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-        >
-          {options.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-      )}
+      {(props) =>
+        ['attendance-Department', 'attendance-Designation', 'attendance-employee'].includes(id) ? (
+          <FilterSelect
+            {...props}
+            label={label}
+            value={value}
+            onChange={onChange}
+            options={options}
+          />
+        ) : (
+          <select
+            {...props}
+            className="ui-control min-h-11 w-full px-3 py-2"
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+          >
+            {options.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        )
+      }
     </FormField>
   );
 }
@@ -132,7 +143,7 @@ function ReportPanel({ mode }: { mode: 'daily' | 'queue' }) {
   }
   return (
     <div className="attendance-workspace">
-      <div className="attendance-filters">
+      <FilterToolbar className="attendance-filter-bar" role="group" aria-label="Attendance filters">
         {mode === 'daily' ? (
           <FormField
             id="attendance-date"
@@ -193,14 +204,17 @@ function ReportPanel({ mode }: { mode: 'daily' | 'queue' }) {
             ]}
           />
         ))}
-        <Button
-          variant="outline"
-          disabled={!ready || report.isFetching}
-          onClick={() => void report.refetch()}
-        >
-          Refresh attendance
-        </Button>
-      </div>
+        <div className="ui-filter-action">
+          <Button
+            variant="secondary"
+            loading={report.isFetching}
+            disabled={!ready || report.isFetching}
+            onClick={() => void report.refetch()}
+          >
+            <RefreshCw aria-hidden="true" /> Refresh attendance
+          </Button>
+        </div>
+      </FilterToolbar>
       {masters.isError && (
         <QueryState loading={false} error={masters.error} retry={() => void masters.refetch()} />
       )}
@@ -242,7 +256,7 @@ function ReportPanel({ mode }: { mode: 'daily' | 'queue' }) {
               'Stale',
               'Reopened',
               'SnapshotInvalid',
-            ].map((value) => ({ value, label: value || 'Any' }))}
+            ].map((value) => ({ value, label: value ? attendanceLabel(value) : 'Any' }))}
           />
         </div>
       </details>
@@ -257,11 +271,17 @@ function ReportPanel({ mode }: { mode: 'daily' | 'queue' }) {
       )}
       {report.data && !report.isError && (
         <>
-          <p className="text-sm">
-            {report.data.businessDate ?? `${report.data.from} → ${report.data.to}`} ·{' '}
-            {report.data.businessTimeZone}
-          </p>
+          <div className="attendance-section-heading">
+            <h2 className="ui-section-title">
+              {mode === 'queue' ? 'Review queue' : 'Attendance overview'}
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              {report.data.businessDate ?? `${report.data.from} → ${report.data.to}`} ·{' '}
+              {report.data.businessTimeZone}
+            </p>
+          </div>
           <MetricStrip
+            density="compact"
             items={[
               {
                 label: 'Scheduled',
@@ -277,17 +297,17 @@ function ReportPanel({ mode }: { mode: 'daily' | 'queue' }) {
               {
                 label: 'Requires review',
                 value: report.data.counts.requiresReview,
-                context: 'Overlapping attention category',
+                context: 'Days needing attention',
               },
               {
-                label: 'Stale',
+                label: 'Sources changed',
                 value: report.data.counts.stale,
                 context: 'Changed sources; not a violation',
               },
               {
                 label: 'Ready to finalize',
                 value: report.data.counts.readyToFinalize,
-                context: 'Server-reported prerequisite state',
+                context: 'Subject to final review',
               },
             ]}
           />
@@ -295,6 +315,12 @@ function ReportPanel({ mode }: { mode: 'daily' | 'queue' }) {
             Counts are server totals across matching records before pagination. Categories can
             overlap. Missing configuration is not zero scheduled work.
           </p>
+          <div className="attendance-section-heading">
+            <h2 className="ui-section-title">Attendance records</h2>
+            <p className="text-sm text-muted-foreground">
+              {report.data.rows.totalCount} matching records
+            </p>
+          </div>
           <Rows
             rows={report.data.rows.items}
             inspect={(row, button) => {
@@ -319,7 +345,15 @@ function ReportPanel({ mode }: { mode: 'daily' | 'queue' }) {
           invoker.current?.focus({ preventScroll: true });
         }}
         title="Attendance day details"
+        size="lg"
         description="Inspect the server-reported day without leaving this filtered list."
+        footer={
+          selected && (
+            <LinkButton to={`/hr/attendance/${selected.employeeId}/${selected.businessDate}`}>
+              Open full attendance review
+            </LinkButton>
+          )
+        }
       >
         {selected && (
           <div className="attendance-workspace">
@@ -327,7 +361,7 @@ function ReportPanel({ mode }: { mode: 'daily' | 'queue' }) {
               items={[
                 ['Employee', `${selected.displayName} · ${selected.employeeNumber}`],
                 ['Business date', selected.businessDate],
-                ['Record state', selected.recordState],
+                ['Record state', attendanceLabel(selected.recordState)],
                 ['Currently validated', selected.isCurrentlyValidated ? 'Yes' : 'No'],
                 ['Reopen required', selected.requiresReopen ? 'Yes' : 'No'],
               ]}
@@ -347,9 +381,6 @@ function ReportPanel({ mode }: { mode: 'daily' | 'queue' }) {
             <Findings values={selected.findings} />
             <h3 className="ui-subsection-title">Changed sources</h3>
             <Findings values={selected.changedSources} />
-            <LinkButton to={`/hr/attendance/${selected.employeeId}/${selected.businessDate}`}>
-              Open full attendance review
-            </LinkButton>
           </div>
         )}
       </Sheet>
@@ -407,7 +438,7 @@ function EmployeeHistory({ reporting }: { reporting: boolean }) {
         history and official summaries. Legacy records are read-only.
       </p>
       {employeeRead ? (
-        <div className="attendance-filters">
+        <FilterToolbar>
           <FormField
             id="attendance-employee-search"
             label="Find employee"
@@ -422,16 +453,18 @@ function EmployeeHistory({ reporting }: { reporting: boolean }) {
               />
             )}
           </FormField>
-          <Button
-            variant="outline"
-            disabled={!search.trim()}
-            onClick={() => {
-              setLookupPage(1);
-              setSubmitted(search.trim());
-            }}
-          >
-            Find employee
-          </Button>
+          <div className="ui-filter-action">
+            <Button
+              variant="secondary"
+              disabled={!search.trim()}
+              onClick={() => {
+                setLookupPage(1);
+                setSubmitted(search.trim());
+              }}
+            >
+              <Search aria-hidden="true" /> Find employee
+            </Button>
+          </div>
           <SelectField
             id="attendance-employee"
             label="Employee"
@@ -453,7 +486,7 @@ function EmployeeHistory({ reporting }: { reporting: boolean }) {
               })),
             ]}
           />
-        </div>
+        </FilterToolbar>
       ) : (
         <FormField
           id="attendance-employee-id"
@@ -488,8 +521,8 @@ function EmployeeHistory({ reporting }: { reporting: boolean }) {
           )}
         </>
       )}
-      <form
-        className="attendance-filters"
+      <FilterToolbar
+        as="form"
         onSubmit={(event) => {
           event.preventDefault();
           if (
@@ -520,8 +553,10 @@ function EmployeeHistory({ reporting }: { reporting: boolean }) {
             <Input {...props} type="date" value={to} onChange={(e) => setTo(e.target.value)} />
           )}
         </FormField>
-        <Button type="submit">Load employee history</Button>
-      </form>
+        <div className="ui-filter-action">
+          <Button type="submit">Load employee history</Button>
+        </div>
+      </FilterToolbar>
       {error && (
         <p role="alert" className="text-sm text-destructive">
           {error}

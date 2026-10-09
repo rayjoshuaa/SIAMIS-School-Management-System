@@ -109,6 +109,7 @@ let review: Review;
 let capabilities: string[];
 let failure: number;
 let paused: boolean;
+let commandPaused: boolean;
 let empty: boolean;
 let calls: { path: string; method: string; body: Record<string, unknown> | null }[];
 beforeEach(() => {
@@ -139,6 +140,7 @@ beforeEach(() => {
   ];
   failure = 0;
   paused = false;
+  commandPaused = false;
   empty = false;
   calls = [];
   vi.stubGlobal(
@@ -147,6 +149,7 @@ beforeEach(() => {
       const path = String(url);
       const method = options?.method ?? 'GET';
       calls.push({ path, method, body: options?.body ? JSON.parse(String(options.body)) : null });
+      if (commandPaused && method === 'POST') return new Promise<Response>(() => {});
       if (paused && path.startsWith('/api/attendance')) return new Promise<Response>(() => {});
       if (
         failure &&
@@ -315,7 +318,8 @@ describe('F7 attendance administration', () => {
     setup();
     await screen.findByText('Synthetic Employee');
     await userEvent.type(screen.getByLabelText('Business date'), date);
-    await userEvent.selectOptions(screen.getByLabelText('Department'), 'dept');
+    await userEvent.click(screen.getByLabelText('Department'));
+    await userEvent.click(await screen.findByRole('option', { name: 'Teaching' }));
     await userEvent.click(screen.getByText('Factual status filters'));
     await userEvent.selectOptions(screen.getByLabelText('Stale sources'), 'true');
     await waitFor(() =>
@@ -358,6 +362,8 @@ describe('F7 attendance administration', () => {
     const button = await screen.findByRole('button', { name: `Inspect FIXTURE-EMP ${date}` });
     await userEvent.click(button);
     expect(await screen.findByText(/No currently validated official snapshot/)).toBeVisible();
+    expect(screen.getByText('Missing clock-out')).toBeVisible();
+    await userEvent.click(screen.getByText('Technical reference'));
     expect(screen.getByText('MissingClockOut')).toBeVisible();
     await userEvent.click(screen.getByRole('button', { name: 'Close' }));
     await waitFor(() => expect(button).toHaveFocus());
@@ -372,6 +378,11 @@ describe('F7 attendance administration', () => {
     setup();
     expect(await screen.findByText('Loading attendance information…')).toBeVisible();
     expect(screen.queryByText('9')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Refresh attendance' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Refresh attendance' })).toHaveAttribute(
+      'aria-busy',
+      'true',
+    );
   });
   it.each([400, 403, 409, 503])('shows HTTP %s read errors', async (status) => {
     failure = status;
@@ -412,9 +423,21 @@ describe('F7 attendance administration', () => {
     expect(await screen.findByRole('button', { name: 'Add correction evidence' })).toBeVisible();
     expect(screen.queryByRole('button', { name: 'Finalize day' })).not.toBeInTheDocument();
   });
+  it('keeps validation, evidence summary and decision consequences visible without disclosures', async () => {
+    setup(`/hr/attendance/${id}/${date}`);
+    expect(await screen.findByText('Available evidence events')).toBeVisible();
+    expect(screen.getByText('Currently validated')).toBeVisible();
+    expect(screen.getByText('Explicit reopening required')).toBeVisible();
+    expect(screen.getByText('Finalization safeguards')).toBeVisible();
+    expect(
+      screen.getByText(/New manual observations may make a historical revision stale/),
+    ).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Finalize day' })).toBeVisible();
+  });
   it('keeps exact event timestamps and residual separate from unexplained coverage', async () => {
     setup(`/hr/attendance/${id}/${date}`);
     expect(await screen.findByText(evidence.occurredAtUtc)).toBeVisible();
+    await userEvent.click(screen.getByText('Precision and calculation details'));
     expect(screen.getByText('1 ms')).toBeVisible();
     expect(screen.getAllByText('1,000 ms').length).toBeGreaterThan(1);
   });
@@ -502,7 +525,9 @@ describe('F7 attendance administration', () => {
       },
     ];
     setup(`/hr/attendance/${id}/${date}`);
-    expect(await screen.findByText('LeaveCancelled')).toBeVisible();
+    expect(await screen.findByText('Leave Cancelled')).toBeVisible();
+    await userEvent.click(screen.getByText('Technical reference'));
+    expect(screen.getByText('LeaveCancelled')).toBeVisible();
     expect(
       screen.queryByRole('button', { name: 'Add correction evidence' }),
     ).not.toBeInTheDocument();
@@ -582,8 +607,10 @@ describe('F7 attendance administration', () => {
     await userEvent.click(await screen.findByRole('tab', { name: 'Employee history & evidence' }));
     await userEvent.type(screen.getByLabelText('Find employee'), 'Synthetic');
     await userEvent.click(screen.getByRole('button', { name: 'Find employee' }));
-    await screen.findByRole('option', { name: 'Synthetic Employee · FIXTURE-EMP' });
-    await userEvent.selectOptions(screen.getByLabelText('Employee'), id);
+    await userEvent.click(screen.getByLabelText('Employee'));
+    await userEvent.click(
+      await screen.findByRole('option', { name: 'Synthetic Employee · FIXTURE-EMP' }),
+    );
     await userEvent.type(screen.getByLabelText(/^From/), date);
     await userEvent.type(screen.getByLabelText(/^To/), date);
     await userEvent.click(screen.getByRole('button', { name: 'Load employee history' }));
@@ -604,5 +631,56 @@ describe('F7 attendance administration', () => {
     expect(duration(null)).toBe('Unavailable');
     expect(duration(0)).toBe('0 ms');
     expect(duration(Number.MAX_SAFE_INTEGER + 1)).toContain('precision');
+  });
+  it('displays readable record states while preserving filter values', async () => {
+    setup();
+    await screen.findByText('Synthetic Employee');
+    expect(
+      within(screen.getByRole('region', { name: 'Attendance records' })).getByText(
+        'Awaiting finalization',
+      ),
+    ).toBeVisible();
+    await userEvent.click(screen.getByText('Factual status filters'));
+    await userEvent.selectOptions(screen.getByLabelText('Record state'), 'UnfinalizedPastDay');
+    await waitFor(() =>
+      expect(calls.some((call) => call.path.includes('recordState=UnfinalizedPastDay'))).toBe(true),
+    );
+    expect(calls.some((call) => call.method === 'POST')).toBe(false);
+  });
+  it('protects an unsaved decision and restores editing or invoker focus without submission', async () => {
+    setup(`/hr/attendance/${id}/${date}`);
+    const button = await screen.findByRole('button', { name: 'Add correction evidence' });
+    await userEvent.click(button);
+    await userEvent.type(screen.getByLabelText(/^Reason/), 'Unsaved explanation');
+    await userEvent.keyboard('{Escape}');
+    expect(await screen.findByText('Discard unsaved attendance decision?')).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Keep editing' })).toHaveFocus();
+    await userEvent.click(screen.getByRole('button', { name: 'Keep editing' }));
+    expect(screen.getByLabelText(/^Reason/)).toHaveValue('Unsaved explanation');
+    await userEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Discard changes' }));
+    await waitFor(() => expect(button).toHaveFocus());
+    expect(calls.some((call) => call.method === 'POST')).toBe(false);
+  });
+  it('names the review action groups without granting extra actions', async () => {
+    setup(`/hr/attendance/${id}/${date}`);
+    expect(await screen.findByRole('heading', { name: 'Evidence & decisions' })).toBeVisible();
+    expect(screen.getByRole('heading', { name: 'Finalize or reopen' })).toBeVisible();
+    expect(screen.getByText(/They do not authorize absence/)).toBeVisible();
+  });
+  it('keeps a pending confirmation open and prevents repeated commands', async () => {
+    setup(`/hr/attendance/${id}/${date}`);
+    await userEvent.click(await screen.findByRole('button', { name: 'Finalize day' }));
+    await userEvent.type(screen.getByLabelText(/^Reason/), 'Fixture pending decision');
+    commandPaused = true;
+    const confirm = screen.getByRole('button', { name: 'Confirm finalize attendance day' });
+    await userEvent.click(confirm);
+    await waitFor(() => expect(confirm).toBeDisabled());
+    expect(screen.getByRole('button', { name: 'Cancel' })).toBeDisabled();
+    await userEvent.keyboard('{Escape}');
+    expect(screen.getByRole('alertdialog')).toBeVisible();
+    expect(screen.getByLabelText(/^Reason/)).toBeDisabled();
+    await userEvent.click(confirm);
+    expect(calls.filter((call) => call.method === 'POST')).toHaveLength(1);
   });
 });

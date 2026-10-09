@@ -45,7 +45,9 @@ export function EmployeeProfile() {
               {value.preferredName ? ` · ${value.preferredName}` : ''}
             </p>
             <div className="employee-identity-status">
-              <Badge>Record {value.isActive ? 'active' : 'inactive'}</Badge>
+              <Badge intent={value.isActive ? 'success' : 'neutral'}>
+                Record {value.isActive ? 'active' : 'inactive'}
+              </Badge>
               <span className="employee-context">
                 Employment: {value.currentEmployment?.employmentStatus ?? 'No current employment'}
               </span>

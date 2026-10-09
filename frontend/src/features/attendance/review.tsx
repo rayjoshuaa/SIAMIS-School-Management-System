@@ -1,6 +1,15 @@
+import { Badge } from '../../components/ui/feedback';
 import { useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import {
+  RefreshCw,
+  FilePlus2,
+  ListChecks,
+  LockKeyhole,
+  RotateCcw,
+  ClipboardCheck,
+} from 'lucide-react';
 import { api } from '../../lib/api/client';
 import { useAuth } from '../../lib/auth/auth-context';
 import { Button, BackLink } from '../../components/ui/button';
@@ -12,7 +21,7 @@ import { Facts } from '../employees/presentation';
 import type { Day, Event, Review, Revision } from './contracts';
 import type { Page } from '../hr/dashboard-contracts';
 import { CoverageFacts, Findings, QueryState } from './presentation';
-import { payrollBoundary } from './format';
+import { attendanceLabel, payrollBoundary } from './format';
 import { AttendanceCommand, type Command } from './command';
 import '../employees/employees.css';
 import './attendance.css';
@@ -51,26 +60,58 @@ export function AttendanceReview() {
   return (
     <div className="attendance-workspace">
       <BackLink to="/hr/attendance">Attendance workspace</BackLink>
-      <Facts
-        items={[
-          ['Employee ID', employeeId],
-          ['Business date', date],
-          ['Business time zone', value.calculation.businessTimeZone],
-          ['Review case', value.reviewCase?.state ?? 'No review case'],
-          [
-            'Latest historical revision',
-            value.latestHistoricalFinalizedRevision?.revision ?? 'None',
-          ],
-          ['Currently validated', value.isCurrentlyValidated ? 'Yes' : 'No'],
-          ['Stale sources', value.isStale ? 'Yes' : 'No'],
-          ['Explicit reopening required', value.requiresReopen ? 'Yes' : 'No'],
-          ['Reopened', value.isReopened ? 'Yes' : 'No'],
-          ['Absence confirmed', value.isConfirmedAbsent ? 'Yes' : 'No'],
-        ]}
-      />
-      <p className="text-sm text-muted-foreground">{payrollBoundary}</p>
+      <section className="attendance-panel" aria-label="Attendance review context">
+        <div className="attendance-section-heading">
+          <h2 className="ui-section-title">Day review</h2>
+          <Badge
+            intent={
+              value.isStale || value.requiresReopen || value.isReopened
+                ? 'warning'
+                : value.isCurrentlyValidated
+                  ? 'info'
+                  : 'neutral'
+            }
+          >
+            {value.isStale
+              ? 'Sources changed — review required'
+              : value.isCurrentlyValidated
+                ? 'Currently validated'
+                : value.isReopened
+                  ? 'Reopened for review'
+                  : value.latestHistoricalFinalizedRevision
+                    ? 'Historical revision — not currently validated'
+                    : 'Not finalized'}
+          </Badge>
+        </div>
+        <Facts
+          items={[
+            ['Employee ID', employeeId],
+            ['Business date', date],
+            ['Business time zone', value.calculation.businessTimeZone],
+            ['Review case', attendanceLabel(value.reviewCase?.state ?? 'No review case')],
+            [
+              'Latest historical revision',
+              value.latestHistoricalFinalizedRevision?.revision ?? 'None',
+            ],
+            ['Absence confirmed', value.isConfirmedAbsent ? 'Yes' : 'No'],
+            ['Available evidence events', value.rawCalculation.events.length],
+          ]}
+        />
+        <div className="space-y-3">
+          <h3 className="ui-subsection-title">Validation and reopening</h3>
+          <Facts
+            items={[
+              ['Currently validated', value.isCurrentlyValidated ? 'Yes' : 'No'],
+              ['Stale sources', value.isStale ? 'Yes' : 'No'],
+              ['Explicit reopening required', value.requiresReopen ? 'Yes' : 'No'],
+              ['Reopened', value.isReopened ? 'Yes' : 'No'],
+            ]}
+          />
+        </div>
+      </section>
+      <p className="attendance-boundary">{payrollBoundary}</p>
       {value.isStale && (
-        <section aria-label="Changed authoritative sources">
+        <section className="attendance-notice" aria-label="Changed authoritative sources">
           <h2 className="ui-section-title">Historical finalization requires source review</h2>
           <p className="text-sm">
             The previous revision remains immutable. Staleness is not an HR violation; reopening and
@@ -79,53 +120,92 @@ export function AttendanceReview() {
           <Findings values={value.changedSources} />
         </section>
       )}
-      <div className="ui-record-actions">
-        <Button
-          variant="outline"
-          disabled={review.isFetching}
-          onClick={() => void review.refetch()}
-        >
-          Refresh review
-        </Button>
-        {manage && (
-          <Button variant="outline" onClick={(e) => open('manual', e.currentTarget)}>
-            Record manual evidence
+      <section className="attendance-panel attendance-review-actions" aria-label="Review actions">
+        <div className="attendance-section-heading">
+          <h2 className="ui-section-title">Review actions</h2>
+          <Button
+            variant="outline"
+            loading={review.isFetching}
+            disabled={review.isFetching}
+            onClick={() => void review.refetch()}
+          >
+            <RefreshCw aria-hidden="true" /> Refresh review
           </Button>
-        )}
-        {manage && !frozen && (
-          <>
-            <Button variant="outline" onClick={(e) => open('corrections', e.currentTarget)}>
-              Add correction evidence
-            </Button>
-            <Button
-              variant="outline"
-              disabled={!value.rawCalculation.events.length}
-              onClick={(e) => open('adjudications', e.currentTarget)}
-            >
-              Include / exclude evidence
-            </Button>
-          </>
-        )}
-        {finalize && !frozen && (
-          <>
-            <Button variant="outline" onClick={(e) => open('confirm-absence', e.currentTarget)}>
-              Confirm potential absence
-            </Button>
-            <Button onClick={(e) => open('finalize', e.currentTarget)}>Finalize day</Button>
-          </>
-        )}
-        {finalize && frozen && (
-          <Button variant="outline" onClick={(e) => open('reopen', e.currentTarget)}>
-            Reopen finalized day
-          </Button>
-        )}
-      </div>
-      <p className="text-xs text-muted-foreground">
-        Finalization eligibility is validated by the backend: resolved blocking findings,
-        authoritative coverage and explicit confirmation of an unambiguous potential absence where
-        applicable. No force-finalize or bulk period finalization is supported. New manual
-        observations may make a historical revision stale; they never rewrite it.
-      </p>
+        </div>
+        <p className="text-sm text-muted-foreground">
+          Inspect the calculation and evidence below, then record a reasoned decision. Only
+          permitted actions are shown.
+        </p>
+        <div className="attendance-action-groups">
+          {(manage || (finalize && !frozen)) && (
+            <div className="attendance-action-group">
+              <h3 className="ui-subsection-title">Evidence & decisions</h3>
+              <div className="ui-record-actions">
+                {manage && (
+                  <Button variant="outline" onClick={(e) => open('manual', e.currentTarget)}>
+                    <FilePlus2 aria-hidden="true" /> Record manual evidence
+                  </Button>
+                )}
+                {manage && !frozen && (
+                  <>
+                    <Button variant="outline" onClick={(e) => open('corrections', e.currentTarget)}>
+                      <FilePlus2 aria-hidden="true" /> Add correction evidence
+                    </Button>
+                    <Button
+                      variant="outline"
+                      disabled={!value.rawCalculation.events.length}
+                      onClick={(e) => open('adjudications', e.currentTarget)}
+                    >
+                      <ListChecks aria-hidden="true" /> Include / exclude evidence
+                    </Button>
+                  </>
+                )}
+                {finalize && !frozen && (
+                  <>
+                    <Button
+                      variant="outline"
+                      onClick={(e) => open('confirm-absence', e.currentTarget)}
+                    >
+                      <ClipboardCheck aria-hidden="true" /> Confirm potential absence
+                    </Button>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
+          {finalize && (
+            <div className="attendance-action-group">
+              <h3 className="ui-subsection-title">Finalize or reopen</h3>
+              <p className="text-sm text-muted-foreground">
+                {frozen
+                  ? 'Reopening retains the finalized revision and starts an explicit review.'
+                  : 'Finalization freezes a revision. The server checks coverage and unresolved findings.'}
+              </p>
+              <div className="ui-record-actions">
+                {!frozen && (
+                  <Button onClick={(e) => open('finalize', e.currentTarget)}>
+                    <LockKeyhole aria-hidden="true" /> Finalize day
+                  </Button>
+                )}
+                {finalize && frozen && (
+                  <Button variant="outline" onClick={(e) => open('reopen', e.currentTarget)}>
+                    <RotateCcw aria-hidden="true" /> Reopen finalized day
+                  </Button>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+        <div className="attendance-technical space-y-2">
+          <h3 className="ui-subsection-title">Finalization safeguards</h3>
+          <p className="text-xs text-muted-foreground">
+            Finalization eligibility is validated by the backend: resolved blocking findings,
+            authoritative coverage and explicit confirmation of an unambiguous potential absence
+            where applicable. No force-finalize or bulk period finalization is supported. New manual
+            observations may make a historical revision stale; they never rewrite it.
+          </p>
+        </div>
+      </section>
       <Tabs
         label="Attendance review sections"
         tabs={[
@@ -203,9 +283,9 @@ function Calculation({ value }: { value: Day }) {
     <div className="attendance-workspace">
       <Facts
         items={[
-          ['Expected work readiness', value.expectedWork.readiness],
+          ['Schedule status', attendanceLabel(value.expectedWork.readiness)],
           ['Work calendar', value.expectedWork.calendarName],
-          ['Schedule kind', value.expectedWork.scheduleKind],
+          ['Schedule kind', attendanceLabel(value.expectedWork.scheduleKind)],
           ['Schedule finding', value.expectedWork.finding],
           [
             'Late under current policy',
@@ -219,9 +299,18 @@ function Calculation({ value }: { value: Day }) {
             'Potential absence',
             value.potentialAbsence ? 'Provisional finding only' : 'Not reported',
           ],
-          ['Grace policy', `${value.currentGracePolicy} · ${value.clockInGraceMinutes} minutes`],
+          ['Arrival grace period', `${value.clockInGraceMinutes} minutes`],
         ]}
       />
+      <details className="attendance-technical">
+        <summary>Schedule policy reference</summary>
+        <Facts
+          items={[
+            ['Expected work readiness', value.expectedWork.readiness],
+            ['Grace policy', value.currentGracePolicy],
+          ]}
+        />
+      </details>
       <CoverageFacts value={value} />
       <h3 className="ui-subsection-title">Calculation findings</h3>
       <Findings values={value.findings} />
@@ -361,6 +450,7 @@ function Evidence({ employeeId, date }: { employeeId: string; date: string }) {
           invoker.current?.focus({ preventScroll: true });
         }}
         title="Immutable attendance evidence"
+        size="lg"
         description="Original evidence is retained. Review decisions never rewrite or delete this event."
       >
         <QueryState

@@ -35,7 +35,7 @@ export function AppShell({ actions }: { actions?: ReactNode }) {
     /^\/hr\/employees\/(new|[^/]+\/(edit|employment-change|rehire|end-employment))$/.test(pathname);
   const detail = pathname.startsWith('/hr/employees/') || pathname.startsWith('/hr/attendance/');
   useEffect(() => {
-    document.title = `${activeRoute(pathname)?.label ?? 'Page not found'} · SIAMIS`;
+    document.title = `${activeRoute(pathname)?.title ?? activeRoute(pathname)?.label ?? 'Page not found'} · SIAMIS`;
   }, [pathname]);
   return (
     <div className="application-shell">
@@ -52,7 +52,7 @@ export function AppShell({ actions }: { actions?: ReactNode }) {
         <main id="main" tabIndex={-1} className="shell-content">
           <ContentFrame width={employeeForm ? 'form' : detail ? 'reading' : 'workspace'}>
             <WorkspaceHeader
-              title={route?.label ?? 'Page not found'}
+              title={route?.title ?? route?.label ?? 'Page not found'}
               description={route?.description ?? 'Choose another workspace to continue.'}
               actions={actions}
             />

@@ -19,6 +19,7 @@ import type { LucideIcon } from 'lucide-react';
 export type RouteMeta = {
   path: string;
   label: string;
+  title?: string;
   breadcrumb: string;
   description: string;
   icon: LucideIcon;
@@ -74,8 +75,9 @@ export const routes: RouteMeta[] = [
   {
     path: '/hr/attendance',
     label: 'Attendance',
-    breadcrumb: 'Attendance',
-    description: 'Attendance evidence, review and reporting.',
+    title: 'Attendance Management',
+    breadcrumb: 'Attendance Management',
+    description: 'Review recorded attendance, supporting evidence and finalized history.',
     icon: Clock3,
     group: 'hr',
     capability: 'Attendance.Read',

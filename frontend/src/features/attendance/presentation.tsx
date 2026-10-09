@@ -1,3 +1,4 @@
+import { Badge } from '../../components/ui/feedback';
 import { Button, LinkButton } from '../../components/ui/button';
 import { Table, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/table';
 import { TableViewport, SystemState } from '../../components/shared/workspace';
@@ -5,7 +6,7 @@ import { ApiError } from '../../lib/api/errors';
 import { Facts } from '../employees/presentation';
 import type { Coverage, Finding, Row } from './contracts';
 
-import { duration } from './format';
+import { attendanceLabel, duration } from './format';
 export function QueryState({
   loading,
   error,
@@ -49,7 +50,12 @@ export function Findings({ values }: { values: Finding[] }) {
     <ul className="space-y-2 text-sm">
       {values.map((finding, i) => (
         <li key={`${finding.code}-${i}`}>
-          <strong>{finding.code}</strong> — {finding.message}
+          <strong>{attendanceLabel(finding.code)}</strong>
+          <p className="text-muted-foreground">{finding.message}</p>
+          <details className="attendance-technical">
+            <summary>Technical reference</summary>
+            <code>{finding.code}</code>
+          </details>
         </li>
       ))}
     </ul>
@@ -62,7 +68,7 @@ export function CoverageFacts({ value }: { value: Coverage }) {
     <div className="space-y-3">
       <Facts
         items={[
-          ['Readiness', value.readiness],
+          ['Calculation status', attendanceLabel(value.readiness)],
           [
             'Authoritative coverage partition',
             value.coveragePartitionAvailable ? 'Available' : 'Unavailable',
@@ -74,15 +80,22 @@ export function CoverageFacts({ value }: { value: Coverage }) {
           ['Unpaid leave coverage', duration(value.unpaidLeaveCoveredMilliseconds)],
           ['Unexplained scheduled coverage', duration(value.unexplainedScheduledMilliseconds)],
           ['Observed presence', duration(value.observedPresenceMilliseconds)],
-          ['Conversion residual', duration(value.coverageTruncationResidualMilliseconds)],
-          ['Raw arrival variance', duration(value.rawStartVarianceMilliseconds)],
-          ['Calculation contract', value.calculationContractVersion],
         ]}
       />
-      <p className="text-xs text-muted-foreground">
-        Durations are independent integer milliseconds. Conversion residual is precision metadata,
-        never absence, worked time, leave or payroll time. Exact intervals remain authoritative.
-      </p>
+      <details className="attendance-technical">
+        <summary>Precision and calculation details</summary>
+        <Facts
+          items={[
+            ['Conversion residual', duration(value.coverageTruncationResidualMilliseconds)],
+            ['Raw arrival variance', duration(value.rawStartVarianceMilliseconds)],
+            ['Calculation contract', value.calculationContractVersion],
+          ]}
+        />
+        <p className="text-xs text-muted-foreground">
+          Durations are independent integer milliseconds. Conversion residual is precision metadata,
+          never absence, worked time, leave or payroll time. Exact intervals remain authoritative.
+        </p>
+      </details>
     </div>
   );
 }
@@ -115,26 +128,50 @@ export function Rows({
           {rows.map((row) => (
             <TableRow key={`${row.employeeId}-${row.businessDate}`}>
               <TableCell>
-                {row.displayName}
+                <span className="font-semibold">{row.displayName}</span>
                 <div className="text-xs text-muted-foreground">
                   {row.employeeNumber} · {row.businessDate}
                 </div>
               </TableCell>
               <TableCell>
-                {row.workState}
-                <div>{row.timingState}</div>
+                {attendanceLabel(row.workState)}
+                <div className="text-xs text-muted-foreground">
+                  {attendanceLabel(row.timingState)}
+                </div>
               </TableCell>
               <TableCell>
-                {row.recordState}
+                <Badge
+                  intent={
+                    row.isStale ||
+                    row.requiresReopen ||
+                    row.recordState === 'Reopened' ||
+                    row.recordState === 'SnapshotInvalid'
+                      ? 'warning'
+                      : row.isCurrentlyValidated
+                        ? 'info'
+                        : 'neutral'
+                  }
+                >
+                  {attendanceLabel(row.recordState)}
+                </Badge>
                 {row.isStale && <div>Source facts changed</div>}
               </TableCell>
               <TableCell>
-                {row.readyToFinalize
-                  ? 'Ready to finalize'
-                  : row.requiresReview
-                    ? 'Requires review'
-                    : 'No review flag'}
-                <div className="text-xs">{row.attentionCategories.join(', ')}</div>
+                <Badge
+                  intent={row.requiresReview ? 'warning' : row.readyToFinalize ? 'info' : 'neutral'}
+                >
+                  {row.readyToFinalize
+                    ? 'Ready to finalize'
+                    : row.requiresReview
+                      ? 'Requires review'
+                      : 'No review flag'}
+                </Badge>
+                <div className="text-xs text-muted-foreground">
+                  {row.attentionCategories
+                    .filter((category) => !(row.requiresReview && category === 'RequiresReview'))
+                    .map(attendanceLabel)
+                    .join(' · ')}
+                </div>
               </TableCell>
               <TableCell>
                 <div className="flex flex-wrap gap-2">
@@ -147,7 +184,10 @@ export function Rows({
                       Inspect
                     </Button>
                   )}
-                  <LinkButton to={`/hr/attendance/${row.employeeId}/${row.businessDate}`}>
+                  <LinkButton
+                    variant="outline"
+                    to={`/hr/attendance/${row.employeeId}/${row.businessDate}`}
+                  >
                     Review day
                   </LinkButton>
                 </div>

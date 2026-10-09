@@ -328,3 +328,9 @@
     --content-gutter: var(--space-6);
   }
 }
+.shell-destination > span {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}

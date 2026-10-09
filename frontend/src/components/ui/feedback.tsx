@@ -11,7 +11,14 @@ const intents: Record<Intent, string> = {
   neutral: 'text-muted-foreground bg-muted',
 };
 export function Badge({ intent = 'neutral', children }: { intent?: Intent; children: ReactNode }) {
-  return <span className={cn('ui-status inline-flex', intents[intent])}>{children}</span>;
+  return (
+    <span
+      data-intent={intent}
+      className={cn('ui-status inline-flex border border-current/20', intents[intent])}
+    >
+      {children}
+    </span>
+  );
 }
 export function Card({ className, ...props }: ComponentProps<'div'>) {
   return (

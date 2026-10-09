@@ -10,7 +10,8 @@ const styles = cva(
       variant: {
         primary: 'ui-button-primary',
         secondary: 'bg-secondary text-secondary-foreground enabled:hover:bg-muted',
-        outline: 'border border-input bg-surface enabled:hover:bg-muted',
+        outline:
+          'border border-border bg-secondary text-secondary-foreground enabled:hover:bg-muted',
         ghost: 'enabled:hover:bg-muted',
         destructive: 'bg-destructive text-primary-foreground enabled:hover:opacity-90',
         'destructive-outline': 'ui-button-destructive-outline border bg-surface',

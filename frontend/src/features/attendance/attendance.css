@@ -1,7 +1,85 @@
 .attendance-workspace {
   display: grid;
-  gap: var(--space-6);
+  gap: var(--space-4);
   min-width: 0;
+}
+
+.attendance-filter-bar,
+.attendance-panel {
+  padding: var(--space-4);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-panel);
+}
+.attendance-panel {
+  display: grid;
+  gap: var(--space-4);
+  min-width: 0;
+}
+.attendance-section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+}
+.attendance-boundary {
+  color: var(--muted-foreground);
+  font-size: var(--text-meta);
+  border-left: 2px solid var(--border);
+  padding-left: var(--space-3);
+}
+.attendance-status {
+  display: inline-block;
+  font-size: var(--text-meta);
+  font-weight: var(--weight-label);
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  background: var(--muted);
+}
+.attendance-status[data-attention='true'],
+.attendance-notice {
+  border-color: var(--warning);
+}
+.attendance-notice {
+  padding: var(--space-4);
+  border-left: 3px solid var(--warning);
+  display: grid;
+  gap: var(--space-3);
+}
+.attendance-action-groups {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  gap: var(--space-4);
+}
+.attendance-action-group {
+  display: grid;
+  align-content: start;
+  gap: var(--space-3);
+}
+.attendance-technical {
+  font-size: var(--text-meta);
+  color: var(--muted-foreground);
+}
+.attendance-workspace .attendance-technical > summary {
+  font-weight: var(--weight-label);
+  padding-block: var(--space-2);
+}
+.attendance-technical code {
+  overflow-wrap: anywhere;
+}
+@media (max-width: 767px) {
+  .attendance-action-groups {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .attendance-action-group + .attendance-action-group {
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--border);
+  }
+  .attendance-review-actions .ui-record-actions > * {
+    flex: 1 1 180px;
+  }
 }
 .attendance-workspace > *,
 .attendance-filters > * {

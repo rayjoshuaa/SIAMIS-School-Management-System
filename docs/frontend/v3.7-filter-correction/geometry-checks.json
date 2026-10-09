@@ -1,0 +1,2600 @@
+[
+  {
+    "page": "directory",
+    "width": 1920,
+    "height": 1080,
+    "fields": [
+      {
+        "cell": {
+          "left": 276.8000183105469,
+          "right": 1761.037567138672,
+          "width": 1484.237548828125
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 276.8000183105469,
+          "right": 1761.037567138672,
+          "top": 265.8000183105469,
+          "width": 1484.237548828125
+        },
+        "iconClear": true,
+        "label": "Search employees",
+        "valueEllipsis": null,
+        "valueOverflow": null
+      },
+      {
+        "cell": {
+          "left": 276.8000183105469,
+          "right": 462.6000213623047,
+          "width": 185.8000030517578
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 276.8000183105469,
+          "right": 462.6000213623047,
+          "top": 353.8000183105469,
+          "width": 185.8000030517578
+        },
+        "iconClear": true,
+        "label": "Department",
+        "valueEllipsis": "ellipsis",
+        "valueOverflow": false
+      },
+      {
+        "cell": {
+          "left": 478.6000061035156,
+          "right": 664.4000091552734,
+          "width": 185.8000030517578
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 478.6000061035156,
+          "right": 664.4000091552734,
+          "top": 353.8000183105469,
+          "width": 185.8000030517578
+        },
+        "iconClear": true,
+        "label": "Designation",
+        "valueEllipsis": "ellipsis",
+        "valueOverflow": false
+      },
+      {
+        "cell": {
+          "left": 680.4000244140625,
+          "right": 866.2000274658203,
+          "width": 185.8000030517578
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 680.4000244140625,
+          "right": 866.2000274658203,
+          "top": 353.8000183105469,
+          "width": 185.8000030517578
+        },
+        "iconClear": true,
+        "label": "Employment status",
+        "valueEllipsis": "ellipsis",
+        "valueOverflow": true
+      },
+      {
+        "cell": {
+          "left": 882.2000122070312,
+          "right": 1068.000015258789,
+          "width": 185.8000030517578
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 882.2000122070312,
+          "right": 1068.000015258789,
+          "top": 353.8000183105469,
+          "width": 185.8000030517578
+        },
+        "iconClear": true,
+        "label": "Employee record",
+        "valueEllipsis": null,
+        "valueOverflow": null
+      }
+    ],
+    "pageWidth": 1920,
+    "viewport": 1920
+  },
+  {
+    "page": "directory",
+    "width": 1440,
+    "height": 900,
+    "fields": [
+      {
+        "cell": {
+          "left": 272.8000183105469,
+          "right": 1285.0375061035156,
+          "width": 1012.2374877929688
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 272.8000183105469,
+          "right": 1285.0375061035156,
+          "top": 265.8000183105469,
+          "width": 1012.2374877929688
+        },
+        "iconClear": true,
+        "label": "Search employees",
+        "valueEllipsis": null,
+        "valueOverflow": null
+      },
+      {
+        "cell": {
+          "left": 272.8000183105469,
+          "right": 485.2750244140625,
+          "width": 212.4750061035156
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 272.8000183105469,
+          "right": 485.2750244140625,
+          "top": 353.8000183105469,
+          "width": 212.4750061035156
+        },
+        "iconClear": true,
+        "label": "Department",
+        "valueEllipsis": "ellipsis",
+        "valueOverflow": false
+      },
+      {
+        "cell": {
+          "left": 501.2749938964844,
+          "right": 713.75,
+          "width": 212.4750061035156
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 501.2749938964844,
+          "right": 713.75,
+          "top": 353.8000183105469,
+          "width": 212.4750061035156
+        },
+        "iconClear": true,
+        "label": "Designation",
+        "valueEllipsis": "ellipsis",
+        "valueOverflow": false
+      },
+      {
+        "cell": {
+          "left": 729.75,
+          "right": 942.2375030517578,
+          "width": 212.4875030517578
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 729.75,
+          "right": 942.2375030517578,
+          "top": 353.8000183105469,
+          "width": 212.4875030517578
+        },
+        "iconClear": true,
+        "label": "Employment status",
+        "valueEllipsis": "ellipsis",
+        "valueOverflow": true
+      },
+      {
+        "cell": {
+          "left": 958.2374877929688,
+          "right": 1170.7124938964844,
+          "width": 212.4750061035156
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 958.2374877929688,
+          "right": 1170.7124938964844,
+          "top": 353.8000183105469,
+          "width": 212.4750061035156
+        },
+        "iconClear": true,
+        "label": "Employee record",
+        "valueEllipsis": null,
+        "valueOverflow": null
+      }
+    ],
+    "pageWidth": 1440,
+    "viewport": 1440
+  },
+  {
+    "page": "directory",
+    "width": 1280,
+    "height": 800,
+    "fields": [
+      {
+        "cell": {
+          "left": 272.8000183105469,
+          "right": 1125.0375061035156,
+          "width": 852.2374877929688
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 272.8000183105469,
+          "right": 1125.0375061035156,
+          "top": 265.8000183105469,
+          "width": 852.2374877929688
+        },
+        "iconClear": true,
+        "label": "Search employees",
+        "valueEllipsis": null,
+        "valueOverflow": null
+      },
+      {
+        "cell": {
+          "left": 272.8000183105469,
+          "right": 453.2750244140625,
+          "width": 180.4750061035156
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 272.8000183105469,
+          "right": 453.2750244140625,
+          "top": 353.8000183105469,
+          "width": 180.4750061035156
+        },
+        "iconClear": true,
+        "label": "Department",
+        "valueEllipsis": "ellipsis",
+        "valueOverflow": true
+      },
+      {
+        "cell": {
+          "left": 469.2749938964844,
+          "right": 649.75,
+          "width": 180.4750061035156
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 469.2749938964844,
+          "right": 649.75,
+          "top": 353.8000183105469,
+          "width": 180.4750061035156
+        },
+        "iconClear": true,
+        "label": "Designation",
+        "valueEllipsis": "ellipsis",
+        "valueOverflow": true
+      },
+      {
+        "cell": {
+          "left": 665.75,
+          "right": 846.2375030517578,
+          "width": 180.4875030517578
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 665.75,
+          "right": 846.2375030517578,
+          "top": 353.8000183105469,
+          "width": 180.4875030517578
+        },
+        "iconClear": true,
+        "label": "Employment status",
+        "valueEllipsis": "ellipsis",
+        "valueOverflow": true
+      },
+      {
+        "cell": {
+          "left": 862.2374877929688,
+          "right": 1042.7124938964844,
+          "width": 180.4750061035156
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 862.2374877929688,
+          "right": 1042.7124938964844,
+          "top": 353.8000183105469,
+          "width": 180.4750061035156
+        },
+        "iconClear": true,
+        "label": "Employee record",
+        "valueEllipsis": null,
+        "valueOverflow": null
+      }
+    ],
+    "pageWidth": 1280,
+    "viewport": 1280
+  },
+  {
+    "page": "directory",
+    "width": 1024,
+    "height": 768,
+    "fields": [
+      {
+        "cell": {
+          "left": 260.8000183105469,
+          "right": 857.8375549316406,
+          "width": 597.0375366210938
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 260.8000183105469,
+          "right": 857.8375549316406,
+          "top": 265.8000183105469,
+          "width": 597.0375366210938
+        },
+        "iconClear": true,
+        "label": "Search employees",
+        "valueEllipsis": null,
+        "valueOverflow": null
+      },
+      {
+        "cell": {
+          "left": 260.8000183105469,
+          "right": 487.2000274658203,
+          "width": 226.40000915527344
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 260.8000183105469,
+          "right": 487.2000274658203,
+          "top": 353.8000183105469,
+          "width": 226.40000915527344
+        },
+        "iconClear": true,
+        "label": "Department",
+        "valueEllipsis": "ellipsis",
+        "valueOverflow": false
+      },
+      {
+        "cell": {
+          "left": 503.2000122070313,
+          "right": 729.6000213623047,
+          "width": 226.40000915527344
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 503.2000122070313,
+          "right": 729.6000213623047,
+          "top": 353.8000183105469,
+          "width": 226.40000915527344
+        },
+        "iconClear": true,
+        "label": "Designation",
+        "valueEllipsis": "ellipsis",
+        "valueOverflow": false
+      },
+      {
+        "cell": {
+          "left": 745.6000366210938,
+          "right": 972.0000457763672,
+          "width": 226.40000915527344
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 745.6000366210938,
+          "right": 972.0000457763672,
+          "top": 353.8000183105469,
+          "width": 226.40000915527344
+        },
+        "iconClear": true,
+        "label": "Employment status",
+        "valueEllipsis": "ellipsis",
+        "valueOverflow": true
+      },
+      {
+        "cell": {
+          "left": 260.8000183105469,
+          "right": 487.2000274658203,
+          "width": 226.40000915527344
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 260.8000183105469,
+          "right": 487.2000274658203,
+          "top": 441.8000183105469,
+          "width": 226.40000915527344
+        },
+        "iconClear": true,
+        "label": "Employee record",
+        "valueEllipsis": null,
+        "valueOverflow": null
+      }
+    ],
+    "pageWidth": 1009,
+    "viewport": 1024
+  },
+  {
+    "page": "directory",
+    "width": 768,
+    "height": 1024,
+    "fields": [
+      {
+        "cell": {
+          "left": 36.79999923706055,
+          "right": 617.0374870300293,
+          "width": 580.2374877929688
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 36.79999923706055,
+          "right": 617.0374870300293,
+          "top": 265.8000183105469,
+          "width": 580.2374877929688
+        },
+        "iconClear": true,
+        "label": "Search employees",
+        "valueEllipsis": null,
+        "valueOverflow": null
+      },
+      {
+        "cell": {
+          "left": 36.79999923706055,
+          "right": 257.60000228881836,
+          "width": 220.8000030517578
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 36.79999923706055,
+          "right": 257.60000228881836,
+          "top": 353.8000183105469,
+          "width": 220.8000030517578
+        },
+        "iconClear": true,
+        "label": "Department",
+        "valueEllipsis": "ellipsis",
+        "valueOverflow": false
+      },
+      {
+        "cell": {
+          "left": 273.6000061035156,
+          "right": 494.40000915527344,
+          "width": 220.8000030517578
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 273.6000061035156,
+          "right": 494.40000915527344,
+          "top": 353.8000183105469,
+          "width": 220.8000030517578
+        },
+        "iconClear": true,
+        "label": "Designation",
+        "valueEllipsis": "ellipsis",
+        "valueOverflow": false
+      },
+      {
+        "cell": {
+          "left": 510.3999938964844,
+          "right": 731.1999969482422,
+          "width": 220.8000030517578
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 510.3999938964844,
+          "right": 731.1999969482422,
+          "top": 353.8000183105469,
+          "width": 220.8000030517578
+        },
+        "iconClear": true,
+        "label": "Employment status",
+        "valueEllipsis": "ellipsis",
+        "valueOverflow": true
+      },
+      {
+        "cell": {
+          "left": 36.79999923706055,
+          "right": 257.60000228881836,
+          "width": 220.8000030517578
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 36.79999923706055,
+          "right": 257.60000228881836,
+          "top": 441.8000183105469,
+          "width": 220.8000030517578
+        },
+        "iconClear": true,
+        "label": "Employee record",
+        "valueEllipsis": null,
+        "valueOverflow": null
+      }
+    ],
+    "pageWidth": 768,
+    "viewport": 768
+  },
+  {
+    "page": "directory",
+    "width": 390,
+    "height": 844,
+    "fields": [
+      {
+        "cell": {
+          "left": 32.79999923706055,
+          "right": 228.23749923706055,
+          "width": 195.4375
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 32.79999923706055,
+          "right": 228.23749923706055,
+          "top": 305.3000183105469,
+          "width": 195.4375
+        },
+        "iconClear": true,
+        "label": "Search employees",
+        "valueEllipsis": null,
+        "valueOverflow": null
+      },
+      {
+        "cell": {
+          "left": 32.79999923706055,
+          "right": 342.4000053405762,
+          "width": 309.6000061035156
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 32.79999923706055,
+          "right": 342.4000053405762,
+          "top": 393.3000183105469,
+          "width": 309.6000061035156
+        },
+        "iconClear": true,
+        "label": "Department",
+        "valueEllipsis": "ellipsis",
+        "valueOverflow": false
+      },
+      {
+        "cell": {
+          "left": 32.79999923706055,
+          "right": 342.4000053405762,
+          "width": 309.6000061035156
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 32.79999923706055,
+          "right": 342.4000053405762,
+          "top": 481.3000183105469,
+          "width": 309.6000061035156
+        },
+        "iconClear": true,
+        "label": "Designation",
+        "valueEllipsis": "ellipsis",
+        "valueOverflow": false
+      },
+      {
+        "cell": {
+          "left": 32.79999923706055,
+          "right": 342.4000053405762,
+          "width": 309.6000061035156
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 32.79999923706055,
+          "right": 342.4000053405762,
+          "top": 569.2999877929688,
+          "width": 309.6000061035156
+        },
+        "iconClear": true,
+        "label": "Employment status",
+        "valueEllipsis": "ellipsis",
+        "valueOverflow": false
+      },
+      {
+        "cell": {
+          "left": 32.79999923706055,
+          "right": 342.4000053405762,
+          "width": 309.6000061035156
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 32.79999923706055,
+          "right": 342.4000053405762,
+          "top": 657.2999877929688,
+          "width": 309.6000061035156
+        },
+        "iconClear": true,
+        "label": "Employee record",
+        "valueEllipsis": null,
+        "valueOverflow": null
+      }
+    ],
+    "pageWidth": 375,
+    "viewport": 390
+  },
+  {
+    "page": "directory",
+    "width": 1190,
+    "height": 800,
+    "fields": [
+      {
+        "cell": {
+          "left": 260.8000183105469,
+          "right": 1039.437530517578,
+          "width": 778.6375122070312
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 260.8000183105469,
+          "right": 1039.437530517578,
+          "top": 265.8000183105469,
+          "width": 778.6375122070312
+        },
+        "iconClear": true,
+        "label": "Search employees",
+        "valueEllipsis": null,
+        "valueOverflow": null
+      },
+      {
+        "cell": {
+          "left": 260.8000183105469,
+          "right": 472.00001525878906,
+          "width": 211.1999969482422
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 260.8000183105469,
+          "right": 472.00001525878906,
+          "top": 353.8000183105469,
+          "width": 211.1999969482422
+        },
+        "iconClear": true,
+        "label": "Department",
+        "valueEllipsis": "ellipsis",
+        "valueOverflow": false
+      },
+      {
+        "cell": {
+          "left": 488,
+          "right": 699.1999969482422,
+          "width": 211.1999969482422
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 488,
+          "right": 699.1999969482422,
+          "top": 353.8000183105469,
+          "width": 211.1999969482422
+        },
+        "iconClear": true,
+        "label": "Designation",
+        "valueEllipsis": "ellipsis",
+        "valueOverflow": false
+      },
+      {
+        "cell": {
+          "left": 715.2000122070312,
+          "right": 926.4000091552734,
+          "width": 211.1999969482422
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 715.2000122070312,
+          "right": 926.4000091552734,
+          "top": 353.8000183105469,
+          "width": 211.1999969482422
+        },
+        "iconClear": true,
+        "label": "Employment status",
+        "valueEllipsis": "ellipsis",
+        "valueOverflow": true
+      },
+      {
+        "cell": {
+          "left": 942.4000244140624,
+          "right": 1153.6000213623047,
+          "width": 211.1999969482422
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 942.4000244140624,
+          "right": 1153.6000213623047,
+          "top": 353.8000183105469,
+          "width": 211.1999969482422
+        },
+        "iconClear": true,
+        "label": "Employee record",
+        "valueEllipsis": null,
+        "valueOverflow": null
+      }
+    ],
+    "pageWidth": 1190,
+    "viewport": 1190
+  },
+  {
+    "page": "directory",
+    "width": 1210,
+    "height": 800,
+    "fields": [
+      {
+        "cell": {
+          "left": 260.8000183105469,
+          "right": 1059.437530517578,
+          "width": 798.6375122070312
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 260.8000183105469,
+          "right": 1059.437530517578,
+          "top": 265.8000183105469,
+          "width": 798.6375122070312
+        },
+        "iconClear": true,
+        "label": "Search employees",
+        "valueEllipsis": null,
+        "valueOverflow": null
+      },
+      {
+        "cell": {
+          "left": 260.8000183105469,
+          "right": 477.00001525878906,
+          "width": 216.1999969482422
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 260.8000183105469,
+          "right": 477.00001525878906,
+          "top": 353.8000183105469,
+          "width": 216.1999969482422
+        },
+        "iconClear": true,
+        "label": "Department",
+        "valueEllipsis": "ellipsis",
+        "valueOverflow": false
+      },
+      {
+        "cell": {
+          "left": 493,
+          "right": 709.1999969482422,
+          "width": 216.1999969482422
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 493,
+          "right": 709.1999969482422,
+          "top": 353.8000183105469,
+          "width": 216.1999969482422
+        },
+        "iconClear": true,
+        "label": "Designation",
+        "valueEllipsis": "ellipsis",
+        "valueOverflow": false
+      },
+      {
+        "cell": {
+          "left": 725.2000122070312,
+          "right": 941.4000091552734,
+          "width": 216.1999969482422
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 725.2000122070312,
+          "right": 941.4000091552734,
+          "top": 353.8000183105469,
+          "width": 216.1999969482422
+        },
+        "iconClear": true,
+        "label": "Employment status",
+        "valueEllipsis": "ellipsis",
+        "valueOverflow": true
+      },
+      {
+        "cell": {
+          "left": 957.4000244140624,
+          "right": 1173.6000213623047,
+          "width": 216.1999969482422
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 957.4000244140624,
+          "right": 1173.6000213623047,
+          "top": 353.8000183105469,
+          "width": 216.1999969482422
+        },
+        "iconClear": true,
+        "label": "Employee record",
+        "valueEllipsis": null,
+        "valueOverflow": null
+      }
+    ],
+    "pageWidth": 1210,
+    "viewport": 1210
+  },
+  {
+    "page": "directory",
+    "width": 1230,
+    "height": 800,
+    "fields": [
+      {
+        "cell": {
+          "left": 260.8000183105469,
+          "right": 1079.437530517578,
+          "width": 818.6375122070312
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 260.8000183105469,
+          "right": 1079.437530517578,
+          "top": 265.8000183105469,
+          "width": 818.6375122070312
+        },
+        "iconClear": true,
+        "label": "Search employees",
+        "valueEllipsis": null,
+        "valueOverflow": null
+      },
+      {
+        "cell": {
+          "left": 260.8000183105469,
+          "right": 482.00001525878906,
+          "width": 221.1999969482422
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 260.8000183105469,
+          "right": 482.00001525878906,
+          "top": 353.8000183105469,
+          "width": 221.1999969482422
+        },
+        "iconClear": true,
+        "label": "Department",
+        "valueEllipsis": "ellipsis",
+        "valueOverflow": false
+      },
+      {
+        "cell": {
+          "left": 498,
+          "right": 719.1999969482422,
+          "width": 221.1999969482422
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 498,
+          "right": 719.1999969482422,
+          "top": 353.8000183105469,
+          "width": 221.1999969482422
+        },
+        "iconClear": true,
+        "label": "Designation",
+        "valueEllipsis": "ellipsis",
+        "valueOverflow": false
+      },
+      {
+        "cell": {
+          "left": 735.2000122070312,
+          "right": 956.4000091552734,
+          "width": 221.1999969482422
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 735.2000122070312,
+          "right": 956.4000091552734,
+          "top": 353.8000183105469,
+          "width": 221.1999969482422
+        },
+        "iconClear": true,
+        "label": "Employment status",
+        "valueEllipsis": "ellipsis",
+        "valueOverflow": true
+      },
+      {
+        "cell": {
+          "left": 972.4000244140624,
+          "right": 1193.6000213623047,
+          "width": 221.1999969482422
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 972.4000244140624,
+          "right": 1193.6000213623047,
+          "top": 353.8000183105469,
+          "width": 221.1999969482422
+        },
+        "iconClear": true,
+        "label": "Employee record",
+        "valueEllipsis": null,
+        "valueOverflow": null
+      }
+    ],
+    "pageWidth": 1230,
+    "viewport": 1230
+  },
+  {
+    "page": "directory",
+    "width": 1250,
+    "height": 800,
+    "fields": [
+      {
+        "cell": {
+          "left": 260.8000183105469,
+          "right": 1099.437530517578,
+          "width": 838.6375122070312
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 260.8000183105469,
+          "right": 1099.437530517578,
+          "top": 265.8000183105469,
+          "width": 838.6375122070312
+        },
+        "iconClear": true,
+        "label": "Search employees",
+        "valueEllipsis": null,
+        "valueOverflow": null
+      },
+      {
+        "cell": {
+          "left": 260.8000183105469,
+          "right": 487.00001525878906,
+          "width": 226.1999969482422
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 260.8000183105469,
+          "right": 487.00001525878906,
+          "top": 353.8000183105469,
+          "width": 226.1999969482422
+        },
+        "iconClear": true,
+        "label": "Department",
+        "valueEllipsis": "ellipsis",
+        "valueOverflow": false
+      },
+      {
+        "cell": {
+          "left": 503,
+          "right": 729.1999969482422,
+          "width": 226.1999969482422
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 503,
+          "right": 729.1999969482422,
+          "top": 353.8000183105469,
+          "width": 226.1999969482422
+        },
+        "iconClear": true,
+        "label": "Designation",
+        "valueEllipsis": "ellipsis",
+        "valueOverflow": false
+      },
+      {
+        "cell": {
+          "left": 745.2000122070312,
+          "right": 971.4000091552734,
+          "width": 226.1999969482422
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 745.2000122070312,
+          "right": 971.4000091552734,
+          "top": 353.8000183105469,
+          "width": 226.1999969482422
+        },
+        "iconClear": true,
+        "label": "Employment status",
+        "valueEllipsis": "ellipsis",
+        "valueOverflow": true
+      },
+      {
+        "cell": {
+          "left": 987.4000244140624,
+          "right": 1213.6000213623047,
+          "width": 226.1999969482422
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 987.4000244140624,
+          "right": 1213.6000213623047,
+          "top": 353.8000183105469,
+          "width": 226.1999969482422
+        },
+        "iconClear": true,
+        "label": "Employee record",
+        "valueEllipsis": null,
+        "valueOverflow": null
+      }
+    ],
+    "pageWidth": 1250,
+    "viewport": 1250
+  },
+  {
+    "page": "directory",
+    "width": 1270,
+    "height": 800,
+    "fields": [
+      {
+        "cell": {
+          "left": 260.8000183105469,
+          "right": 1119.4250183105469,
+          "width": 858.625
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 260.8000183105469,
+          "right": 1119.4250183105469,
+          "top": 265.8000183105469,
+          "width": 858.625
+        },
+        "iconClear": true,
+        "label": "Search employees",
+        "valueEllipsis": null,
+        "valueOverflow": null
+      },
+      {
+        "cell": {
+          "left": 260.8000183105469,
+          "right": 442.5500183105469,
+          "width": 181.75
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 260.8000183105469,
+          "right": 442.5500183105469,
+          "top": 353.8000183105469,
+          "width": 181.75
+        },
+        "iconClear": true,
+        "label": "Department",
+        "valueEllipsis": "ellipsis",
+        "valueOverflow": true
+      },
+      {
+        "cell": {
+          "left": 458.5500183105469,
+          "right": 640.3125152587891,
+          "width": 181.7624969482422
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 458.5500183105469,
+          "right": 640.3125152587891,
+          "top": 353.8000183105469,
+          "width": 181.7624969482422
+        },
+        "iconClear": true,
+        "label": "Designation",
+        "valueEllipsis": "ellipsis",
+        "valueOverflow": true
+      },
+      {
+        "cell": {
+          "left": 656.3125,
+          "right": 838.0749969482422,
+          "width": 181.7624969482422
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 656.3125,
+          "right": 838.0749969482422,
+          "top": 353.8000183105469,
+          "width": 181.7624969482422
+        },
+        "iconClear": true,
+        "label": "Employment status",
+        "valueEllipsis": "ellipsis",
+        "valueOverflow": true
+      },
+      {
+        "cell": {
+          "left": 854.0750122070312,
+          "right": 1035.8375091552734,
+          "width": 181.7624969482422
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 854.0750122070312,
+          "right": 1035.8375091552734,
+          "top": 353.8000183105469,
+          "width": 181.7624969482422
+        },
+        "iconClear": true,
+        "label": "Employee record",
+        "valueEllipsis": null,
+        "valueOverflow": null
+      }
+    ],
+    "pageWidth": 1270,
+    "viewport": 1270
+  },
+  {
+    "page": "directory",
+    "width": 1290,
+    "height": 800,
+    "fields": [
+      {
+        "cell": {
+          "left": 272.8000183105469,
+          "right": 1135.4250183105469,
+          "width": 862.625
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 272.8000183105469,
+          "right": 1135.4250183105469,
+          "top": 265.8000183105469,
+          "width": 862.625
+        },
+        "iconClear": true,
+        "label": "Search employees",
+        "valueEllipsis": null,
+        "valueOverflow": null
+      },
+      {
+        "cell": {
+          "left": 272.8000183105469,
+          "right": 455.3500213623047,
+          "width": 182.5500030517578
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 272.8000183105469,
+          "right": 455.3500213623047,
+          "top": 353.8000183105469,
+          "width": 182.5500030517578
+        },
+        "iconClear": true,
+        "label": "Department",
+        "valueEllipsis": "ellipsis",
+        "valueOverflow": true
+      },
+      {
+        "cell": {
+          "left": 471.3500061035156,
+          "right": 653.9125061035156,
+          "width": 182.5625
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 471.3500061035156,
+          "right": 653.9125061035156,
+          "top": 353.8000183105469,
+          "width": 182.5625
+        },
+        "iconClear": true,
+        "label": "Designation",
+        "valueEllipsis": "ellipsis",
+        "valueOverflow": true
+      },
+      {
+        "cell": {
+          "left": 669.9125366210938,
+          "right": 852.4750366210938,
+          "width": 182.5625
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 669.9125366210938,
+          "right": 852.4750366210938,
+          "top": 353.8000183105469,
+          "width": 182.5625
+        },
+        "iconClear": true,
+        "label": "Employment status",
+        "valueEllipsis": "ellipsis",
+        "valueOverflow": true
+      },
+      {
+        "cell": {
+          "left": 868.4750366210938,
+          "right": 1051.0375366210938,
+          "width": 182.5625
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 868.4750366210938,
+          "right": 1051.0375366210938,
+          "top": 353.8000183105469,
+          "width": 182.5625
+        },
+        "iconClear": true,
+        "label": "Employee record",
+        "valueEllipsis": null,
+        "valueOverflow": null
+      }
+    ],
+    "pageWidth": 1290,
+    "viewport": 1290
+  },
+  {
+    "page": "directory",
+    "width": 1310,
+    "height": 800,
+    "fields": [
+      {
+        "cell": {
+          "left": 272.8000183105469,
+          "right": 1155.4250183105469,
+          "width": 882.625
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 272.8000183105469,
+          "right": 1155.4250183105469,
+          "top": 265.8000183105469,
+          "width": 882.625
+        },
+        "iconClear": true,
+        "label": "Search employees",
+        "valueEllipsis": null,
+        "valueOverflow": null
+      },
+      {
+        "cell": {
+          "left": 272.8000183105469,
+          "right": 459.3500213623047,
+          "width": 186.5500030517578
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 272.8000183105469,
+          "right": 459.3500213623047,
+          "top": 353.8000183105469,
+          "width": 186.5500030517578
+        },
+        "iconClear": true,
+        "label": "Department",
+        "valueEllipsis": "ellipsis",
+        "valueOverflow": false
+      },
+      {
+        "cell": {
+          "left": 475.3500061035156,
+          "right": 661.9125061035156,
+          "width": 186.5625
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 475.3500061035156,
+          "right": 661.9125061035156,
+          "top": 353.8000183105469,
+          "width": 186.5625
+        },
+        "iconClear": true,
+        "label": "Designation",
+        "valueEllipsis": "ellipsis",
+        "valueOverflow": false
+      },
+      {
+        "cell": {
+          "left": 677.9125366210938,
+          "right": 864.4750366210938,
+          "width": 186.5625
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 677.9125366210938,
+          "right": 864.4750366210938,
+          "top": 353.8000183105469,
+          "width": 186.5625
+        },
+        "iconClear": true,
+        "label": "Employment status",
+        "valueEllipsis": "ellipsis",
+        "valueOverflow": true
+      },
+      {
+        "cell": {
+          "left": 880.4750366210938,
+          "right": 1067.0375366210938,
+          "width": 186.5625
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 880.4750366210938,
+          "right": 1067.0375366210938,
+          "top": 353.8000183105469,
+          "width": 186.5625
+        },
+        "iconClear": true,
+        "label": "Employee record",
+        "valueEllipsis": null,
+        "valueOverflow": null
+      }
+    ],
+    "pageWidth": 1310,
+    "viewport": 1310
+  },
+  {
+    "page": "directory-long-value",
+    "width": 1280,
+    "height": 800,
+    "fields": [
+      {
+        "cell": {
+          "left": 272.8000183105469,
+          "right": 1125.0375061035156,
+          "width": 852.2374877929688
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 272.8000183105469,
+          "right": 1125.0375061035156,
+          "top": 265.8000183105469,
+          "width": 852.2374877929688
+        },
+        "iconClear": true,
+        "label": "Search employees",
+        "valueEllipsis": null,
+        "valueOverflow": null
+      },
+      {
+        "cell": {
+          "left": 272.8000183105469,
+          "right": 453.2750244140625,
+          "width": 180.4750061035156
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 272.8000183105469,
+          "right": 453.2750244140625,
+          "top": 353.8000183105469,
+          "width": 180.4750061035156
+        },
+        "iconClear": true,
+        "label": "Department",
+        "valueEllipsis": "ellipsis",
+        "valueOverflow": true
+      },
+      {
+        "cell": {
+          "left": 469.2749938964844,
+          "right": 649.75,
+          "width": 180.4750061035156
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 469.2749938964844,
+          "right": 649.75,
+          "top": 353.8000183105469,
+          "width": 180.4750061035156
+        },
+        "iconClear": true,
+        "label": "Designation",
+        "valueEllipsis": "ellipsis",
+        "valueOverflow": true
+      },
+      {
+        "cell": {
+          "left": 665.75,
+          "right": 846.2375030517578,
+          "width": 180.4875030517578
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 665.75,
+          "right": 846.2375030517578,
+          "top": 353.8000183105469,
+          "width": 180.4875030517578
+        },
+        "iconClear": true,
+        "label": "Employment status",
+        "valueEllipsis": "ellipsis",
+        "valueOverflow": true
+      },
+      {
+        "cell": {
+          "left": 862.2374877929688,
+          "right": 1042.7124938964844,
+          "width": 180.4750061035156
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 862.2374877929688,
+          "right": 1042.7124938964844,
+          "top": 353.8000183105469,
+          "width": 180.4750061035156
+        },
+        "iconClear": true,
+        "label": "Employee record",
+        "valueEllipsis": null,
+        "valueOverflow": null
+      }
+    ],
+    "pageWidth": 1280,
+    "viewport": 1280
+  },
+  {
+    "page": "directory-long-value",
+    "width": 1280,
+    "height": 800,
+    "fields": [
+      {
+        "cell": {
+          "left": 272.8000183105469,
+          "right": 1125.0375061035156,
+          "width": 852.2374877929688
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 272.8000183105469,
+          "right": 1125.0375061035156,
+          "top": 265.8000183105469,
+          "width": 852.2374877929688
+        },
+        "iconClear": true,
+        "label": "Search employees",
+        "valueEllipsis": null,
+        "valueOverflow": null
+      },
+      {
+        "cell": {
+          "left": 272.8000183105469,
+          "right": 453.2750244140625,
+          "width": 180.4750061035156
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 272.8000183105469,
+          "right": 453.2750244140625,
+          "top": 353.8000183105469,
+          "width": 180.4750061035156
+        },
+        "iconClear": true,
+        "label": "Department",
+        "valueEllipsis": "ellipsis",
+        "valueOverflow": true
+      },
+      {
+        "cell": {
+          "left": 469.2749938964844,
+          "right": 649.75,
+          "width": 180.4750061035156
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 469.2749938964844,
+          "right": 649.75,
+          "top": 353.8000183105469,
+          "width": 180.4750061035156
+        },
+        "iconClear": true,
+        "label": "Designation",
+        "valueEllipsis": "ellipsis",
+        "valueOverflow": true
+      },
+      {
+        "cell": {
+          "left": 665.75,
+          "right": 846.2375030517578,
+          "width": 180.4875030517578
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 665.75,
+          "right": 846.2375030517578,
+          "top": 353.8000183105469,
+          "width": 180.4875030517578
+        },
+        "iconClear": true,
+        "label": "Employment status",
+        "valueEllipsis": "ellipsis",
+        "valueOverflow": true
+      },
+      {
+        "cell": {
+          "left": 862.2374877929688,
+          "right": 1042.7124938964844,
+          "width": 180.4750061035156
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 862.2374877929688,
+          "right": 1042.7124938964844,
+          "top": 353.8000183105469,
+          "width": 180.4750061035156
+        },
+        "iconClear": true,
+        "label": "Employee record",
+        "valueEllipsis": null,
+        "valueOverflow": null
+      }
+    ],
+    "pageWidth": 1280,
+    "viewport": 1280
+  },
+  {
+    "page": "attendance",
+    "width": 1920,
+    "height": 1080,
+    "fields": [
+      {
+        "cell": {
+          "left": 276.8000183105469,
+          "right": 664.4000244140625,
+          "width": 387.6000061035156
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 276.8000183105469,
+          "right": 664.4000244140625,
+          "top": 310.1000061035156,
+          "width": 387.6000061035156
+        },
+        "iconClear": true,
+        "label": "Business date",
+        "valueEllipsis": null,
+        "valueOverflow": null
+      },
+      {
+        "cell": {
+          "left": 680.4000244140625,
+          "right": 1068.000030517578,
+          "width": 387.6000061035156
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 680.4000244140625,
+          "right": 1068.000030517578,
+          "top": 310.1000061035156,
+          "width": 387.6000061035156
+        },
+        "iconClear": true,
+        "label": "Department",
+        "valueEllipsis": "ellipsis",
+        "valueOverflow": false
+      },
+      {
+        "cell": {
+          "left": 1084,
+          "right": 1471.6000061035156,
+          "width": 387.6000061035156
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 1084,
+          "right": 1471.6000061035156,
+          "top": 310.1000061035156,
+          "width": 387.6000061035156
+        },
+        "iconClear": true,
+        "label": "Designation",
+        "valueEllipsis": "ellipsis",
+        "valueOverflow": false
+      }
+    ],
+    "pageWidth": 1920,
+    "viewport": 1920
+  },
+  {
+    "page": "attendance",
+    "width": 1440,
+    "height": 900,
+    "fields": [
+      {
+        "cell": {
+          "left": 272.8000183105469,
+          "right": 538.6000366210938,
+          "width": 265.8000183105469
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 272.8000183105469,
+          "right": 538.6000366210938,
+          "top": 310.1000061035156,
+          "width": 265.8000183105469
+        },
+        "iconClear": true,
+        "label": "Business date",
+        "valueEllipsis": null,
+        "valueOverflow": null
+      },
+      {
+        "cell": {
+          "left": 554.6000366210938,
+          "right": 820.4000549316406,
+          "width": 265.8000183105469
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 554.6000366210938,
+          "right": 820.4000549316406,
+          "top": 310.1000061035156,
+          "width": 265.8000183105469
+        },
+        "iconClear": true,
+        "label": "Department",
+        "valueEllipsis": "ellipsis",
+        "valueOverflow": false
+      },
+      {
+        "cell": {
+          "left": 836.4000244140625,
+          "right": 1102.2000427246094,
+          "width": 265.8000183105469
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 836.4000244140625,
+          "right": 1102.2000427246094,
+          "top": 310.1000061035156,
+          "width": 265.8000183105469
+        },
+        "iconClear": true,
+        "label": "Designation",
+        "valueEllipsis": "ellipsis",
+        "valueOverflow": false
+      }
+    ],
+    "pageWidth": 1425,
+    "viewport": 1440
+  },
+  {
+    "page": "attendance",
+    "width": 1280,
+    "height": 800,
+    "fields": [
+      {
+        "cell": {
+          "left": 272.8000183105469,
+          "right": 498.6000213623047,
+          "width": 225.8000030517578
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 272.8000183105469,
+          "right": 498.6000213623047,
+          "top": 310.1000061035156,
+          "width": 225.8000030517578
+        },
+        "iconClear": true,
+        "label": "Business date",
+        "valueEllipsis": null,
+        "valueOverflow": null
+      },
+      {
+        "cell": {
+          "left": 514.6000366210938,
+          "right": 740.4000396728516,
+          "width": 225.8000030517578
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 514.6000366210938,
+          "right": 740.4000396728516,
+          "top": 310.1000061035156,
+          "width": 225.8000030517578
+        },
+        "iconClear": true,
+        "label": "Department",
+        "valueEllipsis": "ellipsis",
+        "valueOverflow": false
+      },
+      {
+        "cell": {
+          "left": 756.4000244140625,
+          "right": 982.2000274658204,
+          "width": 225.8000030517578
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 756.4000244140625,
+          "right": 982.2000274658204,
+          "top": 310.1000061035156,
+          "width": 225.8000030517578
+        },
+        "iconClear": true,
+        "label": "Designation",
+        "valueEllipsis": "ellipsis",
+        "valueOverflow": false
+      }
+    ],
+    "pageWidth": 1265,
+    "viewport": 1280
+  },
+  {
+    "page": "attendance",
+    "width": 1024,
+    "height": 768,
+    "fields": [
+      {
+        "cell": {
+          "left": 260.8000183105469,
+          "right": 487.2000274658203,
+          "width": 226.40000915527344
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 260.8000183105469,
+          "right": 487.2000274658203,
+          "top": 329.6000061035156,
+          "width": 226.40000915527344
+        },
+        "iconClear": true,
+        "label": "Business date",
+        "valueEllipsis": null,
+        "valueOverflow": null
+      },
+      {
+        "cell": {
+          "left": 503.2000122070313,
+          "right": 729.6000213623047,
+          "width": 226.40000915527344
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 503.2000122070313,
+          "right": 729.6000213623047,
+          "top": 329.6000061035156,
+          "width": 226.40000915527344
+        },
+        "iconClear": true,
+        "label": "Department",
+        "valueEllipsis": "ellipsis",
+        "valueOverflow": false
+      },
+      {
+        "cell": {
+          "left": 745.6000366210938,
+          "right": 972.0000457763672,
+          "width": 226.40000915527344
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 745.6000366210938,
+          "right": 972.0000457763672,
+          "top": 329.6000061035156,
+          "width": 226.40000915527344
+        },
+        "iconClear": true,
+        "label": "Designation",
+        "valueEllipsis": "ellipsis",
+        "valueOverflow": false
+      }
+    ],
+    "pageWidth": 1009,
+    "viewport": 1024
+  },
+  {
+    "page": "attendance",
+    "width": 768,
+    "height": 1024,
+    "fields": [
+      {
+        "cell": {
+          "left": 36.79999923706055,
+          "right": 252.52500534057617,
+          "width": 215.7250061035156
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 36.79999923706055,
+          "right": 252.52500534057617,
+          "top": 329.6000061035156,
+          "width": 215.7250061035156
+        },
+        "iconClear": true,
+        "label": "Business date",
+        "valueEllipsis": null,
+        "valueOverflow": null
+      },
+      {
+        "cell": {
+          "left": 268.5249938964844,
+          "right": 484.2624969482422,
+          "width": 215.7375030517578
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 268.5249938964844,
+          "right": 484.2624969482422,
+          "top": 329.6000061035156,
+          "width": 215.7375030517578
+        },
+        "iconClear": true,
+        "label": "Department",
+        "valueEllipsis": "ellipsis",
+        "valueOverflow": false
+      },
+      {
+        "cell": {
+          "left": 500.2625122070313,
+          "right": 715.9875183105469,
+          "width": 215.7250061035156
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 500.2625122070313,
+          "right": 715.9875183105469,
+          "top": 329.6000061035156,
+          "width": 215.7250061035156
+        },
+        "iconClear": true,
+        "label": "Designation",
+        "valueEllipsis": "ellipsis",
+        "valueOverflow": false
+      }
+    ],
+    "pageWidth": 753,
+    "viewport": 768
+  },
+  {
+    "page": "attendance",
+    "width": 390,
+    "height": 844,
+    "fields": [
+      {
+        "cell": {
+          "left": 32.79999923706055,
+          "right": 342.4000053405762,
+          "width": 309.6000061035156
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 32.79999923706055,
+          "right": 342.4000053405762,
+          "top": 418.1000061035156,
+          "width": 309.6000061035156
+        },
+        "iconClear": true,
+        "label": "Business date",
+        "valueEllipsis": null,
+        "valueOverflow": null
+      },
+      {
+        "cell": {
+          "left": 32.79999923706055,
+          "right": 342.4000053405762,
+          "width": 309.6000061035156
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 32.79999923706055,
+          "right": 342.4000053405762,
+          "top": 525.6000366210938,
+          "width": 309.6000061035156
+        },
+        "iconClear": true,
+        "label": "Department",
+        "valueEllipsis": "ellipsis",
+        "valueOverflow": false
+      },
+      {
+        "cell": {
+          "left": 32.79999923706055,
+          "right": 342.4000053405762,
+          "width": 309.6000061035156
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 32.79999923706055,
+          "right": 342.4000053405762,
+          "top": 613.6000366210938,
+          "width": 309.6000061035156
+        },
+        "iconClear": true,
+        "label": "Designation",
+        "valueEllipsis": "ellipsis",
+        "valueOverflow": false
+      }
+    ],
+    "pageWidth": 375,
+    "viewport": 390
+  },
+  {
+    "page": "attendance",
+    "width": 1250,
+    "height": 800,
+    "fields": [
+      {
+        "cell": {
+          "left": 260.8000183105469,
+          "right": 483.2000274658203,
+          "width": 222.40000915527344
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 260.8000183105469,
+          "right": 483.2000274658203,
+          "top": 310.1000061035156,
+          "width": 222.40000915527344
+        },
+        "iconClear": true,
+        "label": "Business date",
+        "valueEllipsis": null,
+        "valueOverflow": null
+      },
+      {
+        "cell": {
+          "left": 499.2000122070313,
+          "right": 721.6000213623047,
+          "width": 222.40000915527344
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 499.2000122070313,
+          "right": 721.6000213623047,
+          "top": 310.1000061035156,
+          "width": 222.40000915527344
+        },
+        "iconClear": true,
+        "label": "Department",
+        "valueEllipsis": "ellipsis",
+        "valueOverflow": false
+      },
+      {
+        "cell": {
+          "left": 737.6000366210938,
+          "right": 960.0000457763672,
+          "width": 222.40000915527344
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 737.6000366210938,
+          "right": 960.0000457763672,
+          "top": 310.1000061035156,
+          "width": 222.40000915527344
+        },
+        "iconClear": true,
+        "label": "Designation",
+        "valueEllipsis": "ellipsis",
+        "valueOverflow": false
+      }
+    ],
+    "pageWidth": 1235,
+    "viewport": 1250
+  },
+  {
+    "page": "attendance",
+    "width": 1270,
+    "height": 800,
+    "fields": [
+      {
+        "cell": {
+          "left": 260.8000183105469,
+          "right": 488.2000274658203,
+          "width": 227.40000915527344
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 260.8000183105469,
+          "right": 488.2000274658203,
+          "top": 310.1000061035156,
+          "width": 227.40000915527344
+        },
+        "iconClear": true,
+        "label": "Business date",
+        "valueEllipsis": null,
+        "valueOverflow": null
+      },
+      {
+        "cell": {
+          "left": 504.2000122070313,
+          "right": 731.6000213623047,
+          "width": 227.40000915527344
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 504.2000122070313,
+          "right": 731.6000213623047,
+          "top": 310.1000061035156,
+          "width": 227.40000915527344
+        },
+        "iconClear": true,
+        "label": "Department",
+        "valueEllipsis": "ellipsis",
+        "valueOverflow": false
+      },
+      {
+        "cell": {
+          "left": 747.6000366210938,
+          "right": 975.0000457763672,
+          "width": 227.40000915527344
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 747.6000366210938,
+          "right": 975.0000457763672,
+          "top": 310.1000061035156,
+          "width": 227.40000915527344
+        },
+        "iconClear": true,
+        "label": "Designation",
+        "valueEllipsis": "ellipsis",
+        "valueOverflow": false
+      }
+    ],
+    "pageWidth": 1255,
+    "viewport": 1270
+  },
+  {
+    "page": "attendance-employee-history",
+    "width": 1920,
+    "height": 1080,
+    "fields": [
+      {
+        "cell": {
+          "left": 260,
+          "right": 793.3250122070312,
+          "width": 533.3250122070312
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 260,
+          "right": 793.3250122070312,
+          "top": 329.3000183105469,
+          "width": 533.3250122070312
+        },
+        "iconClear": true,
+        "label": "Find employee",
+        "valueEllipsis": null,
+        "valueOverflow": null
+      },
+      {
+        "cell": {
+          "left": 1358.6624755859375,
+          "right": 1892,
+          "width": 533.3375244140625
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 1358.6624755859375,
+          "right": 1892,
+          "top": 329.3000183105469,
+          "width": 533.3375244140625
+        },
+        "iconClear": true,
+        "label": "Employee",
+        "valueEllipsis": "ellipsis",
+        "valueOverflow": false
+      },
+      {
+        "cell": {
+          "left": 260,
+          "right": 793.3250122070312,
+          "width": 533.3250122070312
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 260,
+          "right": 793.3250122070312,
+          "top": 504.8000183105469,
+          "width": 533.3250122070312
+        },
+        "iconClear": true,
+        "label": "From*",
+        "valueEllipsis": null,
+        "valueOverflow": null
+      },
+      {
+        "cell": {
+          "left": 809.3250122070312,
+          "right": 1342.6625366210938,
+          "width": 533.3375244140625
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 809.3250122070312,
+          "right": 1342.6625366210938,
+          "top": 504.8000183105469,
+          "width": 533.3375244140625
+        },
+        "iconClear": true,
+        "label": "To*",
+        "valueEllipsis": null,
+        "valueOverflow": null
+      }
+    ],
+    "pageWidth": 1920,
+    "viewport": 1920
+  },
+  {
+    "page": "attendance-employee-history",
+    "width": 1440,
+    "height": 900,
+    "fields": [
+      {
+        "cell": {
+          "left": 256,
+          "right": 632,
+          "width": 376
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 256,
+          "right": 632,
+          "top": 329.3000183105469,
+          "width": 376
+        },
+        "iconClear": true,
+        "label": "Find employee",
+        "valueEllipsis": null,
+        "valueOverflow": null
+      },
+      {
+        "cell": {
+          "left": 1040,
+          "right": 1416,
+          "width": 376
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 1040,
+          "right": 1416,
+          "top": 329.3000183105469,
+          "width": 376
+        },
+        "iconClear": true,
+        "label": "Employee",
+        "valueEllipsis": "ellipsis",
+        "valueOverflow": false
+      },
+      {
+        "cell": {
+          "left": 256,
+          "right": 632,
+          "width": 376
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 256,
+          "right": 632,
+          "top": 524.2999877929688,
+          "width": 376
+        },
+        "iconClear": true,
+        "label": "From*",
+        "valueEllipsis": null,
+        "valueOverflow": null
+      },
+      {
+        "cell": {
+          "left": 648,
+          "right": 1024,
+          "width": 376
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 648,
+          "right": 1024,
+          "top": 524.2999877929688,
+          "width": 376
+        },
+        "iconClear": true,
+        "label": "To*",
+        "valueEllipsis": null,
+        "valueOverflow": null
+      }
+    ],
+    "pageWidth": 1440,
+    "viewport": 1440
+  },
+  {
+    "page": "attendance-employee-history",
+    "width": 1280,
+    "height": 800,
+    "fields": [
+      {
+        "cell": {
+          "left": 256,
+          "right": 578.6625061035156,
+          "width": 322.6625061035156
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 256,
+          "right": 578.6625061035156,
+          "top": 329.3000183105469,
+          "width": 322.6625061035156
+        },
+        "iconClear": true,
+        "label": "Find employee",
+        "valueEllipsis": null,
+        "valueOverflow": null
+      },
+      {
+        "cell": {
+          "left": 933.3250122070312,
+          "right": 1256.000030517578,
+          "width": 322.6750183105469
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 933.3250122070312,
+          "right": 1256.000030517578,
+          "top": 329.3000183105469,
+          "width": 322.6750183105469
+        },
+        "iconClear": true,
+        "label": "Employee",
+        "valueEllipsis": "ellipsis",
+        "valueOverflow": true
+      },
+      {
+        "cell": {
+          "left": 256,
+          "right": 578.6625061035156,
+          "width": 322.6625061035156
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 256,
+          "right": 578.6625061035156,
+          "top": 524.2999877929688,
+          "width": 322.6625061035156
+        },
+        "iconClear": true,
+        "label": "From*",
+        "valueEllipsis": null,
+        "valueOverflow": null
+      },
+      {
+        "cell": {
+          "left": 594.6625366210938,
+          "right": 917.3250427246094,
+          "width": 322.6625061035156
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 594.6625366210938,
+          "right": 917.3250427246094,
+          "top": 524.2999877929688,
+          "width": 322.6625061035156
+        },
+        "iconClear": true,
+        "label": "To*",
+        "valueEllipsis": null,
+        "valueOverflow": null
+      }
+    ],
+    "pageWidth": 1280,
+    "viewport": 1280
+  },
+  {
+    "page": "attendance-employee-history",
+    "width": 1024,
+    "height": 768,
+    "fields": [
+      {
+        "cell": {
+          "left": 244,
+          "right": 486.6625061035156,
+          "width": 242.6625061035156
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 244,
+          "right": 486.6625061035156,
+          "top": 368.8000183105469,
+          "width": 242.6625061035156
+        },
+        "iconClear": true,
+        "label": "Find employee",
+        "valueEllipsis": null,
+        "valueOverflow": null
+      },
+      {
+        "cell": {
+          "left": 761.3250122070312,
+          "right": 1004.0000152587892,
+          "width": 242.6750030517578
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 761.3250122070312,
+          "right": 1004.0000152587892,
+          "top": 368.8000183105469,
+          "width": 242.6750030517578
+        },
+        "iconClear": true,
+        "label": "Employee",
+        "valueEllipsis": "ellipsis",
+        "valueOverflow": true
+      },
+      {
+        "cell": {
+          "left": 244,
+          "right": 486.6625061035156,
+          "width": 242.6625061035156
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 244,
+          "right": 486.6625061035156,
+          "top": 563.7999877929688,
+          "width": 242.6625061035156
+        },
+        "iconClear": true,
+        "label": "From*",
+        "valueEllipsis": null,
+        "valueOverflow": null
+      },
+      {
+        "cell": {
+          "left": 502.6625061035156,
+          "right": 745.3250122070312,
+          "width": 242.6625061035156
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 502.6625061035156,
+          "right": 745.3250122070312,
+          "top": 563.7999877929688,
+          "width": 242.6625061035156
+        },
+        "iconClear": true,
+        "label": "To*",
+        "valueEllipsis": null,
+        "valueOverflow": null
+      }
+    ],
+    "pageWidth": 1024,
+    "viewport": 1024
+  },
+  {
+    "page": "attendance-employee-history",
+    "width": 768,
+    "height": 1024,
+    "fields": [
+      {
+        "cell": {
+          "left": 20,
+          "right": 252,
+          "width": 232
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 20,
+          "right": 252,
+          "top": 368.8000183105469,
+          "width": 232
+        },
+        "iconClear": true,
+        "label": "Find employee",
+        "valueEllipsis": null,
+        "valueOverflow": null
+      },
+      {
+        "cell": {
+          "left": 516,
+          "right": 748,
+          "width": 232
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 516,
+          "right": 748,
+          "top": 368.8000183105469,
+          "width": 232
+        },
+        "iconClear": true,
+        "label": "Employee",
+        "valueEllipsis": "ellipsis",
+        "valueOverflow": true
+      },
+      {
+        "cell": {
+          "left": 20,
+          "right": 252,
+          "width": 232
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 20,
+          "right": 252,
+          "top": 563.7999877929688,
+          "width": 232
+        },
+        "iconClear": true,
+        "label": "From*",
+        "valueEllipsis": null,
+        "valueOverflow": null
+      },
+      {
+        "cell": {
+          "left": 268,
+          "right": 500,
+          "width": 232
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 268,
+          "right": 500,
+          "top": 563.7999877929688,
+          "width": 232
+        },
+        "iconClear": true,
+        "label": "To*",
+        "valueEllipsis": null,
+        "valueOverflow": null
+      }
+    ],
+    "pageWidth": 768,
+    "viewport": 768
+  },
+  {
+    "page": "attendance-employee-history",
+    "width": 390,
+    "height": 844,
+    "fields": [
+      {
+        "cell": {
+          "left": 16,
+          "right": 359.20001220703125,
+          "width": 343.20001220703125
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 16,
+          "right": 359.20001220703125,
+          "top": 477.3000183105469,
+          "width": 343.20001220703125
+        },
+        "iconClear": true,
+        "label": "Find employee",
+        "valueEllipsis": null,
+        "valueOverflow": null
+      },
+      {
+        "cell": {
+          "left": 16,
+          "right": 359.20001220703125,
+          "width": 343.20001220703125
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 16,
+          "right": 359.20001220703125,
+          "top": 672.2999877929688,
+          "width": 343.20001220703125
+        },
+        "iconClear": true,
+        "label": "Employee",
+        "valueEllipsis": "ellipsis",
+        "valueOverflow": true
+      },
+      {
+        "cell": {
+          "left": 16,
+          "right": 359.20001220703125,
+          "width": 343.20001220703125
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 16,
+          "right": 359.20001220703125,
+          "top": 828.2999877929688,
+          "width": 343.20001220703125
+        },
+        "iconClear": true,
+        "label": "From*",
+        "valueEllipsis": null,
+        "valueOverflow": null
+      },
+      {
+        "cell": {
+          "left": 16,
+          "right": 359.20001220703125,
+          "width": 343.20001220703125
+        },
+        "contained": true,
+        "control": {
+          "height": 44,
+          "left": 16,
+          "right": 359.20001220703125,
+          "top": 916.2999877929688,
+          "width": 343.20001220703125
+        },
+        "iconClear": true,
+        "label": "To*",
+        "valueEllipsis": null,
+        "valueOverflow": null
+      }
+    ],
+    "pageWidth": 375,
+    "viewport": 390
+  }
+]

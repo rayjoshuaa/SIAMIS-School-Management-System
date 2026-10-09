@@ -1,15 +1,15 @@
 import { useRef, useState } from 'react';
-import { Plus, Eye } from 'lucide-react';
+import { Plus, Eye, Search } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '../../lib/auth/auth-context';
 import { api } from '../../lib/api/client';
 import { Button, LinkButton } from '../../components/ui/button';
 import { Badge } from '../../components/ui/feedback';
-import { Input } from '../../components/ui/controls';
+import { Input, FilterSelect } from '../../components/ui/controls';
 import { FormField } from '../../components/shared/form-field';
 import { Table, TableHeader, TableRow, TableHead, TableCell } from '../../components/ui/table';
-import { TableViewport, SystemState } from '../../components/shared/workspace';
+import { FilterToolbar, TableViewport, SystemState } from '../../components/shared/workspace';
 import { Pagination } from '../../components/ui/navigation';
 import { Sheet } from '../../components/ui/overlays';
 import { employeeName, type EmployeePage } from './contracts';
@@ -94,15 +94,16 @@ export function EmployeeDirectory() {
           Employee created successfully.
         </p>
       )}
-      <form
-        className="employee-filters"
+      <FilterToolbar
+        as="form"
+        className="employee-filter-surface"
         aria-label="Employee directory filters"
         onSubmit={(event) => {
           event.preventDefault();
           change('search', search.trim());
         }}
       >
-        <div className="employee-search-row">
+        <FilterToolbar className="ui-filter-search">
           <FormField id="employee-search" label="Search employees">
             {(props) => (
               <Input
@@ -114,10 +115,12 @@ export function EmployeeDirectory() {
               />
             )}
           </FormField>
-          <Button type="submit" variant="outline">
-            Search
-          </Button>
-        </div>
+          <div className="ui-filter-action">
+            <Button type="submit" variant="secondary">
+              <Search aria-hidden="true" /> Search
+            </Button>
+          </div>
+        </FilterToolbar>
         {(
           [
             ['departmentId', 'departments', 'Department'],
@@ -127,21 +130,20 @@ export function EmployeeDirectory() {
         ).map(([key, name, label]) => (
           <FormField key={key} id={`filter-${key}`} label={label}>
             {(props) => (
-              <select
+              <FilterSelect
                 {...props}
-                className="ui-control employee-native-select"
+                label={label}
                 value={params.get(key) ?? ''}
                 disabled={!masters.data}
-                onChange={(event) => change(key, event.target.value)}
-              >
-                <option value="">All {label.toLowerCase()} values</option>
-                {masters.data?.[name].map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {item.name}
-                    {item.isActive ? '' : ' (inactive)'}
-                  </option>
-                ))}
-              </select>
+                onChange={(value) => change(key, value)}
+                options={[
+                  { value: '', label: `All ${label.toLowerCase()} values` },
+                  ...(masters.data?.[name] ?? []).map((item) => ({
+                    value: item.id,
+                    label: `${item.name}${item.isActive ? '' : ' (inactive)'}`,
+                  })),
+                ]}
+              />
             )}
           </FormField>
         ))}
@@ -159,7 +161,7 @@ export function EmployeeDirectory() {
             </select>
           )}
         </FormField>
-      </form>
+      </FilterToolbar>
       {masters.isError && (
         <QueryState loading={false} error={masters.error} retry={() => void masters.refetch()} />
       )}
@@ -233,7 +235,9 @@ export function EmployeeDirectory() {
                           {employee.employmentStatus ?? 'No current employment'}
                         </TableCell>
                         <TableCell>
-                          <Badge>{employee.isActive ? 'Active' : 'Inactive'}</Badge>
+                          <Badge intent={employee.isActive ? 'success' : 'neutral'}>
+                            {employee.isActive ? 'Active' : 'Inactive'}
+                          </Badge>
                         </TableCell>
                         <TableCell>
                           <Button

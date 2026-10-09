@@ -175,6 +175,8 @@ export function AlertDialog({
   variant = 'destructive',
   onCloseAutoFocus,
   children,
+  size,
+  confirmDisabled = false,
 }: {
   trigger?: ReactNode;
   title: string;
@@ -188,6 +190,8 @@ export function AlertDialog({
   variant?: 'primary' | 'destructive';
   onCloseAutoFocus?: ComponentProps<typeof A.Content>['onCloseAutoFocus'];
   children?: ReactNode;
+  size?: 'sm' | 'md' | 'lg';
+  confirmDisabled?: boolean;
 }) {
   return (
     <A.Root open={open} onOpenChange={onOpenChange}>
@@ -202,14 +206,18 @@ export function AlertDialog({
           className={cn(
             floating,
             'fixed top-1/2 left-1/2 max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 overflow-y-auto',
+            size && 'ui-overlay-panel p-0 overflow-hidden',
           )}
+          data-size={size}
         >
-          <A.Title className="text-lg font-semibold">{title}</A.Title>
-          <A.Description className="mt-2 text-sm text-muted-foreground">
-            {description}
-          </A.Description>
-          {children && <div className="mt-4">{children}</div>}
-          <div className="mt-6 flex flex-wrap justify-end gap-2">
+          <div className={size ? 'ui-overlay-header' : undefined}>
+            <A.Title className="text-lg font-semibold">{title}</A.Title>
+            <A.Description className="mt-2 text-sm text-muted-foreground">
+              {description}
+            </A.Description>
+          </div>
+          {children && <div className={size ? 'ui-overlay-body' : 'mt-4'}>{children}</div>}
+          <div className={size ? 'ui-overlay-footer' : 'mt-6 flex flex-wrap justify-end gap-2'}>
             <A.Cancel asChild>
               <Button disabled={loading} variant="outline">
                 Cancel
@@ -219,6 +227,7 @@ export function AlertDialog({
               <Button
                 variant={variant}
                 loading={loading}
+                disabled={confirmDisabled}
                 onClick={(event) => {
                   if (!closeOnConfirm) event.preventDefault();
                   onConfirm();

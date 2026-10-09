@@ -549,3 +549,58 @@ select.ui-control {
     }
   }
 }
+.ui-filter-toolbar {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
+  column-gap: var(--space-4, 16px);
+  row-gap: var(--space-2, 8px);
+  align-items: start;
+}
+.ui-filter-toolbar > * {
+  min-width: 0;
+  max-width: 100%;
+}
+.ui-filter-toolbar > .ui-form-field,
+.ui-filter-toolbar > .ui-filter-action {
+  min-width: 0;
+  display: grid;
+  grid-row: span 3;
+  grid-template-rows: subgrid;
+  /* Row subgrid does not constrain the implicit column's intrinsic minimum. */
+  grid-template-columns: minmax(0, 1fr);
+}
+.ui-filter-toolbar > .ui-form-field > :nth-child(2) {
+  min-width: 0;
+  width: 100%;
+  margin-top: 0;
+}
+.ui-filter-toolbar .ui-control {
+  width: 100%;
+  max-width: 100%;
+}
+.ui-filter-toolbar > .ui-form-field > .ui-field-hint {
+  margin-top: 0;
+}
+.ui-filter-action > .ui-button {
+  grid-row: 2;
+  align-self: start;
+}
+.ui-filter-search {
+  grid-column: 1 / -1;
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+.employee-filter-surface {
+  padding: var(--space-4, 16px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+.ui-select-menu {
+  width: var(--radix-select-trigger-width);
+  max-height: min(320px, var(--radix-select-content-available-height));
+}
+.ui-select-menu .ui-menu-item {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  padding-block: 8px;
+}
