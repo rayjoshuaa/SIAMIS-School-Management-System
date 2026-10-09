@@ -159,7 +159,7 @@ export function HrDashboard() {
                     },
                   ]}
                 />
-                <dl className="hr-overview-facts">
+                <dl className="hr-overview-facts ui-detail-list">
                   <div>
                     <dt>Late</dt>
                     <dd>{attendance.data.counts.late}</dd>
@@ -195,7 +195,7 @@ export function HrDashboard() {
               </p>
             ) : (
               <>
-                <dl className="hr-overview-attention">
+                <dl className="hr-overview-attention ui-detail-list">
                   <div>
                     <dt>Requires review</dt>
                     <dd>{attendance.data.counts.requiresReview}</dd>

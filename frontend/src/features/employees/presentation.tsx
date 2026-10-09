@@ -1,4 +1,5 @@
-import type { ReactNode } from 'react';
+import { DetailFacts as Facts } from '../../components/shared/detail-facts';
+export { DetailFacts as Facts } from '../../components/shared/detail-facts';
 import { Button } from '../../components/ui/button';
 import { SystemState } from '../../components/shared/workspace';
 import { ApiError } from '../../lib/api/errors';
@@ -32,18 +33,6 @@ export function QueryState({
     >
       {error instanceof ApiError ? error.message : 'Unable to load this information. Try again.'}
     </SystemState>
-  );
-}
-export function Facts({ items }: { items: [string, ReactNode][] }) {
-  return (
-    <dl className="employee-facts">
-      {items.map(([label, value]) => (
-        <div key={label}>
-          <dt>{label}</dt>
-          <dd>{value ?? 'Not recorded'}</dd>
-        </div>
-      ))}
-    </dl>
   );
 }
 export function EmploymentSummary({ employee }: { employee: Employee }) {
@@ -81,7 +70,7 @@ export function ContactSummary({ employee }: { employee: Employee }) {
     <div className="space-y-4">
       {employee.contacts.map((contact) => (
         <section key={contact.employeeContactId}>
-          <h3 className="mb-2 text-sm font-semibold">
+          <h3 className="ui-subsection-title mb-2">
             {contact.isPrimary ? 'Primary contact' : 'Contact'}
           </h3>
           <Facts

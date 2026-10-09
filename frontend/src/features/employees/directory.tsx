@@ -4,7 +4,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '../../lib/auth/auth-context';
 import { api } from '../../lib/api/client';
-import { Button } from '../../components/ui/button';
+import { Button, LinkButton } from '../../components/ui/button';
 import { Badge } from '../../components/ui/feedback';
 import { Input } from '../../components/ui/controls';
 import { FormField } from '../../components/shared/form-field';
@@ -35,15 +35,10 @@ function QuickView({ id }: { id: string }) {
       </div>
       <EmploymentSummary employee={query.data} />
       <section className="employee-section">
-        <h2>Contact information</h2>
+        <h2 className="ui-section-title">Contact information</h2>
         <ContactSummary employee={query.data} />
       </section>
-      <Link
-        className="ui-link inline-flex min-h-11 items-center font-semibold"
-        to={`/hr/employees/${id}`}
-      >
-        Open Employee 360 →
-      </Link>
+      <LinkButton to={`/hr/employees/${id}`}>Open Employee 360 →</LinkButton>
     </div>
   );
 }
@@ -88,15 +83,10 @@ export function EmployeeDirectory() {
       <div className="employee-toolbar">
         <p className="employee-context">Search records and review employment context.</p>
         {capabilities.includes('Employee.Manage') && (
-          <Link
-            className="ui-button ui-button-primary employee-action"
-            data-variant="primary"
-            data-density="compact"
-            to="/hr/employees/new"
-          >
+          <LinkButton variant="primary" to="/hr/employees/new">
             <Plus aria-hidden="true" className="size-4" />
             Create employee
-          </Link>
+          </LinkButton>
         )}
       </div>
       {params.get('notice') === 'created' && (

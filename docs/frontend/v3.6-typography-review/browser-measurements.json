@@ -1,0 +1,2810 @@
+[
+  {
+    "headings": [
+      {
+        "name": "Employment change",
+        "size": "24px",
+        "weight": "600"
+      },
+      {
+        "name": "Development QA Employee",
+        "size": "18px",
+        "weight": "600"
+      },
+      {
+        "name": "Employment information",
+        "size": "18px",
+        "weight": "600"
+      }
+    ],
+    "pageWidth": 1920,
+    "screen": "employment",
+    "selects": [
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "departmentId",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "designationId",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "employmentTypeId",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "employmentStatusId",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "locationId",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "hiringSourceId",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "reportingToEmployeeId",
+        "paddingRight": "38px"
+      }
+    ],
+    "width": 1920
+  },
+  {
+    "headings": [
+      {
+        "name": "Employment change",
+        "size": "24px",
+        "weight": "600"
+      },
+      {
+        "name": "Development QA Employee",
+        "size": "18px",
+        "weight": "600"
+      },
+      {
+        "name": "Employment information",
+        "size": "18px",
+        "weight": "600"
+      }
+    ],
+    "pageWidth": 1425,
+    "screen": "employment",
+    "selects": [
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "departmentId",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "designationId",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "employmentTypeId",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "employmentStatusId",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "locationId",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "hiringSourceId",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "reportingToEmployeeId",
+        "paddingRight": "38px"
+      }
+    ],
+    "width": 1440
+  },
+  {
+    "headings": [
+      {
+        "name": "Employment change",
+        "size": "24px",
+        "weight": "600"
+      },
+      {
+        "name": "Development QA Employee",
+        "size": "18px",
+        "weight": "600"
+      },
+      {
+        "name": "Employment information",
+        "size": "18px",
+        "weight": "600"
+      }
+    ],
+    "pageWidth": 1265,
+    "screen": "employment",
+    "selects": [
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "departmentId",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "designationId",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "employmentTypeId",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "employmentStatusId",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "locationId",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "hiringSourceId",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "reportingToEmployeeId",
+        "paddingRight": "38px"
+      }
+    ],
+    "width": 1280
+  },
+  {
+    "headings": [
+      {
+        "name": "Employment change",
+        "size": "24px",
+        "weight": "600"
+      },
+      {
+        "name": "Development QA Employee",
+        "size": "18px",
+        "weight": "600"
+      },
+      {
+        "name": "Employment information",
+        "size": "18px",
+        "weight": "600"
+      }
+    ],
+    "pageWidth": 1009,
+    "screen": "employment",
+    "selects": [
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "departmentId",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "designationId",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "employmentTypeId",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "employmentStatusId",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "locationId",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "hiringSourceId",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "reportingToEmployeeId",
+        "paddingRight": "38px"
+      }
+    ],
+    "width": 1024
+  },
+  {
+    "headings": [
+      {
+        "name": "Employment change",
+        "size": "24px",
+        "weight": "600"
+      },
+      {
+        "name": "Development QA Employee",
+        "size": "18px",
+        "weight": "600"
+      },
+      {
+        "name": "Employment information",
+        "size": "18px",
+        "weight": "600"
+      }
+    ],
+    "pageWidth": 753,
+    "screen": "employment",
+    "selects": [
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "departmentId",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "designationId",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "employmentTypeId",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "employmentStatusId",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "locationId",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "hiringSourceId",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "reportingToEmployeeId",
+        "paddingRight": "38px"
+      }
+    ],
+    "width": 768
+  },
+  {
+    "headings": [
+      {
+        "name": "Employment change",
+        "size": "24px",
+        "weight": "600"
+      },
+      {
+        "name": "Development QA Employee",
+        "size": "18px",
+        "weight": "600"
+      },
+      {
+        "name": "Employment information",
+        "size": "18px",
+        "weight": "600"
+      }
+    ],
+    "pageWidth": 375,
+    "screen": "employment",
+    "selects": [
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "departmentId",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "designationId",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "employmentTypeId",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "employmentStatusId",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "locationId",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "hiringSourceId",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "reportingToEmployeeId",
+        "paddingRight": "38px"
+      }
+    ],
+    "width": 390
+  },
+  {
+    "headings": [
+      {
+        "name": "Employee 360",
+        "size": "24px",
+        "weight": "600"
+      },
+      {
+        "name": "Development QA Employee",
+        "size": "18px",
+        "weight": "600"
+      },
+      {
+        "name": "Employment & application access",
+        "size": "18px",
+        "weight": "600"
+      },
+      {
+        "name": "Employment context",
+        "size": "16px",
+        "weight": "600"
+      },
+      {
+        "name": "Linked account",
+        "size": "16px",
+        "weight": "600"
+      },
+      {
+        "name": "Credentials & verification",
+        "size": "16px",
+        "weight": "600"
+      },
+      {
+        "name": "Account administration",
+        "size": "16px",
+        "weight": "600"
+      }
+    ],
+    "pageWidth": 1905,
+    "screen": "employee-context",
+    "selects": [],
+    "width": 1920
+  },
+  {
+    "headings": [
+      {
+        "name": "Employee 360",
+        "size": "24px",
+        "weight": "600"
+      },
+      {
+        "name": "Development QA Employee",
+        "size": "18px",
+        "weight": "600"
+      },
+      {
+        "name": "Employment & application access",
+        "size": "18px",
+        "weight": "600"
+      },
+      {
+        "name": "Employment context",
+        "size": "16px",
+        "weight": "600"
+      },
+      {
+        "name": "Linked account",
+        "size": "16px",
+        "weight": "600"
+      },
+      {
+        "name": "Credentials & verification",
+        "size": "16px",
+        "weight": "600"
+      },
+      {
+        "name": "Account administration",
+        "size": "16px",
+        "weight": "600"
+      }
+    ],
+    "pageWidth": 1425,
+    "screen": "employee-context",
+    "selects": [],
+    "width": 1440
+  },
+  {
+    "headings": [
+      {
+        "name": "Employee 360",
+        "size": "24px",
+        "weight": "600"
+      },
+      {
+        "name": "Development QA Employee",
+        "size": "18px",
+        "weight": "600"
+      },
+      {
+        "name": "Employment & application access",
+        "size": "18px",
+        "weight": "600"
+      },
+      {
+        "name": "Employment context",
+        "size": "16px",
+        "weight": "600"
+      },
+      {
+        "name": "Linked account",
+        "size": "16px",
+        "weight": "600"
+      },
+      {
+        "name": "Credentials & verification",
+        "size": "16px",
+        "weight": "600"
+      },
+      {
+        "name": "Account administration",
+        "size": "16px",
+        "weight": "600"
+      }
+    ],
+    "pageWidth": 1265,
+    "screen": "employee-context",
+    "selects": [],
+    "width": 1280
+  },
+  {
+    "headings": [
+      {
+        "name": "Employee 360",
+        "size": "24px",
+        "weight": "600"
+      },
+      {
+        "name": "Development QA Employee",
+        "size": "18px",
+        "weight": "600"
+      },
+      {
+        "name": "Employment & application access",
+        "size": "18px",
+        "weight": "600"
+      },
+      {
+        "name": "Employment context",
+        "size": "16px",
+        "weight": "600"
+      },
+      {
+        "name": "Linked account",
+        "size": "16px",
+        "weight": "600"
+      },
+      {
+        "name": "Credentials & verification",
+        "size": "16px",
+        "weight": "600"
+      },
+      {
+        "name": "Account administration",
+        "size": "16px",
+        "weight": "600"
+      }
+    ],
+    "pageWidth": 1009,
+    "screen": "employee-context",
+    "selects": [],
+    "width": 1024
+  },
+  {
+    "headings": [
+      {
+        "name": "Employee 360",
+        "size": "24px",
+        "weight": "600"
+      },
+      {
+        "name": "Development QA Employee",
+        "size": "18px",
+        "weight": "600"
+      },
+      {
+        "name": "Employment & application access",
+        "size": "18px",
+        "weight": "600"
+      },
+      {
+        "name": "Employment context",
+        "size": "16px",
+        "weight": "600"
+      },
+      {
+        "name": "Linked account",
+        "size": "16px",
+        "weight": "600"
+      },
+      {
+        "name": "Credentials & verification",
+        "size": "16px",
+        "weight": "600"
+      },
+      {
+        "name": "Account administration",
+        "size": "16px",
+        "weight": "600"
+      }
+    ],
+    "pageWidth": 753,
+    "screen": "employee-context",
+    "selects": [],
+    "width": 768
+  },
+  {
+    "headings": [
+      {
+        "name": "Employee 360",
+        "size": "24px",
+        "weight": "600"
+      },
+      {
+        "name": "Development QA Employee",
+        "size": "18px",
+        "weight": "600"
+      },
+      {
+        "name": "Employment & application access",
+        "size": "18px",
+        "weight": "600"
+      },
+      {
+        "name": "Employment context",
+        "size": "16px",
+        "weight": "600"
+      },
+      {
+        "name": "Linked account",
+        "size": "16px",
+        "weight": "600"
+      },
+      {
+        "name": "Credentials & verification",
+        "size": "16px",
+        "weight": "600"
+      },
+      {
+        "name": "Account administration",
+        "size": "16px",
+        "weight": "600"
+      }
+    ],
+    "pageWidth": 375,
+    "screen": "employee-context",
+    "selects": [],
+    "width": 390
+  },
+  {
+    "headings": [
+      {
+        "name": "Employees",
+        "size": "24px",
+        "weight": "600"
+      }
+    ],
+    "pageWidth": 1920,
+    "screen": "directory",
+    "selects": [
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "filter-departmentId",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "filter-designationId",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "filter-employmentStatusId",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "filter-active",
+        "paddingRight": "38px"
+      }
+    ],
+    "width": 1920
+  },
+  {
+    "headings": [
+      {
+        "name": "Employees",
+        "size": "24px",
+        "weight": "600"
+      }
+    ],
+    "pageWidth": 1440,
+    "screen": "directory",
+    "selects": [
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "filter-departmentId",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "filter-designationId",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "filter-employmentStatusId",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "filter-active",
+        "paddingRight": "38px"
+      }
+    ],
+    "width": 1440
+  },
+  {
+    "headings": [
+      {
+        "name": "Employees",
+        "size": "24px",
+        "weight": "600"
+      }
+    ],
+    "pageWidth": 1280,
+    "screen": "directory",
+    "selects": [
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "filter-departmentId",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "filter-designationId",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "filter-employmentStatusId",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "filter-active",
+        "paddingRight": "38px"
+      }
+    ],
+    "width": 1280
+  },
+  {
+    "headings": [
+      {
+        "name": "Employees",
+        "size": "24px",
+        "weight": "600"
+      }
+    ],
+    "pageWidth": 1024,
+    "screen": "directory",
+    "selects": [
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "filter-departmentId",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "filter-designationId",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "filter-employmentStatusId",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "filter-active",
+        "paddingRight": "38px"
+      }
+    ],
+    "width": 1024
+  },
+  {
+    "headings": [
+      {
+        "name": "Employees",
+        "size": "24px",
+        "weight": "600"
+      }
+    ],
+    "pageWidth": 768,
+    "screen": "directory",
+    "selects": [
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "filter-departmentId",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "filter-designationId",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "filter-employmentStatusId",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "filter-active",
+        "paddingRight": "38px"
+      }
+    ],
+    "width": 768
+  },
+  {
+    "headings": [
+      {
+        "name": "Employees",
+        "size": "24px",
+        "weight": "600"
+      }
+    ],
+    "pageWidth": 375,
+    "screen": "directory",
+    "selects": [
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "filter-departmentId",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "filter-designationId",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "filter-employmentStatusId",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "filter-active",
+        "paddingRight": "38px"
+      }
+    ],
+    "width": 390
+  },
+  {
+    "headings": [
+      {
+        "name": "Employee 360",
+        "size": "24px",
+        "weight": "600"
+      },
+      {
+        "name": "Development QA Employee",
+        "size": "18px",
+        "weight": "600"
+      },
+      {
+        "name": "Employment information",
+        "size": "16px",
+        "weight": "600"
+      },
+      {
+        "name": "Dates & reporting",
+        "size": "16px",
+        "weight": "600"
+      }
+    ],
+    "pageWidth": 1920,
+    "screen": "employee-overview",
+    "selects": [],
+    "width": 1920
+  },
+  {
+    "headings": [
+      {
+        "name": "Employee 360",
+        "size": "24px",
+        "weight": "600"
+      },
+      {
+        "name": "Development QA Employee",
+        "size": "18px",
+        "weight": "600"
+      },
+      {
+        "name": "Employment information",
+        "size": "16px",
+        "weight": "600"
+      },
+      {
+        "name": "Dates & reporting",
+        "size": "16px",
+        "weight": "600"
+      }
+    ],
+    "pageWidth": 1440,
+    "screen": "employee-overview",
+    "selects": [],
+    "width": 1440
+  },
+  {
+    "headings": [
+      {
+        "name": "Employee 360",
+        "size": "24px",
+        "weight": "600"
+      },
+      {
+        "name": "Development QA Employee",
+        "size": "18px",
+        "weight": "600"
+      },
+      {
+        "name": "Employment information",
+        "size": "16px",
+        "weight": "600"
+      },
+      {
+        "name": "Dates & reporting",
+        "size": "16px",
+        "weight": "600"
+      }
+    ],
+    "pageWidth": 1280,
+    "screen": "employee-overview",
+    "selects": [],
+    "width": 1280
+  },
+  {
+    "headings": [
+      {
+        "name": "Employee 360",
+        "size": "24px",
+        "weight": "600"
+      },
+      {
+        "name": "Development QA Employee",
+        "size": "18px",
+        "weight": "600"
+      },
+      {
+        "name": "Employment information",
+        "size": "16px",
+        "weight": "600"
+      },
+      {
+        "name": "Dates & reporting",
+        "size": "16px",
+        "weight": "600"
+      }
+    ],
+    "pageWidth": 1009,
+    "screen": "employee-overview",
+    "selects": [],
+    "width": 1024
+  },
+  {
+    "headings": [
+      {
+        "name": "Employee 360",
+        "size": "24px",
+        "weight": "600"
+      },
+      {
+        "name": "Development QA Employee",
+        "size": "18px",
+        "weight": "600"
+      },
+      {
+        "name": "Employment information",
+        "size": "16px",
+        "weight": "600"
+      },
+      {
+        "name": "Dates & reporting",
+        "size": "16px",
+        "weight": "600"
+      }
+    ],
+    "pageWidth": 768,
+    "screen": "employee-overview",
+    "selects": [],
+    "width": 768
+  },
+  {
+    "headings": [
+      {
+        "name": "Employee 360",
+        "size": "24px",
+        "weight": "600"
+      },
+      {
+        "name": "Development QA Employee",
+        "size": "18px",
+        "weight": "600"
+      },
+      {
+        "name": "Employment information",
+        "size": "16px",
+        "weight": "600"
+      },
+      {
+        "name": "Dates & reporting",
+        "size": "16px",
+        "weight": "600"
+      }
+    ],
+    "pageWidth": 375,
+    "screen": "employee-overview",
+    "selects": [],
+    "width": 390
+  },
+  {
+    "headings": [
+      {
+        "name": "User Accounts",
+        "size": "24px",
+        "weight": "600"
+      },
+      {
+        "name": "qa-employee",
+        "size": "18px",
+        "weight": "600"
+      },
+      {
+        "name": "Activation & recovery",
+        "size": "16px",
+        "weight": "600"
+      }
+    ],
+    "pageWidth": 1920,
+    "screen": "accounts",
+    "selects": [],
+    "width": 1920
+  },
+  {
+    "headings": [
+      {
+        "name": "User Accounts",
+        "size": "24px",
+        "weight": "600"
+      },
+      {
+        "name": "qa-employee",
+        "size": "18px",
+        "weight": "600"
+      },
+      {
+        "name": "Activation & recovery",
+        "size": "16px",
+        "weight": "600"
+      }
+    ],
+    "pageWidth": 1440,
+    "screen": "accounts",
+    "selects": [],
+    "width": 1440
+  },
+  {
+    "headings": [
+      {
+        "name": "User Accounts",
+        "size": "24px",
+        "weight": "600"
+      },
+      {
+        "name": "qa-employee",
+        "size": "18px",
+        "weight": "600"
+      },
+      {
+        "name": "Activation & recovery",
+        "size": "16px",
+        "weight": "600"
+      }
+    ],
+    "pageWidth": 1280,
+    "screen": "accounts",
+    "selects": [],
+    "width": 1280
+  },
+  {
+    "headings": [
+      {
+        "name": "User Accounts",
+        "size": "24px",
+        "weight": "600"
+      },
+      {
+        "name": "qa-employee",
+        "size": "18px",
+        "weight": "600"
+      },
+      {
+        "name": "Activation & recovery",
+        "size": "16px",
+        "weight": "600"
+      }
+    ],
+    "pageWidth": 1024,
+    "screen": "accounts",
+    "selects": [],
+    "width": 1024
+  },
+  {
+    "headings": [
+      {
+        "name": "User Accounts",
+        "size": "24px",
+        "weight": "600"
+      },
+      {
+        "name": "qa-employee",
+        "size": "18px",
+        "weight": "600"
+      },
+      {
+        "name": "Activation & recovery",
+        "size": "16px",
+        "weight": "600"
+      }
+    ],
+    "pageWidth": 768,
+    "screen": "accounts",
+    "selects": [],
+    "width": 768
+  },
+  {
+    "headings": [
+      {
+        "name": "User Accounts",
+        "size": "24px",
+        "weight": "600"
+      },
+      {
+        "name": "qa-employee",
+        "size": "18px",
+        "weight": "600"
+      },
+      {
+        "name": "Activation & recovery",
+        "size": "16px",
+        "weight": "600"
+      }
+    ],
+    "pageWidth": 390,
+    "screen": "accounts",
+    "selects": [],
+    "width": 390
+  },
+  {
+    "headings": [
+      {
+        "name": "Attendance",
+        "size": "24px",
+        "weight": "600"
+      }
+    ],
+    "pageWidth": 1920,
+    "screen": "attendance",
+    "selects": [
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-Department",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-Designation",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-scheduled",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-late",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-hasApprovedLeave",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-confirmedAbsent",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-requiresReview",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-isStale",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-unfinalized",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-record-state",
+        "paddingRight": "38px"
+      }
+    ],
+    "width": 1920
+  },
+  {
+    "headings": [
+      {
+        "name": "Attendance",
+        "size": "24px",
+        "weight": "600"
+      }
+    ],
+    "pageWidth": 1425,
+    "screen": "attendance",
+    "selects": [
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-Department",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-Designation",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-scheduled",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-late",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-hasApprovedLeave",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-confirmedAbsent",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-requiresReview",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-isStale",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-unfinalized",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-record-state",
+        "paddingRight": "38px"
+      }
+    ],
+    "width": 1440
+  },
+  {
+    "headings": [
+      {
+        "name": "Attendance",
+        "size": "24px",
+        "weight": "600"
+      }
+    ],
+    "pageWidth": 1265,
+    "screen": "attendance",
+    "selects": [
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-Department",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-Designation",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-scheduled",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-late",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-hasApprovedLeave",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-confirmedAbsent",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-requiresReview",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-isStale",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-unfinalized",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-record-state",
+        "paddingRight": "38px"
+      }
+    ],
+    "width": 1280
+  },
+  {
+    "headings": [
+      {
+        "name": "Attendance",
+        "size": "24px",
+        "weight": "600"
+      }
+    ],
+    "pageWidth": 1009,
+    "screen": "attendance",
+    "selects": [
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-Department",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-Designation",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-scheduled",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-late",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-hasApprovedLeave",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-confirmedAbsent",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-requiresReview",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-isStale",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-unfinalized",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-record-state",
+        "paddingRight": "38px"
+      }
+    ],
+    "width": 1024
+  },
+  {
+    "headings": [
+      {
+        "name": "Attendance",
+        "size": "24px",
+        "weight": "600"
+      }
+    ],
+    "pageWidth": 753,
+    "screen": "attendance",
+    "selects": [
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-Department",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-Designation",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-scheduled",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-late",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-hasApprovedLeave",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-confirmedAbsent",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-requiresReview",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-isStale",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-unfinalized",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-record-state",
+        "paddingRight": "38px"
+      }
+    ],
+    "width": 768
+  },
+  {
+    "headings": [
+      {
+        "name": "Attendance",
+        "size": "24px",
+        "weight": "600"
+      }
+    ],
+    "pageWidth": 375,
+    "screen": "attendance",
+    "selects": [
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-Department",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-Designation",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-scheduled",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-late",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-hasApprovedLeave",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-confirmedAbsent",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-requiresReview",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-isStale",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-unfinalized",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-record-state",
+        "paddingRight": "38px"
+      }
+    ],
+    "width": 390
+  },
+  {
+    "headings": [
+      {
+        "name": "Attendance",
+        "size": "24px",
+        "weight": "600"
+      },
+      {
+        "name": "Live calculation",
+        "size": "16px",
+        "weight": "600"
+      },
+      {
+        "name": "Currently validated official calculation",
+        "size": "16px",
+        "weight": "600"
+      },
+      {
+        "name": "Findings",
+        "size": "16px",
+        "weight": "600"
+      },
+      {
+        "name": "Changed sources",
+        "size": "16px",
+        "weight": "600"
+      }
+    ],
+    "pageWidth": 1920,
+    "screen": "attendance-details",
+    "selects": [
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-Department",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-Designation",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-scheduled",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-late",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-hasApprovedLeave",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-confirmedAbsent",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-requiresReview",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-isStale",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-unfinalized",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-record-state",
+        "paddingRight": "38px"
+      }
+    ],
+    "width": 1920
+  },
+  {
+    "headings": [
+      {
+        "name": "Attendance",
+        "size": "24px",
+        "weight": "600"
+      },
+      {
+        "name": "Live calculation",
+        "size": "16px",
+        "weight": "600"
+      },
+      {
+        "name": "Currently validated official calculation",
+        "size": "16px",
+        "weight": "600"
+      },
+      {
+        "name": "Findings",
+        "size": "16px",
+        "weight": "600"
+      },
+      {
+        "name": "Changed sources",
+        "size": "16px",
+        "weight": "600"
+      }
+    ],
+    "pageWidth": 1440,
+    "screen": "attendance-details",
+    "selects": [
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-Department",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-Designation",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-scheduled",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-late",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-hasApprovedLeave",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-confirmedAbsent",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-requiresReview",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-isStale",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-unfinalized",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-record-state",
+        "paddingRight": "38px"
+      }
+    ],
+    "width": 1440
+  },
+  {
+    "headings": [
+      {
+        "name": "Attendance",
+        "size": "24px",
+        "weight": "600"
+      },
+      {
+        "name": "Live calculation",
+        "size": "16px",
+        "weight": "600"
+      },
+      {
+        "name": "Currently validated official calculation",
+        "size": "16px",
+        "weight": "600"
+      },
+      {
+        "name": "Findings",
+        "size": "16px",
+        "weight": "600"
+      },
+      {
+        "name": "Changed sources",
+        "size": "16px",
+        "weight": "600"
+      }
+    ],
+    "pageWidth": 1280,
+    "screen": "attendance-details",
+    "selects": [
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-Department",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-Designation",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-scheduled",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-late",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-hasApprovedLeave",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-confirmedAbsent",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-requiresReview",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-isStale",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-unfinalized",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-record-state",
+        "paddingRight": "38px"
+      }
+    ],
+    "width": 1280
+  },
+  {
+    "headings": [
+      {
+        "name": "Attendance",
+        "size": "24px",
+        "weight": "600"
+      },
+      {
+        "name": "Live calculation",
+        "size": "16px",
+        "weight": "600"
+      },
+      {
+        "name": "Currently validated official calculation",
+        "size": "16px",
+        "weight": "600"
+      },
+      {
+        "name": "Findings",
+        "size": "16px",
+        "weight": "600"
+      },
+      {
+        "name": "Changed sources",
+        "size": "16px",
+        "weight": "600"
+      }
+    ],
+    "pageWidth": 1024,
+    "screen": "attendance-details",
+    "selects": [
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-Department",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-Designation",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-scheduled",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-late",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-hasApprovedLeave",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-confirmedAbsent",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-requiresReview",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-isStale",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-unfinalized",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-record-state",
+        "paddingRight": "38px"
+      }
+    ],
+    "width": 1024
+  },
+  {
+    "headings": [
+      {
+        "name": "Attendance",
+        "size": "24px",
+        "weight": "600"
+      },
+      {
+        "name": "Live calculation",
+        "size": "16px",
+        "weight": "600"
+      },
+      {
+        "name": "Currently validated official calculation",
+        "size": "16px",
+        "weight": "600"
+      },
+      {
+        "name": "Findings",
+        "size": "16px",
+        "weight": "600"
+      },
+      {
+        "name": "Changed sources",
+        "size": "16px",
+        "weight": "600"
+      }
+    ],
+    "pageWidth": 768,
+    "screen": "attendance-details",
+    "selects": [
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-Department",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-Designation",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-scheduled",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-late",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-hasApprovedLeave",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-confirmedAbsent",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-requiresReview",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-isStale",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-unfinalized",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-record-state",
+        "paddingRight": "38px"
+      }
+    ],
+    "width": 768
+  },
+  {
+    "headings": [
+      {
+        "name": "Attendance",
+        "size": "24px",
+        "weight": "600"
+      },
+      {
+        "name": "Live calculation",
+        "size": "16px",
+        "weight": "600"
+      },
+      {
+        "name": "Currently validated official calculation",
+        "size": "16px",
+        "weight": "600"
+      },
+      {
+        "name": "Findings",
+        "size": "16px",
+        "weight": "600"
+      },
+      {
+        "name": "Changed sources",
+        "size": "16px",
+        "weight": "600"
+      }
+    ],
+    "pageWidth": 390,
+    "screen": "attendance-details",
+    "selects": [
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-Department",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-Designation",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-scheduled",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-late",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-hasApprovedLeave",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-confirmedAbsent",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-requiresReview",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-isStale",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-unfinalized",
+        "paddingRight": "38px"
+      },
+      {
+        "appearance": "none",
+        "backgroundPosition": "calc(100% - 14px) 50%",
+        "height": 44,
+        "name": "attendance-record-state",
+        "paddingRight": "38px"
+      }
+    ],
+    "width": 390
+  },
+  {
+    "headings": [
+      {
+        "name": "Attendance review",
+        "size": "24px",
+        "weight": "600"
+      },
+      {
+        "name": "Calculation findings",
+        "size": "16px",
+        "weight": "600"
+      },
+      {
+        "name": "Approved leave facts",
+        "size": "16px",
+        "weight": "600"
+      },
+      {
+        "name": "Recorded events",
+        "size": "16px",
+        "weight": "600"
+      }
+    ],
+    "pageWidth": 1905,
+    "screen": "attendance-review",
+    "selects": [],
+    "width": 1920
+  },
+  {
+    "headings": [
+      {
+        "name": "Attendance review",
+        "size": "24px",
+        "weight": "600"
+      },
+      {
+        "name": "Calculation findings",
+        "size": "16px",
+        "weight": "600"
+      },
+      {
+        "name": "Approved leave facts",
+        "size": "16px",
+        "weight": "600"
+      },
+      {
+        "name": "Recorded events",
+        "size": "16px",
+        "weight": "600"
+      }
+    ],
+    "pageWidth": 1425,
+    "screen": "attendance-review",
+    "selects": [],
+    "width": 1440
+  },
+  {
+    "headings": [
+      {
+        "name": "Attendance review",
+        "size": "24px",
+        "weight": "600"
+      },
+      {
+        "name": "Calculation findings",
+        "size": "16px",
+        "weight": "600"
+      },
+      {
+        "name": "Approved leave facts",
+        "size": "16px",
+        "weight": "600"
+      },
+      {
+        "name": "Recorded events",
+        "size": "16px",
+        "weight": "600"
+      }
+    ],
+    "pageWidth": 1265,
+    "screen": "attendance-review",
+    "selects": [],
+    "width": 1280
+  },
+  {
+    "headings": [
+      {
+        "name": "Attendance review",
+        "size": "24px",
+        "weight": "600"
+      },
+      {
+        "name": "Calculation findings",
+        "size": "16px",
+        "weight": "600"
+      },
+      {
+        "name": "Approved leave facts",
+        "size": "16px",
+        "weight": "600"
+      },
+      {
+        "name": "Recorded events",
+        "size": "16px",
+        "weight": "600"
+      }
+    ],
+    "pageWidth": 1009,
+    "screen": "attendance-review",
+    "selects": [],
+    "width": 1024
+  },
+  {
+    "headings": [
+      {
+        "name": "Attendance review",
+        "size": "24px",
+        "weight": "600"
+      },
+      {
+        "name": "Calculation findings",
+        "size": "16px",
+        "weight": "600"
+      },
+      {
+        "name": "Approved leave facts",
+        "size": "16px",
+        "weight": "600"
+      },
+      {
+        "name": "Recorded events",
+        "size": "16px",
+        "weight": "600"
+      }
+    ],
+    "pageWidth": 753,
+    "screen": "attendance-review",
+    "selects": [],
+    "width": 768
+  },
+  {
+    "headings": [
+      {
+        "name": "Attendance review",
+        "size": "24px",
+        "weight": "600"
+      },
+      {
+        "name": "Calculation findings",
+        "size": "16px",
+        "weight": "600"
+      },
+      {
+        "name": "Approved leave facts",
+        "size": "16px",
+        "weight": "600"
+      },
+      {
+        "name": "Recorded events",
+        "size": "16px",
+        "weight": "600"
+      }
+    ],
+    "pageWidth": 375,
+    "screen": "attendance-review",
+    "selects": [],
+    "width": 390
+  },
+  {
+    "headings": [
+      {
+        "name": "HR Dashboard",
+        "size": "24px",
+        "weight": "600"
+      },
+      {
+        "name": "Workforce overview",
+        "size": "18px",
+        "weight": "600"
+      },
+      {
+        "name": "Today's attendance",
+        "size": "18px",
+        "weight": "600"
+      },
+      {
+        "name": "Attendance attention · today",
+        "size": "18px",
+        "weight": "600"
+      },
+      {
+        "name": "Pending leave requests",
+        "size": "18px",
+        "weight": "600"
+      },
+      {
+        "name": "No Pending leave requests.",
+        "size": "16px",
+        "weight": "600"
+      },
+      {
+        "name": "HR areas",
+        "size": "18px",
+        "weight": "600"
+      }
+    ],
+    "pageWidth": 1920,
+    "screen": "hr-dashboard",
+    "selects": [],
+    "width": 1920
+  },
+  {
+    "headings": [
+      {
+        "name": "HR Dashboard",
+        "size": "24px",
+        "weight": "600"
+      },
+      {
+        "name": "Workforce overview",
+        "size": "18px",
+        "weight": "600"
+      },
+      {
+        "name": "Today's attendance",
+        "size": "18px",
+        "weight": "600"
+      },
+      {
+        "name": "Attendance attention · today",
+        "size": "18px",
+        "weight": "600"
+      },
+      {
+        "name": "Pending leave requests",
+        "size": "18px",
+        "weight": "600"
+      },
+      {
+        "name": "No Pending leave requests.",
+        "size": "16px",
+        "weight": "600"
+      },
+      {
+        "name": "HR areas",
+        "size": "18px",
+        "weight": "600"
+      }
+    ],
+    "pageWidth": 1425,
+    "screen": "hr-dashboard",
+    "selects": [],
+    "width": 1440
+  },
+  {
+    "headings": [
+      {
+        "name": "HR Dashboard",
+        "size": "24px",
+        "weight": "600"
+      },
+      {
+        "name": "Workforce overview",
+        "size": "18px",
+        "weight": "600"
+      },
+      {
+        "name": "Today's attendance",
+        "size": "18px",
+        "weight": "600"
+      },
+      {
+        "name": "Attendance attention · today",
+        "size": "18px",
+        "weight": "600"
+      },
+      {
+        "name": "Pending leave requests",
+        "size": "18px",
+        "weight": "600"
+      },
+      {
+        "name": "No Pending leave requests.",
+        "size": "16px",
+        "weight": "600"
+      },
+      {
+        "name": "HR areas",
+        "size": "18px",
+        "weight": "600"
+      }
+    ],
+    "pageWidth": 1265,
+    "screen": "hr-dashboard",
+    "selects": [],
+    "width": 1280
+  },
+  {
+    "headings": [
+      {
+        "name": "HR Dashboard",
+        "size": "24px",
+        "weight": "600"
+      },
+      {
+        "name": "Workforce overview",
+        "size": "18px",
+        "weight": "600"
+      },
+      {
+        "name": "Today's attendance",
+        "size": "18px",
+        "weight": "600"
+      },
+      {
+        "name": "Attendance attention · today",
+        "size": "18px",
+        "weight": "600"
+      },
+      {
+        "name": "Pending leave requests",
+        "size": "18px",
+        "weight": "600"
+      },
+      {
+        "name": "No Pending leave requests.",
+        "size": "16px",
+        "weight": "600"
+      },
+      {
+        "name": "HR areas",
+        "size": "18px",
+        "weight": "600"
+      }
+    ],
+    "pageWidth": 1009,
+    "screen": "hr-dashboard",
+    "selects": [],
+    "width": 1024
+  },
+  {
+    "headings": [
+      {
+        "name": "HR Dashboard",
+        "size": "24px",
+        "weight": "600"
+      },
+      {
+        "name": "Workforce overview",
+        "size": "18px",
+        "weight": "600"
+      },
+      {
+        "name": "Today's attendance",
+        "size": "18px",
+        "weight": "600"
+      },
+      {
+        "name": "Attendance attention · today",
+        "size": "18px",
+        "weight": "600"
+      },
+      {
+        "name": "Pending leave requests",
+        "size": "18px",
+        "weight": "600"
+      },
+      {
+        "name": "No Pending leave requests.",
+        "size": "16px",
+        "weight": "600"
+      },
+      {
+        "name": "HR areas",
+        "size": "18px",
+        "weight": "600"
+      }
+    ],
+    "pageWidth": 753,
+    "screen": "hr-dashboard",
+    "selects": [],
+    "width": 768
+  },
+  {
+    "headings": [
+      {
+        "name": "HR Dashboard",
+        "size": "24px",
+        "weight": "600"
+      },
+      {
+        "name": "Workforce overview",
+        "size": "18px",
+        "weight": "600"
+      },
+      {
+        "name": "Today's attendance",
+        "size": "18px",
+        "weight": "600"
+      },
+      {
+        "name": "Attendance attention · today",
+        "size": "18px",
+        "weight": "600"
+      },
+      {
+        "name": "Pending leave requests",
+        "size": "18px",
+        "weight": "600"
+      },
+      {
+        "name": "No Pending leave requests.",
+        "size": "16px",
+        "weight": "600"
+      },
+      {
+        "name": "HR areas",
+        "size": "18px",
+        "weight": "600"
+      }
+    ],
+    "pageWidth": 375,
+    "screen": "hr-dashboard",
+    "selects": [],
+    "width": 390
+  }
+]

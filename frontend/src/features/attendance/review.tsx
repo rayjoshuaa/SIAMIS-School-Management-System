@@ -1,9 +1,9 @@
 import { useRef, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../../lib/api/client';
 import { useAuth } from '../../lib/auth/auth-context';
-import { Button } from '../../components/ui/button';
+import { Button, BackLink } from '../../components/ui/button';
 import { Sheet } from '../../components/ui/overlays';
 import { Tabs, Pagination } from '../../components/ui/navigation';
 import { TableViewport } from '../../components/shared/workspace';
@@ -50,9 +50,7 @@ export function AttendanceReview() {
   }
   return (
     <div className="attendance-workspace">
-      <Link className="ui-link" to="/hr/attendance">
-        ← Attendance workspace
-      </Link>
+      <BackLink to="/hr/attendance">Attendance workspace</BackLink>
       <Facts
         items={[
           ['Employee ID', employeeId],
@@ -73,7 +71,7 @@ export function AttendanceReview() {
       <p className="text-sm text-muted-foreground">{payrollBoundary}</p>
       {value.isStale && (
         <section aria-label="Changed authoritative sources">
-          <h2 className="font-semibold">Historical finalization requires source review</h2>
+          <h2 className="ui-section-title">Historical finalization requires source review</h2>
           <p className="text-sm">
             The previous revision remains immutable. Staleness is not an HR violation; reopening and
             refinalization are explicit actions.
@@ -81,7 +79,7 @@ export function AttendanceReview() {
           <Findings values={value.changedSources} />
         </section>
       )}
-      <div className="flex flex-wrap gap-3">
+      <div className="ui-record-actions">
         <Button
           variant="outline"
           disabled={review.isFetching}
@@ -225,7 +223,7 @@ function Calculation({ value }: { value: Day }) {
         ]}
       />
       <CoverageFacts value={value} />
-      <h3 className="font-semibold">Calculation findings</h3>
+      <h3 className="ui-subsection-title">Calculation findings</h3>
       <Findings values={value.findings} />
       {[
         ['Expected schedule', value.scheduledIntervals],
@@ -247,7 +245,7 @@ function Calculation({ value }: { value: Day }) {
           )}
         </details>
       ))}
-      <h3 className="font-semibold">Approved leave facts</h3>
+      <h3 className="ui-subsection-title">Approved leave facts</h3>
       {value.approvedLeaves.length ? (
         value.approvedLeaves.map((leave) => (
           <p key={leave.leaveId} className="break-all text-sm">
@@ -258,7 +256,7 @@ function Calculation({ value }: { value: Day }) {
       ) : (
         <p className="text-sm">No approved leave coverage reported.</p>
       )}
-      <h3 className="font-semibold">Recorded events</h3>
+      <h3 className="ui-subsection-title">Recorded events</h3>
       <EventTable events={value.events} />
     </div>
   );
@@ -427,9 +425,9 @@ function RevisionHistory({ employeeId, date }: { employeeId: string; date: strin
                 ]}
               />
               <Calculation value={revision.snapshot.calculation} />
-              <h3 className="mt-4 font-semibold">Frozen raw evidence</h3>
+              <h3 className="ui-subsection-title mt-4">Frozen raw evidence</h3>
               <EventTable events={revision.snapshot.rawEvents} />
-              <h3 className="mt-4 font-semibold">Frozen review history</h3>
+              <h3 className="ui-subsection-title mt-4">Frozen review history</h3>
               {revision.snapshot.reviewHistory.map((action) => (
                 <p key={action.id} className="text-sm">
                   {action.sequence} · {action.action} · {action.reason} · {action.occurredAtUtc}

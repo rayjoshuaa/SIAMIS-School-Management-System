@@ -1,15 +1,16 @@
 import { useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../lib/api/client';
 import { useAuth } from '../../lib/auth/auth-context';
-import { Button } from '../../components/ui/button';
+import { Button, LinkButton } from '../../components/ui/button';
 import { Checkbox } from '../../components/ui/controls';
 import { Alert } from '../../components/ui/feedback';
 import { AlertDialog } from '../../components/ui/overlays';
 import { permanentRoles, type Account } from '../administration/account-contracts';
 import type { AccountLifecycle, Employee } from './contracts';
 import { Facts, QueryState } from './presentation';
+import { AssignedRoles } from '../administration/account-presentation';
+import { ShieldCheck } from 'lucide-react';
 
 export function AccountAccess({ employee }: { employee: Employee }) {
   const { state } = useAuth();
@@ -22,21 +23,24 @@ export function AccountAccess({ employee }: { employee: Employee }) {
   });
   const linked = lifecycle.data;
   return (
-    <section className="employee-section space-y-4" aria-label="Account access">
-      <h2>Account access</h2>
+    <section className="account-workspace" aria-label="Account access">
+      <h2 className="account-section-title">Employment &amp; application access</h2>
       <p className="text-sm text-muted-foreground">
         Employee, employment, account and credential statuses are separate. Rehire does not
         reactivate an account or change its roles.
       </p>
-      <Facts
-        items={[
-          ['Employee record status', employee.isActive ? 'Active' : 'Inactive'],
-          [
-            'Employment status',
-            linked?.currentEmploymentStatus ?? employee.currentEmployment?.employmentStatus,
-          ],
-        ]}
-      />
+      <section aria-label="Employment context">
+        <h3 className="ui-subsection-title mb-3">Employment context</h3>
+        <Facts
+          items={[
+            ['Employee record status', employee.isActive ? 'Active' : 'Inactive'],
+            [
+              'Employment status',
+              linked?.currentEmploymentStatus ?? employee.currentEmployment?.employmentStatus,
+            ],
+          ]}
+        />
+      </section>
       <QueryState
         loading={lifecycle.isPending}
         error={lifecycle.error}
@@ -55,8 +59,8 @@ export function AccountAccess({ employee }: { employee: Employee }) {
           />
           {!linked.accountLinked ? (
             <p className="text-sm">
-              No Identity account is linked to this employee. An employee record does not itself
-              grant application access.
+              No system account is linked to this employee. An employee record does not itself grant
+              application access.
             </p>
           ) : security && linked.linkedUserId ? (
             <LinkedAccount
@@ -83,9 +87,9 @@ export function AccountAccess({ employee }: { employee: Employee }) {
           )}
           {security && (
             <div className="space-y-2">
-              <Link className="ui-link inline-flex min-h-11 items-center" to="/hr/security">
+              <LinkButton to="/hr/security">
                 {linked.accountLinked ? 'Open User Accounts' : 'Provision through User Accounts'}
-              </Link>
+              </LinkButton>
               {!linked.accountLinked && (
                 <p className="break-all text-sm text-muted-foreground">
                   For provisioning, use Employee ID: {employee.employeeId}. Linkage is entered and
@@ -164,24 +168,36 @@ function LinkedAccount({ userId, employeeId }: { userId: string; employeeId: str
   }
   const knownRoles = account.roles.every((role) => permanentRoles.some((value) => value === role));
   return (
-    <div className="space-y-4">
-      <Facts
-        items={[
-          ['Linked account', account.userName],
-          ['Account status', account.isActive ? 'Active' : 'Disabled'],
-          ['Assigned roles', account.roles.join(', ') || 'None'],
-          [
-            'Credential status',
-            !account.credentialEstablished
-              ? 'Activation pending'
-              : account.requiresPasswordChange
-                ? 'Password change required'
-                : 'Established',
-          ],
-          ['Email verification', account.emailConfirmed ? 'Confirmed' : 'Not confirmed'],
-          ['Lockout status', account.isLockedOut ? 'Locked out' : 'Not locked out'],
-        ]}
-      />
+    <div className="account-workspace">
+      <section className="account-group" aria-label="Linked account identity">
+        <h3 className="flex items-center gap-2">
+          <ShieldCheck aria-hidden="true" className="size-4" />
+          Linked account
+        </h3>
+        <Facts
+          items={[
+            ['Linked account', account.userName],
+            ['Assigned roles', <AssignedRoles roles={account.roles} />],
+          ]}
+        />
+      </section>
+      <section className="account-group" aria-label="Credentials and verification">
+        <h3>Credentials &amp; verification</h3>
+        <Facts
+          items={[
+            [
+              'Credential status',
+              !account.credentialEstablished
+                ? 'Activation pending'
+                : account.requiresPasswordChange
+                  ? 'Password change required'
+                  : 'Established',
+            ],
+            ['Email verification', account.emailConfirmed ? 'Confirmed' : 'Not confirmed'],
+            ['Lockout status', account.isLockedOut ? 'Locked out' : 'Not locked out'],
+          ]}
+        />
+      </section>
       {!account.credentialEstablished && (
         <Alert intent="info" title="Activation pending">
           The user must establish their own password through the existing activation workflow.
@@ -192,18 +208,25 @@ function LinkedAccount({ userId, employeeId }: { userId: string; employeeId: str
           {notice}
         </p>
       )}
-      <div className="flex flex-wrap gap-3">
-        <Button variant="outline" onClick={(e) => open('status', e.currentTarget)}>
-          {account.isActive ? 'Disable account' : 'Enable account'}
-        </Button>
-        <Button
-          variant="outline"
-          disabled={!knownRoles}
-          onClick={(e) => open('roles', e.currentTarget)}
-        >
-          Replace assigned roles
-        </Button>
-      </div>
+      <section className="account-group" aria-label="Account administration">
+        <h3>Account administration</h3>
+        <p className="mb-3 text-sm text-muted-foreground">
+          Account changes affect application access and revoke existing sessions. Employment records
+          and history are retained.
+        </p>
+        <div className="ui-record-actions">
+          <Button variant="outline" onClick={(e) => open('status', e.currentTarget)}>
+            {account.isActive ? 'Disable account' : 'Enable account'}
+          </Button>
+          <Button
+            variant="outline"
+            disabled={!knownRoles}
+            onClick={(e) => open('roles', e.currentTarget)}
+          >
+            Replace assigned roles
+          </Button>
+        </div>
+      </section>
       {!knownRoles && (
         <p className="text-sm">
           Unrecognized role assignments require review in User Accounts before replacement.
@@ -242,12 +265,12 @@ function LinkedAccount({ userId, employeeId }: { userId: string; employeeId: str
       >
         {command === 'roles' && (
           <fieldset disabled={update.isPending}>
-            <legend className="text-sm font-semibold">Complete replacement role set</legend>
+            <legend className="text-sm font-semibold">Roles after this change</legend>
             <p className="my-2 text-sm">
               Unselected roles will be removed. Selecting no roles removes all role grants.
             </p>
             {permanentRoles.map((role) => (
-              <label className="flex min-h-11 items-center gap-2 text-sm" key={role}>
+              <label className="account-role-choice" key={role}>
                 <Checkbox
                   checked={roles.includes(role)}
                   onCheckedChange={(checked) =>

@@ -1,4 +1,123 @@
+/* Control geometry is deliberately outside layers to retain its reserved icon
+   space alongside legacy feature padding and Tailwind utilities. Native selects
+   keep their native popup, keyboard and form semantics; only the arrow is painted. */
+select.ui-control,
+.ui-select-trigger {
+  min-width: 0;
+  min-height: var(--control-height);
+  padding-inline-start: var(--space-3);
+}
+select.ui-control {
+  appearance: none;
+  padding-inline-end: calc(var(--select-icon-inset) + var(--icon-inline) + var(--select-icon-gap));
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%235e626b' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right var(--select-icon-inset) center;
+  background-size: var(--icon-inline);
+  text-overflow: ellipsis;
+}
+.ui-select-trigger {
+  padding-inline-end: var(--select-icon-inset);
+  gap: var(--select-icon-gap);
+}
+.ui-select-value {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  text-align: start;
+}
+.ui-select-icon {
+  display: flex;
+  flex: 0 0 var(--icon-inline);
+  align-items: center;
+  justify-content: center;
+}
+.ui-select-icon svg {
+  width: var(--icon-inline);
+  height: var(--icon-inline);
+  stroke-width: var(--icon-stroke);
+}
+@media (forced-colors: active) {
+  select.ui-control {
+    appearance: auto;
+    background-image: none;
+  }
+}
 @layer components {
+  .ui-section-title,
+  .ui-subsection-title {
+    color: var(--foreground);
+    font-weight: var(--weight-heading);
+    line-height: var(--line-heading);
+    overflow-wrap: anywhere;
+  }
+  .ui-section-title {
+    font-size: var(--text-section);
+  }
+  .ui-subsection-title {
+    font-size: var(--text-subsection);
+  }
+  .ui-detail-facts {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-4) var(--space-6);
+    font-size: var(--text-body);
+    line-height: var(--line-body);
+  }
+  .ui-detail-facts > div {
+    min-width: 0;
+  }
+  .ui-detail-facts dt,
+  .ui-detail-list dt {
+    font-weight: var(--weight-label);
+    color: var(--foreground);
+  }
+  .ui-detail-facts dt {
+    margin-bottom: var(--space-1);
+  }
+  .ui-detail-facts dd,
+  .ui-detail-list dd {
+    margin: 0;
+    font-weight: var(--weight-body);
+    color: var(--foreground);
+    overflow-wrap: anywhere;
+  }
+  .ui-record-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2) var(--space-3);
+    min-width: 0;
+  }
+  .ui-link-button {
+    justify-self: start;
+    max-width: 100%;
+    text-decoration: none;
+    text-align: center;
+  }
+  .ui-button-destructive-outline {
+    border-color: var(--destructive);
+    color: var(--destructive);
+  }
+  .ui-button-destructive-outline:hover:not(:disabled) {
+    background: var(--danger-surface);
+  }
+  @media (min-width: 1024px) {
+    .ui-detail-facts {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+  [data-sheet='true'] .ui-detail-facts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  @media (max-width: 639px) {
+    .ui-detail-facts,
+    [data-sheet='true'] .ui-detail-facts {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
   .ui-content-frame {
     display: grid;
     gap: var(--section-gap);
@@ -25,6 +144,7 @@
     margin: 0;
   }
   .ui-label {
+    font-size: var(--text-body);
     font-weight: var(--weight-label);
     line-height: var(--line-label);
   }
@@ -278,6 +398,7 @@
     gap: var(--space-4);
     padding-block: var(--space-6);
   }
+  .ui-page-title,
   .ui-workspace-header h1 {
     font-size: var(--text-page);
     font-weight: 600;
@@ -354,7 +475,7 @@
     border-bottom: 0;
   }
   .ui-queue h3 {
-    font-size: var(--text-body);
+    font-size: var(--text-subsection);
     font-weight: 600;
   }
   .ui-queue p {
@@ -371,7 +492,7 @@
     border-left: 3px solid var(--border);
   }
   .ui-state h3 {
-    font-size: var(--text-body);
+    font-size: var(--text-subsection);
     font-weight: 600;
   }
   .ui-state p {

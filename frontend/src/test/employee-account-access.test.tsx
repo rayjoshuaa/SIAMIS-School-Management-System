@@ -91,6 +91,15 @@ function setup(security = true) {
   );
 }
 describe('F6 employee account access', () => {
+  it('groups existing account identity, credential and administration facts without mutating access', async () => {
+    setup();
+    expect(await screen.findByRole('region', { name: 'Linked account identity' })).toBeVisible();
+    expect(screen.getByRole('region', { name: 'Credentials and verification' })).toBeVisible();
+    expect(screen.getByRole('region', { name: 'Account administration' })).toHaveTextContent(
+      'revoke existing sessions',
+    );
+    expect(calls.every((call) => call.method === 'GET')).toBe(true);
+  });
   it('separates employee, employment, account and credential statuses', async () => {
     setup();
     expect(await screen.findByText('Synthetic account')).toBeVisible();
@@ -118,7 +127,7 @@ describe('F6 employee account access', () => {
   it('does not offer provisioning to HR without Security.Manage', async () => {
     lifecycle = { ...lifecycle, accountLinked: false };
     setup(false);
-    await screen.findByText(/No Identity account is linked/);
+    await screen.findByText(/No system account is linked/);
     expect(screen.queryByRole('link')).not.toBeInTheDocument();
   });
   it('reports pending activation without issuing a credential link', async () => {

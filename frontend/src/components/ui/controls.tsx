@@ -109,11 +109,13 @@ export function Select({
         aria-describedby={describedBy}
         aria-invalid={invalid}
         aria-required={required}
-        className={cn(fieldStyle, 'flex items-center justify-between gap-3', className)}
+        className={cn(fieldStyle, 'ui-select-trigger flex items-center', className)}
       >
-        <SelectPrimitive.Value placeholder={placeholder} />
-        <SelectPrimitive.Icon>
-          <ChevronDown className="size-4" />
+        <span className="ui-select-value">
+          <SelectPrimitive.Value placeholder={placeholder} />
+        </span>
+        <SelectPrimitive.Icon className="ui-select-icon">
+          <ChevronDown aria-hidden="true" />
         </SelectPrimitive.Icon>
       </SelectPrimitive.Trigger>
       <SelectPrimitive.Portal>

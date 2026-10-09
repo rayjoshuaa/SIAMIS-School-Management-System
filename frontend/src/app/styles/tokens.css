@@ -36,11 +36,13 @@
   /* V2 roles extend the existing semantic architecture; legacy values stay stable. */
   --text-page: 1.5rem;
   --text-section: 1.125rem;
+  --text-subsection: 1rem;
   --text-body: 0.875rem;
   --text-meta: 0.8125rem;
   --text-metric: 1.75rem;
   --line-body: 1.5;
   --weight-label: 600;
+  --weight-body: 400;
   --space-1: calc(var(--space-unit) * 1);
   --space-2: calc(var(--space-unit) * 2);
   --space-3: calc(var(--space-unit) * 3);
@@ -75,6 +77,8 @@
   --icon-inline: 1rem;
   --icon-navigation: 1.125rem;
   --icon-stroke: 1.75;
+  --select-icon-inset: 0.875rem;
+  --select-icon-gap: var(--space-2);
   --content-workspace: 105rem;
   --content-reading: 80rem;
   --content-form: 60rem;

@@ -14,7 +14,7 @@ const fixture = {
   userId: '00000000-0000-0000-0000-000000000001',
   userName: 'Synthetic account',
   email: 'synthetic@example.invalid',
-  employeeId: null,
+  employeeId: null as string | null,
   isActive: true,
   requiresPasswordChange: false,
   credentialEstablished: false,
@@ -30,6 +30,7 @@ let listTotal: number;
 let detailLoading: boolean;
 let createLoading: boolean;
 beforeEach(() => {
+  fixture.employeeId = null;
   vi.stubGlobal(
     'ResizeObserver',
     class {
@@ -140,6 +141,37 @@ async function fill() {
   await userEvent.click(screen.getByRole('checkbox', { name: 'Management' }));
 }
 describe('real D13 account administration contract', () => {
+  it.each([true, false])('gates linked employee navigation on Employee.Read (%s)', async (read) => {
+    fixture.employeeId = '11111111-1111-4111-8111-111111111111';
+    setup(['Security.Manage', ...(read ? ['Employee.Read'] : [])]);
+    await userEvent.click(await screen.findByRole('button', { name: 'View Synthetic account' }));
+    await screen.findByRole('heading', { name: 'Synthetic account' });
+    const link = screen.queryByRole('link', { name: 'View linked employee' });
+    if (read) expect(link).toHaveAttribute('href', `/hr/employees/${fixture.employeeId}`);
+    else expect(link).not.toBeInTheDocument();
+    expect(calls.every((call) => call.method === 'GET')).toBe(true);
+  });
+  it('uses approved overlay widths and protects unsaved provisioning input without issuing a request', async () => {
+    setup();
+    await openCreate();
+    const dialog = await screen.findByRole('dialog', { name: 'Create User' });
+    expect(dialog).toHaveAttribute('data-size', 'md');
+    await userEvent.type(screen.getByRole('textbox', { name: 'Username' }), 'unsaved-fixture');
+    await userEvent.keyboard('{Escape}');
+    expect(screen.getByText('Discard unsaved changes?')).toBeVisible();
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Keep editing' }));
+    expect(screen.getByRole('textbox', { name: 'Username' })).toHaveValue('unsaved-fixture');
+    await userEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Discard changes' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(calls.every((call) => call.method === 'GET')).toBe(true);
+    await userEvent.click(screen.getByRole('button', { name: 'View Synthetic account' }));
+    expect(await screen.findByRole('dialog', { name: 'Account details' })).toHaveAttribute(
+      'data-size',
+      'md',
+    );
+  });
   it('opens a named create dialog, focuses Username, traps Tab and restores the opener on Escape', async () => {
     setup();
     const opener = await screen.findByRole('button', { name: 'Create User' });

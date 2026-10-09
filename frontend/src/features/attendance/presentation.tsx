@@ -1,5 +1,4 @@
-import { Link } from 'react-router-dom';
-import { Button } from '../../components/ui/button';
+import { Button, LinkButton } from '../../components/ui/button';
 import { Table, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/table';
 import { TableViewport, SystemState } from '../../components/shared/workspace';
 import { ApiError } from '../../lib/api/errors';
@@ -148,12 +147,9 @@ export function Rows({
                       Inspect
                     </Button>
                   )}
-                  <Link
-                    className="ui-link inline-flex min-h-11 items-center"
-                    to={`/hr/attendance/${row.employeeId}/${row.businessDate}`}
-                  >
+                  <LinkButton to={`/hr/attendance/${row.employeeId}/${row.businessDate}`}>
                     Review day
-                  </Link>
+                  </LinkButton>
                 </div>
               </TableCell>
             </TableRow>

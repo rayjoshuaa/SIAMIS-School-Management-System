@@ -1,10 +1,11 @@
-import { Link, useParams, useSearchParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../lib/auth/auth-context';
 import { Table, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/table';
 import { Tabs } from '../../components/ui/navigation';
 import { TableViewport } from '../../components/shared/workspace';
 import { Avatar, Badge } from '../../components/ui/feedback';
-import { Pencil } from 'lucide-react';
+import { Pencil, CalendarRange, UserRoundMinus, UserRoundPlus } from 'lucide-react';
+import { BackLink, LinkButton } from '../../components/ui/button';
 import { employeeName } from './contracts';
 import { masterLabel, useEmployee, useHistory, useMasters } from './data';
 import { ContactSummary, EmploymentSummary, Facts, QueryState } from './presentation';
@@ -30,9 +31,7 @@ export function EmployeeProfile() {
   const manage = state.user?.capabilities.includes('Employee.Manage');
   return (
     <div className="employee-workspace employee-profile">
-      <Link className="ui-link" to="/hr/employees">
-        ← Employee directory
-      </Link>
+      <BackLink to="/hr/employees">Employee directory</BackLink>
       {params.get('notice') === 'saved' && <p role="status">Employee saved successfully.</p>}
       <header className="employee-toolbar employee-profile-header">
         <div className="employee-identity">
@@ -54,30 +53,29 @@ export function EmployeeProfile() {
           </div>
         </div>
         {manage && (
-          <div className="employee-profile-actions">
-            <Link
-              className="ui-button employee-action employee-action-outline"
-              to="edit"
-              data-density="compact"
-            >
+          <div className="ui-record-actions">
+            <LinkButton to="edit">
               <Pencil aria-hidden="true" className="size-4" />
               Edit profile
-            </Link>
+            </LinkButton>
             {value.currentEmployment && value.isActive ? (
               <>
-                <Link className="ui-link inline-flex min-h-11 items-center" to="employment-change">
+                <LinkButton to="employment-change">
+                  <CalendarRange aria-hidden="true" />
                   Record employment change
-                </Link>
-                <Link className="ui-link inline-flex min-h-11 items-center" to="end-employment">
+                </LinkButton>
+                <LinkButton variant="destructive-outline" to="end-employment">
+                  <UserRoundMinus aria-hidden="true" />
                   End employment
-                </Link>
+                </LinkButton>
               </>
             ) : (
               !value.isActive &&
               !value.currentEmployment && (
-                <Link className="ui-link inline-flex min-h-11 items-center" to="rehire">
+                <LinkButton to="rehire">
+                  <UserRoundPlus aria-hidden="true" />
                   Rehire
-                </Link>
+                </LinkButton>
               )
             )}
           </div>
@@ -107,15 +105,15 @@ export function EmployeeProfile() {
                   ]}
                 />
                 <section className="employee-section">
-                  <h2>Contact information</h2>
+                  <h2 className="ui-section-title">Contact information</h2>
                   <ContactSummary employee={value} />
                 </section>
                 <section className="employee-section">
-                  <h2>Addresses</h2>
+                  <h2 className="ui-section-title">Addresses</h2>
                   {value.addresses.length ? (
                     value.addresses.map((address) => (
                       <div className="mb-4 text-sm" key={address.employeeAddressId}>
-                        <h3 className="font-semibold">
+                        <h3 className="ui-subsection-title">
                           {address.addressType}
                           {address.isPrimary ? ' · Primary' : ''}
                         </h3>
@@ -138,11 +136,11 @@ export function EmployeeProfile() {
                   )}
                 </section>
                 <section className="employee-section">
-                  <h2>Emergency contacts</h2>
+                  <h2 className="ui-section-title">Emergency contacts</h2>
                   {value.emergencyContacts.length ? (
                     value.emergencyContacts.map((contact) => (
                       <div className="mb-4" key={contact.emergencyContactId}>
-                        <h3 className="mb-2 text-sm font-semibold">
+                        <h3 className="ui-subsection-title mb-2">
                           {contact.name}
                           {contact.isPrimary ? ' · Primary' : ''}
                         </h3>
@@ -168,6 +166,10 @@ export function EmployeeProfile() {
             label: 'Employment history',
             content: (
               <>
+                <div className="employee-history-heading">
+                  <h3>Employment records</h3>
+                  <p>Current and historical periods are retained. Dates are shown as recorded.</p>
+                </div>
                 <QueryState
                   loading={history.isPending}
                   error={history.error}
@@ -221,7 +223,11 @@ export function EmployeeProfile() {
                                   )}
                                 </div>
                               </TableCell>
-                              <TableCell>{record.isCurrent ? 'Current' : 'Historical'}</TableCell>
+                              <TableCell>
+                                <Badge intent={record.isCurrent ? 'info' : 'neutral'}>
+                                  {record.isCurrent ? 'Current' : 'Historical'}
+                                </Badge>
+                              </TableCell>
                             </TableRow>
                           ))}
                         </tbody>

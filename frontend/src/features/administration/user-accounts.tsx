@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, type FormEvent } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Button } from '../../components/ui/button';
+import { Button, LinkButton } from '../../components/ui/button';
 import { Input, Checkbox } from '../../components/ui/controls';
 import { Alert, Badge, Spinner } from '../../components/ui/feedback';
 import { Table, TableHeader, TableRow, TableHead, TableCell } from '../../components/ui/table';
@@ -10,6 +10,9 @@ import { api } from '../../lib/api/client';
 import { ApiError } from '../../lib/api/errors';
 import { useAuth } from '../../lib/auth/auth-context';
 import { can } from '../../lib/auth/capabilities';
+import { Plus, Eye } from 'lucide-react';
+import { AssignedRoles } from './account-presentation';
+import { Dialog as RadixDialog } from 'radix-ui';
 
 import { permanentRoles, type Account } from './account-contracts';
 type AccountPage = { items: Account[]; totalCount: number; page: number; pageSize: number };
@@ -31,12 +34,12 @@ function errorMessage(error: Error) {
 }
 function CreateUser({
   onCreated,
-  onCancel,
   onPendingChange,
+  onDirtyChange,
 }: {
   onCreated: (account: Account) => void;
-  onCancel: () => void;
   onPendingChange: (pending: boolean) => void;
+  onDirtyChange: (dirty: boolean) => void;
 }) {
   const [userName, setUserName] = useState('');
   const [email, setEmail] = useState('');
@@ -51,6 +54,10 @@ function CreateUser({
     onPendingChange(create.isPending);
     return () => onPendingChange(false);
   }, [create.isPending, onPendingChange]);
+  useEffect(() => {
+    onDirtyChange(!!(userName || email || employeeId || roles.length));
+    return () => onDirtyChange(false);
+  }, [userName, email, employeeId, roles.length, onDirtyChange]);
   function submit(event: FormEvent) {
     event.preventDefault();
     create.reset();
@@ -84,30 +91,32 @@ function CreateUser({
           </Alert>
         </div>
       )}
-      <FormField id="account-username" label="Username" required error={errors.userName}>
-        {(props) => (
-          <Input
-            {...props}
-            value={userName}
-            onChange={(e) => setUserName(e.target.value)}
-            maxLength={256}
-            autoComplete="off"
-            disabled={create.isPending}
-          />
-        )}
-      </FormField>
-      <FormField id="account-email" label="Delivery email" required error={errors.email}>
-        {(props) => (
-          <Input
-            {...props}
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            maxLength={256}
-            disabled={create.isPending}
-          />
-        )}
-      </FormField>
+      <div className="account-create-grid">
+        <FormField id="account-username" label="Username" required error={errors.userName}>
+          {(props) => (
+            <Input
+              {...props}
+              value={userName}
+              onChange={(e) => setUserName(e.target.value)}
+              maxLength={256}
+              autoComplete="off"
+              disabled={create.isPending}
+            />
+          )}
+        </FormField>
+        <FormField id="account-email" label="Delivery email" required error={errors.email}>
+          {(props) => (
+            <Input
+              {...props}
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              maxLength={256}
+              disabled={create.isPending}
+            />
+          )}
+        </FormField>
+      </div>
       <fieldset
         disabled={create.isPending}
         aria-describedby="account-roles-hint account-roles-error"
@@ -124,7 +133,7 @@ function CreateUser({
         </p>
         <div className="mt-2 grid gap-x-4 sm:grid-cols-2">
           {permanentRoles.map((role) => (
-            <label key={role} className="flex items-center gap-2 text-sm">
+            <label key={role} className="account-role-choice">
               <Checkbox
                 aria-label={role}
                 checked={roles.includes(role)}
@@ -164,9 +173,11 @@ function CreateUser({
         )}
       </FormField>
       <div className="sticky bottom-0 flex flex-wrap justify-end gap-2 border-t border-border bg-surface pt-3">
-        <Button variant="outline" onClick={onCancel} disabled={create.isPending}>
-          Cancel
-        </Button>
+        <RadixDialog.Close asChild>
+          <Button variant="outline" disabled={create.isPending}>
+            Cancel
+          </Button>
+        </RadixDialog.Close>
         <Button type="submit" loading={create.isPending}>
           Create User
         </Button>
@@ -182,9 +193,14 @@ export function UserAccounts() {
         Security.Manage is required to administer accounts.
       </Alert>
     );
-  return <AuthorizedAccounts actorId={state.user!.userId} />;
+  return (
+    <AuthorizedAccounts
+      actorId={state.user!.userId}
+      employeeRead={can(state.user, 'Employee.Read')}
+    />
+  );
 }
-function AuthorizedAccounts({ actorId }: { actorId: string }) {
+function AuthorizedAccounts({ actorId, employeeRead }: { actorId: string; employeeRead: boolean }) {
   const cache = useQueryClient();
   const [page, setPage] = useState(1);
   type Overlay = 'create' | 'detail' | 'confirm' | null;
@@ -192,6 +208,7 @@ function AuthorizedAccounts({ actorId }: { actorId: string }) {
   const overlayRef = useRef<Overlay>(null);
   const invoker = useRef<HTMLButtonElement | null>(null);
   const [createBusy, setCreateBusy] = useState(false);
+  const [createDirty, setCreateDirty] = useState(false);
   const [confirmation, setConfirmation] = useState<'issue' | 'collect'>('issue');
   function changeOverlay(next: Overlay) {
     overlayRef.current = next;
@@ -263,10 +280,10 @@ function AuthorizedAccounts({ actorId }: { actorId: string }) {
   }
   const account = detail.data;
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+    <div className="account-workspace">
+      <div className="account-toolbar">
         <p className="text-sm text-muted-foreground">
-          Account provisioning and activation. Access is enforced by Security.Manage on the server.
+          Provision accounts and review assigned access. Users establish their own passwords.
         </p>
         <Button
           onClick={(event) => {
@@ -276,6 +293,7 @@ function AuthorizedAccounts({ actorId }: { actorId: string }) {
           }}
           disabled={overlay !== null}
         >
+          <Plus aria-hidden="true" className="size-4" />
           Create User
         </Button>
       </div>
@@ -287,6 +305,9 @@ function AuthorizedAccounts({ actorId }: { actorId: string }) {
         </div>
       )}
       <Dialog
+        size="md"
+        dirty={createDirty}
+        pending={createBusy}
         open={overlay === 'create'}
         onOpenChange={(open) => {
           if (!open && !createBusy) changeOverlay(null);
@@ -303,7 +324,7 @@ function AuthorizedAccounts({ actorId }: { actorId: string }) {
         {overlay === 'create' && (
           <CreateUser
             onPendingChange={setCreateBusy}
-            onCancel={() => changeOverlay(null)}
+            onDirtyChange={setCreateDirty}
             onCreated={(created) => {
               select(created.userId);
               setNotice(
@@ -333,7 +354,7 @@ function AuthorizedAccounts({ actorId }: { actorId: string }) {
             tabIndex={0}
             className="overflow-x-auto border border-border bg-surface"
           >
-            <Table>
+            <Table className="account-table">
               <caption className="sr-only">User accounts and their real assigned roles</caption>
               <TableHeader>
                 <TableRow>
@@ -348,7 +369,9 @@ function AuthorizedAccounts({ actorId }: { actorId: string }) {
                 {accounts.data.items.map((user) => (
                   <TableRow key={user.userId}>
                     <TableCell>{user.userName}</TableCell>
-                    <TableCell>{user.roles.join(', ') || 'None'}</TableCell>
+                    <TableCell>
+                      <AssignedRoles roles={user.roles} />
+                    </TableCell>
                     <TableCell>
                       <Badge intent={user.isActive ? 'success' : 'neutral'}>
                         {user.isActive ? 'Active' : 'Disabled'}
@@ -365,6 +388,7 @@ function AuthorizedAccounts({ actorId }: { actorId: string }) {
                     <TableCell>
                       <Button
                         variant="outline"
+                        density="compact"
                         aria-label={`View ${user.userName}`}
                         disabled={issue.isPending || collect.isPending}
                         onClick={(event) => {
@@ -372,6 +396,7 @@ function AuthorizedAccounts({ actorId }: { actorId: string }) {
                           select(user.userId);
                         }}
                       >
+                        <Eye aria-hidden="true" className="size-4" />
                         View
                       </Button>
                     </TableCell>
@@ -403,6 +428,7 @@ function AuthorizedAccounts({ actorId }: { actorId: string }) {
         </>
       )}
       <Sheet
+        size="md"
         open={overlay === 'detail'}
         onOpenChange={(open) => {
           if (!open) {
@@ -435,16 +461,20 @@ function AuthorizedAccounts({ actorId }: { actorId: string }) {
             ) : (
               account && (
                 <>
-                  <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
+                  <h3 className="account-section-title mt-4">{account.userName}</h3>
+                  <p className="mt-1 mb-4 text-sm text-muted-foreground">
+                    Application access and password readiness are separate states.
+                  </p>
+                  <dl className="ui-detail-facts account-facts">
                     <div>
-                      <dt className="text-muted-foreground">Account status</dt>
+                      <dt>Account status</dt>
                       <dd>
                         {account.isActive ? 'Active' : 'Disabled'}
                         {account.isLockedOut ? ' · Locked out' : ''}
                       </dd>
                     </div>
                     <div>
-                      <dt className="text-muted-foreground">Credential status</dt>
+                      <dt>Credential status</dt>
                       <dd>
                         {!account.credentialEstablished
                           ? 'Activation pending'
@@ -454,20 +484,29 @@ function AuthorizedAccounts({ actorId }: { actorId: string }) {
                       </dd>
                     </div>
                     <div>
-                      <dt className="text-muted-foreground">Username</dt>
+                      <dt>Username</dt>
                       <dd>{account.userName}</dd>
                     </div>
                     <div>
-                      <dt className="text-muted-foreground">Delivery email</dt>
+                      <dt>Delivery email</dt>
                       <dd>{account.email || 'Not configured'}</dd>
                     </div>
                     <div>
-                      <dt className="text-muted-foreground">Assigned roles</dt>
-                      <dd>{account.roles.join(', ')}</dd>
+                      <dt>Assigned roles</dt>
+                      <dd>
+                        <AssignedRoles roles={account.roles} />
+                      </dd>
                     </div>
                     <div>
-                      <dt className="text-muted-foreground">Employee link</dt>
+                      <dt>Employee link</dt>
                       <dd className="break-all">{account.employeeId || 'Not linked'}</dd>
+                      {employeeRead && account.employeeId && (
+                        <dd className="mt-2">
+                          <LinkButton to={`/hr/employees/${account.employeeId}`}>
+                            View linked employee
+                          </LinkButton>
+                        </dd>
+                      )}
                     </div>
                   </dl>
                   {issue.isError && (
@@ -477,80 +516,83 @@ function AuthorizedAccounts({ actorId }: { actorId: string }) {
                       </Alert>
                     </div>
                   )}
-                  <Button
-                    className="mt-4"
-                    variant="outline"
-                    loading={issue.isPending}
-                    disabled={
-                      collect.isPending ||
-                      !account.isActive ||
-                      !account.email ||
-                      (account.credentialEstablished && !account.emailConfirmed)
-                    }
-                    onClick={() => {
-                      setNotice('');
-                      setDevelopmentLink(null);
-                      issue.reset();
-                      setConfirmation('issue');
-                      changeOverlay('confirm');
-                    }}
-                  >
-                    {account.credentialEstablished
-                      ? 'Initiate password recovery'
-                      : 'Reissue activation'}
-                  </Button>
-                  {(!account.email ||
-                    (account.credentialEstablished && !account.emailConfirmed)) && (
-                    <p className="mt-2 text-sm text-muted-foreground">
-                      Verified-email recovery is unavailable for this account. No recovery bypass is
-                      offered.
-                    </p>
-                  )}
-                  {import.meta.env.DEV && (
-                    <div className="mt-4 space-y-3 border-t border-border pt-4">
-                      <p className="text-sm text-muted-foreground">
-                        Development-only handoff: collect the transient activation/recovery link
-                        after issuance. Requires the existing explicitly enabled Development
-                        delivery provider. Collection consumes the delivery; the link stays in
-                        memory only.
+                  <section className="account-group mt-4" aria-label="Activation and recovery">
+                    <h3>Activation &amp; recovery</h3>
+                    <Button
+                      className="mt-4"
+                      variant="outline"
+                      loading={issue.isPending}
+                      disabled={
+                        collect.isPending ||
+                        !account.isActive ||
+                        !account.email ||
+                        (account.credentialEstablished && !account.emailConfirmed)
+                      }
+                      onClick={() => {
+                        setNotice('');
+                        setDevelopmentLink(null);
+                        issue.reset();
+                        setConfirmation('issue');
+                        changeOverlay('confirm');
+                      }}
+                    >
+                      {account.credentialEstablished
+                        ? 'Initiate password recovery'
+                        : 'Reissue activation'}
+                    </Button>
+                    {(!account.email ||
+                      (account.credentialEstablished && !account.emailConfirmed)) && (
+                      <p className="mt-2 text-sm text-muted-foreground">
+                        Verified-email recovery is unavailable for this account. No recovery bypass
+                        is offered.
                       </p>
-                      <Button
-                        variant="outline"
-                        loading={collect.isPending}
-                        disabled={!account.isActive || !!developmentLink || issue.isPending}
-                        onClick={() => {
-                          collect.reset();
-                          setConfirmation('collect');
-                          changeOverlay('confirm');
-                        }}
-                      >
-                        Collect Development delivery link
-                      </Button>
-                      {collect.isError && (
-                        <div role="alert">
-                          <Alert intent="warning" title="No Development delivery collected">
-                            {errorMessage(collect.error)}
-                          </Alert>
-                        </div>
-                      )}
-                      {developmentLink && (
-                        <p className="text-sm">
-                          <a
-                            className="text-primary underline"
-                            href={developmentLink}
-                            target="_blank"
-                            rel="noreferrer"
-                          >
-                            Open private activation/recovery link
-                          </a>
-                          <span className="mt-2 block text-muted-foreground">
-                            Share privately with the intended account owner only. Do not include it
-                            in reports or screenshots.
-                          </span>
+                    )}
+                    {import.meta.env.DEV && (
+                      <div className="mt-4 space-y-3 border-t border-border pt-4">
+                        <p className="text-sm text-muted-foreground">
+                          Development-only handoff: collect the transient activation/recovery link
+                          after issuance. Requires the existing explicitly enabled Development
+                          delivery provider. Collection consumes the delivery; the link stays in
+                          memory only.
                         </p>
-                      )}
-                    </div>
-                  )}
+                        <Button
+                          variant="outline"
+                          loading={collect.isPending}
+                          disabled={!account.isActive || !!developmentLink || issue.isPending}
+                          onClick={() => {
+                            collect.reset();
+                            setConfirmation('collect');
+                            changeOverlay('confirm');
+                          }}
+                        >
+                          Collect Development delivery link
+                        </Button>
+                        {collect.isError && (
+                          <div role="alert">
+                            <Alert intent="warning" title="No Development delivery collected">
+                              {errorMessage(collect.error)}
+                            </Alert>
+                          </div>
+                        )}
+                        {developmentLink && (
+                          <p className="text-sm">
+                            <a
+                              className="text-primary underline"
+                              href={developmentLink}
+                              target="_blank"
+                              rel="noreferrer"
+                            >
+                              Open private activation/recovery link
+                            </a>
+                            <span className="mt-2 block text-muted-foreground">
+                              Share privately with the intended account owner only. Do not include
+                              it in reports or screenshots.
+                            </span>
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </section>
                 </>
               )
             )}

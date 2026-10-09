@@ -29,7 +29,7 @@ function DashboardRegion({
     <Card className="flex h-full flex-col p-4">
       <div className="flex items-center gap-2 border-b border-border pb-3">
         <Icon aria-hidden="true" className="size-4 text-muted-foreground" />
-        <h2 className="text-sm font-semibold">{title}</h2>
+        <h2 className="ui-section-title">{title}</h2>
       </div>
       <div
         className={`flex flex-1 flex-col items-center justify-center px-2 py-6 text-center ${chart ? 'min-h-44' : 'min-h-36'}`}

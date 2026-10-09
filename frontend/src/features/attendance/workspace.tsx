@@ -1,9 +1,9 @@
 import { useRef, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../../lib/api/client';
 import { useAuth } from '../../lib/auth/auth-context';
-import { Button } from '../../components/ui/button';
+import { Button, LinkButton } from '../../components/ui/button';
 import { Input } from '../../components/ui/controls';
 import { Tabs, Pagination } from '../../components/ui/navigation';
 import { Sheet } from '../../components/ui/overlays';
@@ -332,9 +332,9 @@ function ReportPanel({ mode }: { mode: 'daily' | 'queue' }) {
                 ['Reopen required', selected.requiresReopen ? 'Yes' : 'No'],
               ]}
             />
-            <h3 className="font-semibold">Live calculation</h3>
+            <h3 className="ui-subsection-title">Live calculation</h3>
             <CoverageFacts value={selected.live} />
-            <h3 className="font-semibold">Currently validated official calculation</h3>
+            <h3 className="ui-subsection-title">Currently validated official calculation</h3>
             {selected.official ? (
               <CoverageFacts value={selected.official} />
             ) : (
@@ -343,16 +343,13 @@ function ReportPanel({ mode }: { mode: 'daily' | 'queue' }) {
                 substitute.
               </p>
             )}
-            <h3 className="font-semibold">Findings</h3>
+            <h3 className="ui-subsection-title">Findings</h3>
             <Findings values={selected.findings} />
-            <h3 className="font-semibold">Changed sources</h3>
+            <h3 className="ui-subsection-title">Changed sources</h3>
             <Findings values={selected.changedSources} />
-            <Link
-              className="ui-link inline-flex min-h-11 items-center"
-              to={`/hr/attendance/${selected.employeeId}/${selected.businessDate}`}
-            >
+            <LinkButton to={`/hr/attendance/${selected.employeeId}/${selected.businessDate}`}>
               Open full attendance review
-            </Link>
+            </LinkButton>
           </div>
         )}
       </Sheet>
@@ -532,12 +529,9 @@ function EmployeeHistory({ reporting }: { reporting: boolean }) {
       )}
       {range && (
         <>
-          <Link
-            className="ui-link inline-flex min-h-11 items-center"
-            to={`/hr/attendance/${range.employeeId}/${range.to}`}
-          >
+          <LinkButton to={`/hr/attendance/${range.employeeId}/${range.to}`}>
             Review selected employee on {range.to}
-          </Link>
+          </LinkButton>
           {reporting && (
             <>
               <QueryState
@@ -547,7 +541,7 @@ function EmployeeHistory({ reporting }: { reporting: boolean }) {
               />
               {summary.data && !summary.isError && (
                 <>
-                  <h2 className="font-semibold">Official period summary</h2>
+                  <h2 className="ui-section-title">Official period summary</h2>
                   <Facts
                     items={[
                       ['Complete', summary.data.isComplete ? 'Yes' : 'No'],
@@ -591,7 +585,7 @@ function EmployeeHistory({ reporting }: { reporting: boolean }) {
               {history.data && !history.isError && <Rows rows={history.data.dates} />}
             </>
           )}
-          <h2 className="font-semibold">Legacy records — read-only</h2>
+          <h2 className="ui-section-title">Legacy records — read-only</h2>
           <QueryState
             loading={legacy.isPending}
             error={legacy.error}

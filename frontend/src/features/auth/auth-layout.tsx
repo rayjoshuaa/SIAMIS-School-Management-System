@@ -1,4 +1,5 @@
-import { Outlet, Link } from 'react-router-dom';
+import { Outlet } from 'react-router-dom';
+import { BackLink } from '../../components/ui/button';
 import type { ReactNode } from 'react';
 import { AuthBrand } from './auth-presentation';
 import campusPhoto from '../../assets/branding/siamis-campus-login.png';
@@ -26,9 +27,5 @@ export function AuthSurface({ children }: { children: ReactNode }) {
   );
 }
 export function LoginLink() {
-  return (
-    <Link to="/login" className="auth-secondary-link auth-back-link">
-      Back to sign in
-    </Link>
-  );
+  return <BackLink to="/login">Back to sign in</BackLink>;
 }

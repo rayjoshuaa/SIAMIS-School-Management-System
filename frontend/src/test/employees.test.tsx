@@ -150,6 +150,14 @@ beforeEach(() => {
 });
 
 describe('V3.5 employee workspace presentation', () => {
+  it('explains the existing effective-date contract beside the current employment without mutation', async () => {
+    setup(`/hr/employees/${id}/employment-change`);
+    const context = await screen.findByRole('region', { name: 'Employment being reviewed' });
+    expect(context).toHaveTextContent('FIXTURE-001');
+    expect(context).toHaveTextContent('The current period ends on the preceding day');
+    expect(context).toHaveTextContent('Teaching');
+    expect(calls.every((call) => call.method === 'GET')).toBe(true);
+  });
   it('keeps labelled filters and primary creation navigation without inventing sorting', async () => {
     setup();
     await screen.findByText('FIXTURE-001');
@@ -502,7 +510,7 @@ describe('F5 employee workspace', () => {
     setup(`/hr/employees/${id}/end-employment`);
     await screen.findByLabelText(/^End date/);
     await userEvent.type(screen.getByLabelText(/^End date/), '2026-09-01');
-    await userEvent.selectOptions(screen.getByLabelText(/^Terminal employment status/), 'terminal');
+    await userEvent.selectOptions(screen.getByLabelText(/^End-of-employment status/), 'terminal');
     await userEvent.selectOptions(screen.getByLabelText(/^Linked account decision/), 'false');
     await userEvent.click(screen.getByRole('button', { name: 'Review end of employment' }));
     expect(calls.some((call) => call.method === 'POST')).toBe(false);

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link, useBlocker, useNavigate, useParams } from 'react-router-dom';
+import { useBlocker, useNavigate, useParams } from 'react-router-dom';
 import { Controller, useForm } from 'react-hook-form';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../lib/api/client';
@@ -7,7 +7,7 @@ import { ApiError } from '../../lib/api/errors';
 import { useAuth } from '../../lib/auth/auth-context';
 import { FormField } from '../../components/shared/form-field';
 import { Input } from '../../components/ui/controls';
-import { Button } from '../../components/ui/button';
+import { Button, BackLink, LinkButton } from '../../components/ui/button';
 import { AlertDialog } from '../../components/ui/overlays';
 import { SystemState } from '../../components/shared/workspace';
 import {
@@ -17,8 +17,8 @@ import {
   type Masters,
   type MasterName,
 } from './contracts';
-import { resolveMasterId, useEmployee, useHistory, useMasters } from './data';
-import { QueryState } from './presentation';
+import { masterLabel, resolveMasterId, useEmployee, useHistory, useMasters } from './data';
+import { Facts, QueryState } from './presentation';
 import { ReportingEmployee } from './reporting-employee';
 import './employees.css';
 
@@ -349,18 +349,55 @@ function EmployeeEditor({
   }
   return (
     <div className="employee-workspace employee-form">
-      <Link className="ui-link" to={back}>
-        ← {employee ? 'Employee 360' : 'Employee directory'}
-      </Link>
-      <div>
-        <p className="mt-2 text-sm text-muted-foreground">
-          {mode === 'create'
-            ? 'Enter personal information and initial employment details. User account provisioning remains a separate administration workflow.'
-            : mode === 'edit'
-              ? 'Correct personal information. Existing employment context and related records are retained; record an employment change to start a new period.'
-              : 'Record employment dates and context. Previous employment history remains available.'}
-        </p>
-      </div>
+      <BackLink to={back}>{employee ? 'Employee 360' : 'Employee directory'}</BackLink>
+      {(mode === 'create' || mode === 'edit') && (
+        <div>
+          <p className="mt-2 text-sm text-muted-foreground">
+            {mode === 'create'
+              ? 'Enter personal information and initial employment details. User account provisioning remains a separate administration workflow.'
+              : mode === 'edit'
+                ? 'Correct personal information. Existing employment context and related records are retained; record an employment change to start a new period.'
+                : 'Record employment dates and context. Previous employment history remains available.'}
+          </p>
+        </div>
+      )}
+      {employee && mode !== 'edit' && (
+        <section className="employee-lifecycle-context" aria-label="Employment being reviewed">
+          <h2>
+            {employee.firstName} {employee.lastName}
+          </h2>
+          <p className="employee-context mb-4">
+            {employee.employeeNumber} ·{' '}
+            {record?.isCurrent
+              ? 'Current employment'
+              : record
+                ? 'Previous employment context'
+                : 'No current employment'}
+          </p>
+          <Facts
+            items={[
+              ['Employee record', employee.isActive ? 'Active' : 'Inactive'],
+              [
+                'Department',
+                record ? masterLabel(masters, 'departments', record.departmentId) : null,
+              ],
+              [
+                'Employment status',
+                record
+                  ? masterLabel(masters, 'employment-statuses', record.employmentStatusId)
+                  : null,
+              ],
+            ]}
+          />
+          <p className="mt-4 text-sm">
+            {mode === 'employment-change'
+              ? 'A new period starts on the effective date. The current period ends on the preceding day. Leave a field unchanged to keep its current value.'
+              : mode === 'end-employment'
+                ? 'The end date is inclusive. Ending employment closes the current period and makes the employee record inactive. Review any linked account decision separately.'
+                : 'Rehire starts a new employment period and retains previous history. It does not reactivate a linked account or change its roles.'}
+          </p>
+        </section>
+      )}
       {unavailableEnd ? (
         <SystemState kind="permission" title="Employment cannot be ended here">
           {!record?.isCurrent
@@ -412,7 +449,7 @@ function EmployeeEditor({
                     {select(
                       'employmentStatusId',
                       'employment-statuses',
-                      'Terminal employment status',
+                      'End-of-employment status',
                       true,
                     )}
                     {account?.requiresOffboardingDecision && (
@@ -485,9 +522,7 @@ function EmployeeEditor({
             <Button type="submit" loading={mutation.isPending}>
               {mode === 'end-employment' ? 'Review end of employment' : 'Save employee'}
             </Button>
-            <Link className="ui-link inline-flex min-h-11 items-center" to={back}>
-              Cancel
-            </Link>
+            <LinkButton to={back}>Cancel</LinkButton>
           </div>
         </form>
       )}

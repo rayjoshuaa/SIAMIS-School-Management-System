@@ -16,9 +16,6 @@
 .attendance-table {
   min-width: 720px;
 }
-.attendance-workspace .employee-facts dd {
-  overflow-wrap: anywhere;
-}
 .attendance-workspace details > summary {
   cursor: pointer;
   min-height: 44px;

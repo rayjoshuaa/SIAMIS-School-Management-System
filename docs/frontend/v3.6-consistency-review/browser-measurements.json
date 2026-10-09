@@ -1,0 +1,1310 @@
+[
+  {
+    "facts": [
+      {
+        "label": "Account status",
+        "valueWeight": "400",
+        "weight": "600"
+      },
+      {
+        "label": "Credential status",
+        "valueWeight": "400",
+        "weight": "600"
+      }
+    ],
+    "pageWidth": 1920,
+    "screen": "account drawer",
+    "width": 1920
+  },
+  {
+    "facts": [
+      {
+        "label": "Account status",
+        "valueWeight": "400",
+        "weight": "600"
+      },
+      {
+        "label": "Credential status",
+        "valueWeight": "400",
+        "weight": "600"
+      }
+    ],
+    "pageWidth": 1440,
+    "screen": "account drawer",
+    "width": 1440
+  },
+  {
+    "facts": [
+      {
+        "label": "Account status",
+        "valueWeight": "400",
+        "weight": "600"
+      },
+      {
+        "label": "Credential status",
+        "valueWeight": "400",
+        "weight": "600"
+      }
+    ],
+    "pageWidth": 1280,
+    "screen": "account drawer",
+    "width": 1280
+  },
+  {
+    "facts": [
+      {
+        "label": "Account status",
+        "valueWeight": "400",
+        "weight": "600"
+      },
+      {
+        "label": "Credential status",
+        "valueWeight": "400",
+        "weight": "600"
+      }
+    ],
+    "pageWidth": 1024,
+    "screen": "account drawer",
+    "width": 1024
+  },
+  {
+    "facts": [
+      {
+        "label": "Account status",
+        "valueWeight": "400",
+        "weight": "600"
+      },
+      {
+        "label": "Credential status",
+        "valueWeight": "400",
+        "weight": "600"
+      }
+    ],
+    "pageWidth": 768,
+    "screen": "account drawer",
+    "width": 768
+  },
+  {
+    "facts": [
+      {
+        "label": "Account status",
+        "valueWeight": "400",
+        "weight": "600"
+      },
+      {
+        "label": "Credential status",
+        "valueWeight": "400",
+        "weight": "600"
+      }
+    ],
+    "pageWidth": 390,
+    "screen": "account drawer",
+    "width": 390
+  },
+  {
+    "actions": [
+      {
+        "height": 36,
+        "text": "Employee directory"
+      },
+      {
+        "height": 36,
+        "text": "Edit profile"
+      },
+      {
+        "height": 36,
+        "text": "Record employment change"
+      },
+      {
+        "height": 36,
+        "text": "End employment"
+      }
+    ],
+    "labels": [
+      {
+        "label": "Employee record",
+        "valueWeight": "400",
+        "weight": "600"
+      },
+      {
+        "label": "Current employment status",
+        "valueWeight": "400",
+        "weight": "600"
+      }
+    ],
+    "pageWidth": 1920,
+    "screen": "employee",
+    "width": 1920
+  },
+  {
+    "actions": [
+      {
+        "height": 36,
+        "text": "Employee directory"
+      },
+      {
+        "height": 36,
+        "text": "Edit profile"
+      },
+      {
+        "height": 36,
+        "text": "Record employment change"
+      },
+      {
+        "height": 36,
+        "text": "End employment"
+      }
+    ],
+    "labels": [
+      {
+        "label": "Employee record",
+        "valueWeight": "400",
+        "weight": "600"
+      },
+      {
+        "label": "Current employment status",
+        "valueWeight": "400",
+        "weight": "600"
+      }
+    ],
+    "pageWidth": 1440,
+    "screen": "employee",
+    "width": 1440
+  },
+  {
+    "actions": [
+      {
+        "height": 36,
+        "text": "Employee directory"
+      },
+      {
+        "height": 36,
+        "text": "Edit profile"
+      },
+      {
+        "height": 36,
+        "text": "Record employment change"
+      },
+      {
+        "height": 36,
+        "text": "End employment"
+      }
+    ],
+    "labels": [
+      {
+        "label": "Employee record",
+        "valueWeight": "400",
+        "weight": "600"
+      },
+      {
+        "label": "Current employment status",
+        "valueWeight": "400",
+        "weight": "600"
+      }
+    ],
+    "pageWidth": 1280,
+    "screen": "employee",
+    "width": 1280
+  },
+  {
+    "actions": [
+      {
+        "height": 36,
+        "text": "Employee directory"
+      },
+      {
+        "height": 36,
+        "text": "Edit profile"
+      },
+      {
+        "height": 36,
+        "text": "Record employment change"
+      },
+      {
+        "height": 36,
+        "text": "End employment"
+      }
+    ],
+    "labels": [
+      {
+        "label": "Employee record",
+        "valueWeight": "400",
+        "weight": "600"
+      },
+      {
+        "label": "Current employment status",
+        "valueWeight": "400",
+        "weight": "600"
+      }
+    ],
+    "pageWidth": 1009,
+    "screen": "employee",
+    "width": 1024
+  },
+  {
+    "actions": [
+      {
+        "height": 36,
+        "text": "Employee directory"
+      },
+      {
+        "height": 36,
+        "text": "Edit profile"
+      },
+      {
+        "height": 36,
+        "text": "Record employment change"
+      },
+      {
+        "height": 36,
+        "text": "End employment"
+      }
+    ],
+    "labels": [
+      {
+        "label": "Employee record",
+        "valueWeight": "400",
+        "weight": "600"
+      },
+      {
+        "label": "Current employment status",
+        "valueWeight": "400",
+        "weight": "600"
+      }
+    ],
+    "pageWidth": 768,
+    "screen": "employee",
+    "width": 768
+  },
+  {
+    "actions": [
+      {
+        "height": 44,
+        "text": "Employee directory"
+      },
+      {
+        "height": 44,
+        "text": "Edit profile"
+      },
+      {
+        "height": 44,
+        "text": "Record employment change"
+      },
+      {
+        "height": 44,
+        "text": "End employment"
+      }
+    ],
+    "labels": [
+      {
+        "label": "Employee record",
+        "valueWeight": "400",
+        "weight": "600"
+      },
+      {
+        "label": "Current employment status",
+        "valueWeight": "400",
+        "weight": "600"
+      }
+    ],
+    "pageWidth": 375,
+    "screen": "employee",
+    "width": 390
+  },
+  {
+    "actions": [
+      {
+        "height": 36,
+        "text": "Employee directory"
+      },
+      {
+        "height": 36,
+        "text": "Edit profile"
+      },
+      {
+        "height": 36,
+        "text": "Record employment change"
+      },
+      {
+        "height": 36,
+        "text": "End employment"
+      },
+      {
+        "height": 36,
+        "text": "Open User Accounts"
+      }
+    ],
+    "labels": [
+      {
+        "label": "Employee record status",
+        "valueWeight": "400",
+        "weight": "600"
+      },
+      {
+        "label": "Employment status",
+        "valueWeight": "400",
+        "weight": "600"
+      }
+    ],
+    "pageWidth": 1905,
+    "screen": "employee-account",
+    "width": 1920
+  },
+  {
+    "actions": [
+      {
+        "height": 36,
+        "text": "Employee directory"
+      },
+      {
+        "height": 36,
+        "text": "Edit profile"
+      },
+      {
+        "height": 36,
+        "text": "Record employment change"
+      },
+      {
+        "height": 36,
+        "text": "End employment"
+      },
+      {
+        "height": 36,
+        "text": "Open User Accounts"
+      }
+    ],
+    "labels": [
+      {
+        "label": "Employee record status",
+        "valueWeight": "400",
+        "weight": "600"
+      },
+      {
+        "label": "Employment status",
+        "valueWeight": "400",
+        "weight": "600"
+      }
+    ],
+    "pageWidth": 1425,
+    "screen": "employee-account",
+    "width": 1440
+  },
+  {
+    "actions": [
+      {
+        "height": 36,
+        "text": "Employee directory"
+      },
+      {
+        "height": 36,
+        "text": "Edit profile"
+      },
+      {
+        "height": 36,
+        "text": "Record employment change"
+      },
+      {
+        "height": 36,
+        "text": "End employment"
+      },
+      {
+        "height": 36,
+        "text": "Open User Accounts"
+      }
+    ],
+    "labels": [
+      {
+        "label": "Employee record status",
+        "valueWeight": "400",
+        "weight": "600"
+      },
+      {
+        "label": "Employment status",
+        "valueWeight": "400",
+        "weight": "600"
+      }
+    ],
+    "pageWidth": 1265,
+    "screen": "employee-account",
+    "width": 1280
+  },
+  {
+    "actions": [
+      {
+        "height": 36,
+        "text": "Employee directory"
+      },
+      {
+        "height": 36,
+        "text": "Edit profile"
+      },
+      {
+        "height": 36,
+        "text": "Record employment change"
+      },
+      {
+        "height": 36,
+        "text": "End employment"
+      },
+      {
+        "height": 36,
+        "text": "Open User Accounts"
+      }
+    ],
+    "labels": [
+      {
+        "label": "Employee record status",
+        "valueWeight": "400",
+        "weight": "600"
+      },
+      {
+        "label": "Employment status",
+        "valueWeight": "400",
+        "weight": "600"
+      }
+    ],
+    "pageWidth": 1009,
+    "screen": "employee-account",
+    "width": 1024
+  },
+  {
+    "actions": [
+      {
+        "height": 36,
+        "text": "Employee directory"
+      },
+      {
+        "height": 36,
+        "text": "Edit profile"
+      },
+      {
+        "height": 36,
+        "text": "Record employment change"
+      },
+      {
+        "height": 36,
+        "text": "End employment"
+      },
+      {
+        "height": 36,
+        "text": "Open User Accounts"
+      }
+    ],
+    "labels": [
+      {
+        "label": "Employee record status",
+        "valueWeight": "400",
+        "weight": "600"
+      },
+      {
+        "label": "Employment status",
+        "valueWeight": "400",
+        "weight": "600"
+      }
+    ],
+    "pageWidth": 753,
+    "screen": "employee-account",
+    "width": 768
+  },
+  {
+    "actions": [
+      {
+        "height": 44,
+        "text": "Employee directory"
+      },
+      {
+        "height": 44,
+        "text": "Edit profile"
+      },
+      {
+        "height": 44,
+        "text": "Record employment change"
+      },
+      {
+        "height": 44,
+        "text": "End employment"
+      },
+      {
+        "height": 44,
+        "text": "Open User Accounts"
+      }
+    ],
+    "labels": [
+      {
+        "label": "Employee record status",
+        "valueWeight": "400",
+        "weight": "600"
+      },
+      {
+        "label": "Employment status",
+        "valueWeight": "400",
+        "weight": "600"
+      }
+    ],
+    "pageWidth": 375,
+    "screen": "employee-account",
+    "width": 390
+  },
+  {
+    "actions": [
+      {
+        "height": 36,
+        "text": "Employee 360"
+      },
+      {
+        "height": 44,
+        "text": "Cancel"
+      }
+    ],
+    "labels": [
+      {
+        "label": "Employee record",
+        "valueWeight": "400",
+        "weight": "600"
+      },
+      {
+        "label": "Department",
+        "valueWeight": "400",
+        "weight": "600"
+      }
+    ],
+    "pageWidth": 1920,
+    "screen": "employment",
+    "width": 1920
+  },
+  {
+    "actions": [
+      {
+        "height": 36,
+        "text": "Employee 360"
+      },
+      {
+        "height": 44,
+        "text": "Cancel"
+      }
+    ],
+    "labels": [
+      {
+        "label": "Employee record",
+        "valueWeight": "400",
+        "weight": "600"
+      },
+      {
+        "label": "Department",
+        "valueWeight": "400",
+        "weight": "600"
+      }
+    ],
+    "pageWidth": 1425,
+    "screen": "employment",
+    "width": 1440
+  },
+  {
+    "actions": [
+      {
+        "height": 36,
+        "text": "Employee 360"
+      },
+      {
+        "height": 44,
+        "text": "Cancel"
+      }
+    ],
+    "labels": [
+      {
+        "label": "Employee record",
+        "valueWeight": "400",
+        "weight": "600"
+      },
+      {
+        "label": "Department",
+        "valueWeight": "400",
+        "weight": "600"
+      }
+    ],
+    "pageWidth": 1265,
+    "screen": "employment",
+    "width": 1280
+  },
+  {
+    "actions": [
+      {
+        "height": 36,
+        "text": "Employee 360"
+      },
+      {
+        "height": 44,
+        "text": "Cancel"
+      }
+    ],
+    "labels": [
+      {
+        "label": "Employee record",
+        "valueWeight": "400",
+        "weight": "600"
+      },
+      {
+        "label": "Department",
+        "valueWeight": "400",
+        "weight": "600"
+      }
+    ],
+    "pageWidth": 1009,
+    "screen": "employment",
+    "width": 1024
+  },
+  {
+    "actions": [
+      {
+        "height": 36,
+        "text": "Employee 360"
+      },
+      {
+        "height": 44,
+        "text": "Cancel"
+      }
+    ],
+    "labels": [
+      {
+        "label": "Employee record",
+        "valueWeight": "400",
+        "weight": "600"
+      },
+      {
+        "label": "Department",
+        "valueWeight": "400",
+        "weight": "600"
+      }
+    ],
+    "pageWidth": 753,
+    "screen": "employment",
+    "width": 768
+  },
+  {
+    "actions": [
+      {
+        "height": 44,
+        "text": "Employee 360"
+      },
+      {
+        "height": 44,
+        "text": "Cancel"
+      }
+    ],
+    "labels": [
+      {
+        "label": "Employee record",
+        "valueWeight": "400",
+        "weight": "600"
+      },
+      {
+        "label": "Department",
+        "valueWeight": "400",
+        "weight": "600"
+      }
+    ],
+    "pageWidth": 375,
+    "screen": "employment",
+    "width": 390
+  },
+  {
+    "actions": [
+      {
+        "height": 36,
+        "text": "Employee 360"
+      },
+      {
+        "height": 44,
+        "text": "Cancel"
+      }
+    ],
+    "labels": [
+      {
+        "label": "Employee record",
+        "valueWeight": "400",
+        "weight": "600"
+      },
+      {
+        "label": "Department",
+        "valueWeight": "400",
+        "weight": "600"
+      }
+    ],
+    "pageWidth": 1920,
+    "screen": "end-employment",
+    "width": 1920
+  },
+  {
+    "actions": [
+      {
+        "height": 36,
+        "text": "Employee 360"
+      },
+      {
+        "height": 44,
+        "text": "Cancel"
+      }
+    ],
+    "labels": [
+      {
+        "label": "Employee record",
+        "valueWeight": "400",
+        "weight": "600"
+      },
+      {
+        "label": "Department",
+        "valueWeight": "400",
+        "weight": "600"
+      }
+    ],
+    "pageWidth": 1440,
+    "screen": "end-employment",
+    "width": 1440
+  },
+  {
+    "actions": [
+      {
+        "height": 36,
+        "text": "Employee 360"
+      },
+      {
+        "height": 44,
+        "text": "Cancel"
+      }
+    ],
+    "labels": [
+      {
+        "label": "Employee record",
+        "valueWeight": "400",
+        "weight": "600"
+      },
+      {
+        "label": "Department",
+        "valueWeight": "400",
+        "weight": "600"
+      }
+    ],
+    "pageWidth": 1280,
+    "screen": "end-employment",
+    "width": 1280
+  },
+  {
+    "actions": [
+      {
+        "height": 36,
+        "text": "Employee 360"
+      },
+      {
+        "height": 44,
+        "text": "Cancel"
+      }
+    ],
+    "labels": [
+      {
+        "label": "Employee record",
+        "valueWeight": "400",
+        "weight": "600"
+      },
+      {
+        "label": "Department",
+        "valueWeight": "400",
+        "weight": "600"
+      }
+    ],
+    "pageWidth": 1009,
+    "screen": "end-employment",
+    "width": 1024
+  },
+  {
+    "actions": [
+      {
+        "height": 36,
+        "text": "Employee 360"
+      },
+      {
+        "height": 44,
+        "text": "Cancel"
+      }
+    ],
+    "labels": [
+      {
+        "label": "Employee record",
+        "valueWeight": "400",
+        "weight": "600"
+      },
+      {
+        "label": "Department",
+        "valueWeight": "400",
+        "weight": "600"
+      }
+    ],
+    "pageWidth": 768,
+    "screen": "end-employment",
+    "width": 768
+  },
+  {
+    "actions": [
+      {
+        "height": 44,
+        "text": "Employee 360"
+      },
+      {
+        "height": 44,
+        "text": "Cancel"
+      }
+    ],
+    "labels": [
+      {
+        "label": "Employee record",
+        "valueWeight": "400",
+        "weight": "600"
+      },
+      {
+        "label": "Department",
+        "valueWeight": "400",
+        "weight": "600"
+      }
+    ],
+    "pageWidth": 375,
+    "screen": "end-employment",
+    "width": 390
+  },
+  {
+    "actions": [
+      {
+        "height": 44,
+        "text": "Review day"
+      },
+      {
+        "height": 44,
+        "text": "Review day"
+      }
+    ],
+    "labels": [
+      {
+        "label": "Employee",
+        "valueWeight": "400",
+        "weight": "600"
+      },
+      {
+        "label": "Business date",
+        "valueWeight": "400",
+        "weight": "600"
+      }
+    ],
+    "pageWidth": 1920,
+    "screen": "attendance-drawer",
+    "width": 1920
+  },
+  {
+    "actions": [
+      {
+        "height": 44,
+        "text": "Review day"
+      },
+      {
+        "height": 44,
+        "text": "Review day"
+      }
+    ],
+    "labels": [
+      {
+        "label": "Employee",
+        "valueWeight": "400",
+        "weight": "600"
+      },
+      {
+        "label": "Business date",
+        "valueWeight": "400",
+        "weight": "600"
+      }
+    ],
+    "pageWidth": 1440,
+    "screen": "attendance-drawer",
+    "width": 1440
+  },
+  {
+    "actions": [
+      {
+        "height": 44,
+        "text": "Review day"
+      },
+      {
+        "height": 44,
+        "text": "Review day"
+      }
+    ],
+    "labels": [
+      {
+        "label": "Employee",
+        "valueWeight": "400",
+        "weight": "600"
+      },
+      {
+        "label": "Business date",
+        "valueWeight": "400",
+        "weight": "600"
+      }
+    ],
+    "pageWidth": 1280,
+    "screen": "attendance-drawer",
+    "width": 1280
+  },
+  {
+    "actions": [
+      {
+        "height": 36,
+        "text": "Review day"
+      },
+      {
+        "height": 36,
+        "text": "Review day"
+      }
+    ],
+    "labels": [
+      {
+        "label": "Employee",
+        "valueWeight": "400",
+        "weight": "600"
+      },
+      {
+        "label": "Business date",
+        "valueWeight": "400",
+        "weight": "600"
+      }
+    ],
+    "pageWidth": 1024,
+    "screen": "attendance-drawer",
+    "width": 1024
+  },
+  {
+    "actions": [
+      {
+        "height": 36,
+        "text": "Review day"
+      },
+      {
+        "height": 36,
+        "text": "Review day"
+      }
+    ],
+    "labels": [
+      {
+        "label": "Employee",
+        "valueWeight": "400",
+        "weight": "600"
+      },
+      {
+        "label": "Business date",
+        "valueWeight": "400",
+        "weight": "600"
+      }
+    ],
+    "pageWidth": 768,
+    "screen": "attendance-drawer",
+    "width": 768
+  },
+  {
+    "actions": [
+      {
+        "height": 44,
+        "text": "Review day"
+      },
+      {
+        "height": 44,
+        "text": "Review day"
+      }
+    ],
+    "labels": [
+      {
+        "label": "Employee",
+        "valueWeight": "400",
+        "weight": "600"
+      },
+      {
+        "label": "Business date",
+        "valueWeight": "400",
+        "weight": "600"
+      }
+    ],
+    "pageWidth": 390,
+    "screen": "attendance-drawer",
+    "width": 390
+  },
+  {
+    "actions": [
+      {
+        "height": 36,
+        "text": "Attendance workspace"
+      }
+    ],
+    "labels": [
+      {
+        "label": "Employee ID",
+        "valueWeight": "400",
+        "weight": "600"
+      },
+      {
+        "label": "Business date",
+        "valueWeight": "400",
+        "weight": "600"
+      }
+    ],
+    "pageWidth": 1905,
+    "screen": "attendance-review",
+    "width": 1920
+  },
+  {
+    "actions": [
+      {
+        "height": 36,
+        "text": "Attendance workspace"
+      }
+    ],
+    "labels": [
+      {
+        "label": "Employee ID",
+        "valueWeight": "400",
+        "weight": "600"
+      },
+      {
+        "label": "Business date",
+        "valueWeight": "400",
+        "weight": "600"
+      }
+    ],
+    "pageWidth": 1425,
+    "screen": "attendance-review",
+    "width": 1440
+  },
+  {
+    "actions": [
+      {
+        "height": 36,
+        "text": "Attendance workspace"
+      }
+    ],
+    "labels": [
+      {
+        "label": "Employee ID",
+        "valueWeight": "400",
+        "weight": "600"
+      },
+      {
+        "label": "Business date",
+        "valueWeight": "400",
+        "weight": "600"
+      }
+    ],
+    "pageWidth": 1265,
+    "screen": "attendance-review",
+    "width": 1280
+  },
+  {
+    "actions": [
+      {
+        "height": 36,
+        "text": "Attendance workspace"
+      }
+    ],
+    "labels": [
+      {
+        "label": "Employee ID",
+        "valueWeight": "400",
+        "weight": "600"
+      },
+      {
+        "label": "Business date",
+        "valueWeight": "400",
+        "weight": "600"
+      }
+    ],
+    "pageWidth": 1009,
+    "screen": "attendance-review",
+    "width": 1024
+  },
+  {
+    "actions": [
+      {
+        "height": 36,
+        "text": "Attendance workspace"
+      }
+    ],
+    "labels": [
+      {
+        "label": "Employee ID",
+        "valueWeight": "400",
+        "weight": "600"
+      },
+      {
+        "label": "Business date",
+        "valueWeight": "400",
+        "weight": "600"
+      }
+    ],
+    "pageWidth": 753,
+    "screen": "attendance-review",
+    "width": 768
+  },
+  {
+    "actions": [
+      {
+        "height": 44,
+        "text": "Attendance workspace"
+      }
+    ],
+    "labels": [
+      {
+        "label": "Employee ID",
+        "valueWeight": "400",
+        "weight": "600"
+      },
+      {
+        "label": "Business date",
+        "valueWeight": "400",
+        "weight": "600"
+      }
+    ],
+    "pageWidth": 375,
+    "screen": "attendance-review",
+    "width": 390
+  },
+  {
+    "actions": [
+      {
+        "height": 44,
+        "text": "Review day"
+      },
+      {
+        "height": 44,
+        "text": "Review day"
+      }
+    ],
+    "labels": [],
+    "pageWidth": 1920,
+    "screen": "attendance-workspace",
+    "width": 1920
+  },
+  {
+    "actions": [
+      {
+        "height": 44,
+        "text": "Review day"
+      },
+      {
+        "height": 44,
+        "text": "Review day"
+      }
+    ],
+    "labels": [],
+    "pageWidth": 1425,
+    "screen": "attendance-workspace",
+    "width": 1440
+  },
+  {
+    "actions": [
+      {
+        "height": 44,
+        "text": "Review day"
+      },
+      {
+        "height": 44,
+        "text": "Review day"
+      }
+    ],
+    "labels": [],
+    "pageWidth": 1265,
+    "screen": "attendance-workspace",
+    "width": 1280
+  },
+  {
+    "actions": [
+      {
+        "height": 36,
+        "text": "Review day"
+      },
+      {
+        "height": 36,
+        "text": "Review day"
+      }
+    ],
+    "labels": [],
+    "pageWidth": 1009,
+    "screen": "attendance-workspace",
+    "width": 1024
+  },
+  {
+    "actions": [
+      {
+        "height": 36,
+        "text": "Review day"
+      },
+      {
+        "height": 36,
+        "text": "Review day"
+      }
+    ],
+    "labels": [],
+    "pageWidth": 753,
+    "screen": "attendance-workspace",
+    "width": 768
+  },
+  {
+    "actions": [
+      {
+        "height": 44,
+        "text": "Review day"
+      },
+      {
+        "height": 44,
+        "text": "Review day"
+      }
+    ],
+    "labels": [],
+    "pageWidth": 375,
+    "screen": "attendance-workspace",
+    "width": 390
+  },
+  {
+    "actions": [],
+    "labels": [],
+    "pageWidth": 1920,
+    "screen": "dashboard",
+    "width": 1920
+  },
+  {
+    "actions": [],
+    "labels": [],
+    "pageWidth": 1425,
+    "screen": "dashboard",
+    "width": 1440
+  },
+  {
+    "actions": [],
+    "labels": [],
+    "pageWidth": 1265,
+    "screen": "dashboard",
+    "width": 1280
+  },
+  {
+    "actions": [],
+    "labels": [],
+    "pageWidth": 1009,
+    "screen": "dashboard",
+    "width": 1024
+  },
+  {
+    "actions": [],
+    "labels": [],
+    "pageWidth": 753,
+    "screen": "dashboard",
+    "width": 768
+  },
+  {
+    "actions": [],
+    "labels": [],
+    "pageWidth": 375,
+    "screen": "dashboard",
+    "width": 390
+  }
+]
