@@ -40,6 +40,17 @@ export const routes: RouteMeta[] = [
     status: 'foundation',
   },
   {
+    path: '/self/attendance',
+    label: 'My Attendance',
+    breadcrumb: 'My Attendance',
+    description: 'Record your work sessions and view your personal clocking history.',
+    icon: Clock3,
+    group: 'workspace',
+    capability: 'SelfService',
+    visible: true,
+    status: 'foundation',
+  },
+  {
     path: '/hr',
     label: 'HR Dashboard',
     breadcrumb: 'HR',
@@ -222,6 +233,12 @@ export type WorkspaceModule = {
 };
 export const workspaceModules: WorkspaceModule[] = [
   { id: 'workspace', label: 'Workspace', icon: LayoutDashboard, destinations: ['/'] },
+  {
+    id: 'self',
+    label: 'Employee Self-Service',
+    icon: ContactRound,
+    destinations: ['/self/attendance'],
+  },
   {
     id: 'school',
     label: 'School Management',

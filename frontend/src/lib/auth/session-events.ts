@@ -1,4 +1,9 @@
 let epoch = 0;
+let protectedRequestsBlocked = false;
+export const areProtectedRequestsBlocked = () => protectedRequestsBlocked;
+export function blockProtectedRequests(blocked: boolean) {
+  protectedRequestsBlocked = blocked;
+}
 const listeners = new Set<() => void>();
 export const sessionEpoch = () => epoch;
 export function advanceSession() {

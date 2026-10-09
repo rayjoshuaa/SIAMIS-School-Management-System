@@ -1,0 +1,91 @@
+@layer components {
+  .clock-workspace {
+    display: grid;
+    gap: var(--space-4);
+    min-width: 0;
+  }
+  .clock-panel {
+    padding: 20px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-panel);
+    background: var(--surface);
+  }
+  .clock-section-heading {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .clock-current-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 280px);
+    gap: 24px;
+    align-items: center;
+  }
+  .clock-current-facts,
+  .clock-actions {
+    min-width: 0;
+    display: grid;
+    gap: 12px;
+  }
+  .clock-current-facts > p,
+  .clock-helper,
+  .clock-boundary {
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--muted-foreground);
+  }
+  .clock-current-facts > .ui-status {
+    justify-self: start;
+  }
+  .clock-facts {
+    display: grid;
+    gap: 8px;
+  }
+  .clock-facts dt {
+    font-size: 13px;
+    color: var(--muted-foreground);
+  }
+  .clock-facts dd {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--foreground);
+  }
+  .clock-feedback:not(:empty) {
+    margin-top: 16px;
+    margin-bottom: 12px;
+    font-size: 14px;
+  }
+  .clock-panel > .clock-helper {
+    margin-top: 12px;
+  }
+  .clock-history {
+    display: grid;
+    gap: 16px;
+    min-width: 0;
+  }
+  .clock-history .clock-section-heading {
+    margin-bottom: 0;
+  }
+  .clock-history .ui-table {
+    min-width: 740px;
+  }
+  .clock-history time {
+    white-space: nowrap;
+  }
+  .clock-boundary {
+    border-top: 1px solid var(--border);
+    padding-top: 12px;
+  }
+  @media (max-width: 767px) {
+    .clock-current-grid {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 16px;
+    }
+    .clock-panel {
+      padding: 16px;
+    }
+  }
+}

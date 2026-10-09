@@ -6,6 +6,53 @@ import { Alert } from '../../components/ui/feedback';
 import { Button } from '../../components/ui/button';
 import { AuthSurface } from './auth-layout';
 import { AuthHeader, AuthStatus } from './auth-presentation';
+import { useLayoutEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
+
+function SessionConnectionFailure({ retry }: { retry: () => void }) {
+  const dialog = useRef<HTMLDialogElement>(null);
+  useLayoutEffect(() => {
+    const element = dialog.current!;
+    element.showModal();
+    return () => element.close();
+  }, []);
+  // The native top layer also suspends existing Radix portals without unmounting their drafts.
+  // Portal to body so an open Radix dialog's aria-hidden root does not hide this recovery UI.
+  return createPortal(
+    <dialog
+      ref={dialog}
+      aria-label="Session connection unavailable"
+      onCancel={(event) => event.preventDefault()}
+      style={{
+        position: 'fixed',
+        inset: 0,
+        margin: 0,
+        border: 0,
+        padding: 0,
+        width: '100vw',
+        height: '100dvh',
+        maxWidth: 'none',
+        maxHeight: 'none',
+        background: 'var(--background, #F8F7F4)',
+        pointerEvents: 'auto',
+      }}
+    >
+      <AuthSurface>
+        <div className="auth-content">
+          <AuthHeader title="We couldn't connect to SIAMIS." />
+          <AuthStatus intent="connection">
+            Your unsaved work is retained. Reconnect to verify your session before continuing.
+          </AuthStatus>
+          <Button autoFocus className="auth-submit" onClick={retry}>
+            Try again
+          </Button>
+        </div>
+      </AuthSurface>
+    </dialog>,
+    document.body,
+  );
+}
+
 export function SessionBoundary() {
   const { state, refresh } = useAuth();
   const location = useLocation();
@@ -24,7 +71,15 @@ export function SessionBoundary() {
         </div>
       </AuthSurface>
     );
-  return <Outlet />;
+  const unavailable = state.revalidation === 'unavailable';
+  return (
+    <>
+      {unavailable && <SessionConnectionFailure retry={() => void refresh()} />}
+      <div hidden={!!unavailable} inert={!!unavailable} key={state.contextVersion ?? 0}>
+        <Outlet />
+      </div>
+    </>
+  );
 }
 export function ProtectedRoutes() {
   const { state } = useAuth();

@@ -53,6 +53,11 @@ const AttendanceReview = lazy(() =>
     default: module.AttendanceReview,
   })),
 );
+const MyAttendance = lazy(() =>
+  import('../../features/clocking/my-attendance').then((module) => ({
+    default: module.MyAttendance,
+  })),
+);
 captureCredentialLink();
 const router = createBrowserRouter([
   ...(Showcase
@@ -111,6 +116,8 @@ const router = createBrowserRouter([
                         <EmployeeDirectory />
                       ) : route.path === '/hr/attendance' ? (
                         <AttendanceWorkspace />
+                      ) : route.path === '/self/attendance' ? (
+                        <MyAttendance />
                       ) : (
                         <ModulePlaceholder />
                       ),

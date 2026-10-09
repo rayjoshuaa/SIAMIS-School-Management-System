@@ -74,15 +74,15 @@ Employee-first UPDLOCK and Serializable transaction reuse existing Attendance/Le
 
 Base: `/api/employees/{employeeId}/attendance-days/{date}`.
 
-| Method | Suffix | Success |
-|---|---|---|
-| GET | review | 200 current facts, history and validity |
-| GET | history | 200 immutable revisions in order |
-| POST | corrections | 201 |
-| POST | adjudications | 201 |
-| POST | confirm-absence | 200 |
-| POST | finalize | 201 |
-| POST | reopen | 200 |
+| Method | Suffix          | Success                                 |
+| ------ | --------------- | --------------------------------------- |
+| GET    | review          | 200 current facts, history and validity |
+| GET    | history         | 200 immutable revisions in order        |
+| POST   | corrections     | 201                                     |
+| POST   | adjudications   | 201                                     |
+| POST   | confirm-absence | 200                                     |
+| POST   | finalize        | 201                                     |
+| POST   | reopen          | 200                                     |
 
 Mutations require ExpectedVersion, ExpectedSourceFingerprint and Reason. Invalid requests 400; missing employee/owned evidence 404; stale/conflicting/blocking state 409. Creation responses identify the review GET location. Existing D9C calculated GET remains a calculated read, not a claim of finalization. Swagger documents purposes, contracts and response codes.
 
@@ -121,20 +121,20 @@ Adds AttendanceReviewCases, AttendanceReviewActions, FinalizedAttendanceRevision
 
 All requested suites passed. Primary assertion total: **3,574**, plus 19 regression-wrapper baseline/restoration assertions. These are assertion checks, not xUnit test-case counts. Timing-dependent race branches account for small run-to-run count differences.
 
-| Suite | Passed assertions |
-|---|---:|
-| Pure regression executable (all checkpoints) | 813 |
-| Of which new D9D pure checks | 36 (included above) |
-| D9D live API/SQL | 173 |
-| Production-mode guard/no-write verification | 6 |
-| D9B live evidence/schedule | 122 |
-| D9C live calculation/precision | 116 |
-| D8B/D1 | 117 |
-| D8C | 246 |
-| D8C lifecycle/concurrency | 230 |
-| D8D main evidence/sandwich | 523 |
-| D8D capped focus | 391 |
-| Eight established payroll suites | 837 |
+| Suite                                        |   Passed assertions |
+| -------------------------------------------- | ------------------: |
+| Pure regression executable (all checkpoints) |                 813 |
+| Of which new D9D pure checks                 | 36 (included above) |
+| D9D live API/SQL                             |                 173 |
+| Production-mode guard/no-write verification  |                   6 |
+| D9B live evidence/schedule                   |                 122 |
+| D9C live calculation/precision               |                 116 |
+| D8B/D1                                       |                 117 |
+| D8C                                          |                 246 |
+| D8C lifecycle/concurrency                    |                 230 |
+| D8D main evidence/sandwich                   |                 523 |
+| D8D capped focus                             |                 391 |
+| Eight established payroll suites             |                 837 |
 
 Payroll breakdown: D5A 70; D5C 306; D6B 76; D6C 48; D6D 38; D6E 88; D6E boundaries 128; D7 operations/lifecycle/payslip 83.
 
@@ -163,22 +163,22 @@ Live verification requires the documented empty transactional Development baseli
 
 Final read-only SQL verification confirms the exact original 74 tables' rows/values/timestamps match the pre-migration snapshot, and all three new D9D tables are empty. Fixture cleanup targets recorded IDs in dependency order. No baseline employee/master row was deleted or changed.
 
-| Table/group | Final count |
-|---|---:|
-| Employees | 1, TEST-EMP-001 inactive |
-| EmploymentRecords | 1 |
-| Original master tables (18) | 172 rows total |
-| PayrollComponents (included above) | 17 |
-| AttendanceEvents | 0 |
-| Legacy Attendance | 0 |
-| AttendanceReviewCases | 0 |
-| AttendanceReviewActions | 0 |
-| FinalizedAttendanceRevisions | 0 |
-| Leave/calendar/evidence/entitlement/sandwich tables | All 0 |
-| Payroll transactional/configuration/statutory tables | All 0 |
-| Other employee child tables / OrganizationProfiles | All 0 |
-| Application tables | 77 (20 nonempty, 57 empty) |
-| Applied migrations | 39 |
+| Table/group                                          |                Final count |
+| ---------------------------------------------------- | -------------------------: |
+| Employees                                            |   1, TEST-EMP-001 inactive |
+| EmploymentRecords                                    |                          1 |
+| Original master tables (18)                          |             172 rows total |
+| PayrollComponents (included above)                   |                         17 |
+| AttendanceEvents                                     |                          0 |
+| Legacy Attendance                                    |                          0 |
+| AttendanceReviewCases                                |                          0 |
+| AttendanceReviewActions                              |                          0 |
+| FinalizedAttendanceRevisions                         |                          0 |
+| Leave/calendar/evidence/entitlement/sandwich tables  |                      All 0 |
+| Payroll transactional/configuration/statutory tables |                      All 0 |
+| Other employee child tables / OrganizationProfiles   |                      All 0 |
+| Application tables                                   | 77 (20 nonempty, 57 empty) |
+| Applied migrations                                   |                         39 |
 
 Final data rows = 174 (172 masters + employee + employment). All five new SQL checks and seven NoAction FKs are enabled/trusted; all 13 new-table physical indexes, including PK/alternate keys, exist. Verification processes were stopped after testing; the user's unrelated processes were not stopped.
 
@@ -189,42 +189,42 @@ Monthly attendance reporting and any explicit approved downstream integration; p
 ## 27. Complete changed-file list
 
 - [D9D-REPORT.md](D9D-REPORT.md)
-- [src/SIAMIS.Api/Controllers/AttendanceReviewController.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Api/Controllers/AttendanceReviewController.cs>)
-- [src/SIAMIS.Api/Program.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Api/Program.cs>)
-- [src/SIAMIS.Application/Employees/AttendanceReviewContracts.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Application/Employees/AttendanceReviewContracts.cs>)
-- [src/SIAMIS.Domain/Entities/Employees/AttendanceReview.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Domain/Entities/Employees/AttendanceReview.cs>)
-- [src/SIAMIS.Infrastructure/Configurations/AttendanceReviewConfiguration.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Infrastructure/Configurations/AttendanceReviewConfiguration.cs>)
-- [src/SIAMIS.Infrastructure/Data/SIAMISDbContext.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Infrastructure/Data/SIAMISDbContext.cs>)
-- [src/SIAMIS.Infrastructure/Migrations/20261004033520_AddAttendanceReviewFinalization.Designer.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Infrastructure/Migrations/20261004033520_AddAttendanceReviewFinalization.Designer.cs>)
-- [src/SIAMIS.Infrastructure/Migrations/20261004033520_AddAttendanceReviewFinalization.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Infrastructure/Migrations/20261004033520_AddAttendanceReviewFinalization.cs>)
-- [src/SIAMIS.Infrastructure/Migrations/SIAMISDbContextModelSnapshot.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Infrastructure/Migrations/SIAMISDbContextModelSnapshot.cs>)
-- [src/SIAMIS.Infrastructure/Services/AttendanceDayService.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Infrastructure/Services/AttendanceDayService.cs>)
-- [src/SIAMIS.Infrastructure/Services/AttendanceReviewService.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Infrastructure/Services/AttendanceReviewService.cs>)
-- [src/SIAMIS.Infrastructure/Services/AttendanceReviewSources.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Infrastructure/Services/AttendanceReviewSources.cs>)
-- [tests/SIAMIS.Payroll.RegressionTests/D9DReviewTests.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/tests/SIAMIS.Payroll.RegressionTests/D9DReviewTests.cs>)
-- [tests/SIAMIS.Payroll.RegressionTests/Program.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/tests/SIAMIS.Payroll.RegressionTests/Program.cs>)
-- [tests/verify_d9d_live.py](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/tests/verify_d9d_live.py>)
-- [tests/verify_d9d_production.py](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/tests/verify_d9d_production.py>)
-- [tests/verify_d9d_regressions.py](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/tests/verify_d9d_regressions.py>)
+- [src/SIAMIS.Api/Controllers/AttendanceReviewController.cs](../../../src/SIAMIS.Api/Controllers/AttendanceReviewController.cs)
+- [src/SIAMIS.Api/Program.cs](../../../src/SIAMIS.Api/Program.cs)
+- [src/SIAMIS.Application/Employees/AttendanceReviewContracts.cs](../../../src/SIAMIS.Application/Employees/AttendanceReviewContracts.cs)
+- [src/SIAMIS.Domain/Entities/Employees/AttendanceReview.cs](../../../src/SIAMIS.Domain/Entities/Employees/AttendanceReview.cs)
+- [src/SIAMIS.Infrastructure/Configurations/AttendanceReviewConfiguration.cs](../../../src/SIAMIS.Infrastructure/Configurations/AttendanceReviewConfiguration.cs)
+- [src/SIAMIS.Infrastructure/Data/SIAMISDbContext.cs](../../../src/SIAMIS.Infrastructure/Data/SIAMISDbContext.cs)
+- [src/SIAMIS.Infrastructure/Migrations/20261004033520_AddAttendanceReviewFinalization.Designer.cs](../../../src/SIAMIS.Infrastructure/Migrations/20261004033520_AddAttendanceReviewFinalization.Designer.cs)
+- [src/SIAMIS.Infrastructure/Migrations/20261004033520_AddAttendanceReviewFinalization.cs](../../../src/SIAMIS.Infrastructure/Migrations/20261004033520_AddAttendanceReviewFinalization.cs)
+- [src/SIAMIS.Infrastructure/Migrations/SIAMISDbContextModelSnapshot.cs](../../../src/SIAMIS.Infrastructure/Migrations/SIAMISDbContextModelSnapshot.cs)
+- [src/SIAMIS.Infrastructure/Services/AttendanceDayService.cs](../../../src/SIAMIS.Infrastructure/Services/AttendanceDayService.cs)
+- [src/SIAMIS.Infrastructure/Services/AttendanceReviewService.cs](../../../src/SIAMIS.Infrastructure/Services/AttendanceReviewService.cs)
+- [src/SIAMIS.Infrastructure/Services/AttendanceReviewSources.cs](../../../src/SIAMIS.Infrastructure/Services/AttendanceReviewSources.cs)
+- [tests/SIAMIS.Payroll.RegressionTests/D9DReviewTests.cs](../../../tests/SIAMIS.Payroll.RegressionTests/D9DReviewTests.cs)
+- [tests/SIAMIS.Payroll.RegressionTests/Program.cs](../../../tests/SIAMIS.Payroll.RegressionTests/Program.cs)
+- [tests/verify_d9d_live.py](../../../tests/verify_d9d_live.py)
+- [tests/verify_d9d_production.py](../../../tests/verify_d9d_production.py)
+- [tests/verify_d9d_regressions.py](../../../tests/verify_d9d_regressions.py)
 
 18 changed/created files. No existing applied migration was modified; no Payroll or D8 implementation file changed.
 
 ## 28. Verification/status table
 
-| Verification | Result |
-|---|---|
-| D9D implementation / approved stale-reopen contract | Complete |
-| Local Development migration | Applied; 39 total migrations |
-| Live SQL constraints/indexes | Verified; trusted NoAction/shape/coverage safeguards |
-| Focused pure/live D9D + requested regressions | Passed |
-| Swagger and Created Location | Passed |
-| Production mutation guards | Five routes return 404; no writes |
-| Exact final baseline | Restored; original values/timestamps unchanged |
-| Final dotnet restore | Successful |
-| Final Release build | 0 warnings, 0 errors |
-| EF pending-model-changes | No changes since last migration |
-| git diff --check | Passed |
-| Commit / push | Neither performed |
-| New unresolved stop conditions | None |
+| Verification                                        | Result                                               |
+| --------------------------------------------------- | ---------------------------------------------------- |
+| D9D implementation / approved stale-reopen contract | Complete                                             |
+| Local Development migration                         | Applied; 39 total migrations                         |
+| Live SQL constraints/indexes                        | Verified; trusted NoAction/shape/coverage safeguards |
+| Focused pure/live D9D + requested regressions       | Passed                                               |
+| Swagger and Created Location                        | Passed                                               |
+| Production mutation guards                          | Five routes return 404; no writes                    |
+| Exact final baseline                                | Restored; original values/timestamps unchanged       |
+| Final dotnet restore                                | Successful                                           |
+| Final Release build                                 | 0 warnings, 0 errors                                 |
+| EF pending-model-changes                            | No changes since last migration                      |
+| git diff --check                                    | Passed                                               |
+| Commit / push                                       | Neither performed                                    |
+| New unresolved stop conditions                      | None                                                 |
 
 Remaining boundary: mutations remain Development-only and unattributed until real authentication/RBAC exists. Off-site policy, monthly reports and all downstream consequences remain deferred as described above.

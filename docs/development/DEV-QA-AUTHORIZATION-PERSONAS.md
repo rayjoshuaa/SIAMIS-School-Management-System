@@ -1,5 +1,7 @@
 # Development QA authorization personas — web administration
 
+> Current-status note (v0.5.1): the six QA personas were subsequently created and activated through real web Administration; qa-employee uses a dedicated QA Employee. Existing review/helper accounts remain local. The PowerShell provisioner is superseded and must not be run. Historical counts/results below describe their original checkpoint; see [current authorization](../architecture/AUTHORIZATION.md) and [release status](../releases/v0.5.1.md).
+
 Current status: Development administrator access restored. The minimal web
 User Accounts functionality, interaction model and UX architecture are approved.
 Final SIAMIS-wide visual polish is deferred. QA personas are not yet created.
@@ -141,15 +143,15 @@ migrations are unchanged.
 
 ### Database before/after
 
-| Table | Original approved baseline | Immediately before reset | Final |
-| --- | ---: | ---: | ---: |
-| Users | 2 | 2 | 2 |
-| UserRoles | 2 | 2 | 2 |
-| Roles | 5 | 5 | 5 |
-| Employees | 1 | 1 | 1 |
-| EmploymentRecords | 1 | 1 | 1 |
-| SecurityAuditEvents | 30 | 31 | 36 |
-| Migration history | 42 | 42 | 42 |
+| Table               | Original approved baseline | Immediately before reset | Final |
+| ------------------- | -------------------------: | -----------------------: | ----: |
+| Users               |                          2 |                        2 |     2 |
+| UserRoles           |                          2 |                        2 |     2 |
+| Roles               |                          5 |                        5 |     5 |
+| Employees           |                          1 |                        1 |     1 |
+| EmploymentRecords   |                          1 |                        1 |     1 |
+| SecurityAuditEvents |                         30 |                       31 |    36 |
+| Migration history   |                         42 |                       42 |    42 |
 
 The pre-reset audit increase was the earlier failed helper login. The subsequent
 five audit events are one explicit reset, three successful normal helper logins

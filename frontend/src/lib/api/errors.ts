@@ -22,6 +22,8 @@ export class ApiError extends Error {
     public readonly kind: ErrorKind,
     public readonly status: number,
     public readonly fieldErrors: Record<string, string[]> = {},
+    public readonly code?:
+      'idempotency_conflict' | 'registration_in_progress' | 'registration_key_expired',
   ) {
     super(messages[kind]);
     this.name = 'ApiError';
@@ -57,5 +59,14 @@ export function normalizeProblem(status: number, body: unknown): ApiError {
     }
   }
   // Do not propagate arbitrary detail, stack traces or server extension fields to the UI.
-  return new ApiError(kind, status, fields);
+  const code =
+    body &&
+    typeof body === 'object' &&
+    'code' in body &&
+    (body.code === 'idempotency_conflict' ||
+      body.code === 'registration_in_progress' ||
+      body.code === 'registration_key_expired')
+      ? body.code
+      : undefined;
+  return new ApiError(kind, status, fields, code);
 }

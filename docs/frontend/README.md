@@ -1,10 +1,10 @@
 # Frontend
 
-F1 provides the design system, F2 the school shell and F3 real authentication/session/account access. HR screens and dashboard analytics remain deferred. The backend remains frozen at `hr-backend-v1`.
+Current features: premium V3 foundation, shell/authentication, HR Dashboard, Employee Directory/360, employment/account lifecycle, User Accounts, Attendance Management and employee-owned clocking. [HR status](../modules/hr/README.md) distinguishes implemented functionality from planned modules.
 
 ## Run locally
 
-Use Node 22.22.2 or newer within the supported engines in [package.json](../../frontend/package.json). From the repository root:
+Verified release toolchain: **Node 22.23.2 / npm 10.9.8**. Other supported engine ranges appear in [package.json](../../frontend/package.json), but were not verified for this release.
 
 ```powershell
 cd frontend
@@ -12,27 +12,28 @@ npm ci
 npm run dev
 ```
 
-Open `http://localhost:5173/`. Anonymous users see login; authenticated users see the school shell with effective capability navigation. HR feature pages and dashboard values remain placeholders. Planned school modules remain unavailable.
+Default: `http://localhost:5173/login`. Current review uses `npm run dev -- --port 5175` and `http://localhost:5175/login`. Vite selects a strict port; it does not silently fall back. `/dev/ui` is an independent Development-only synthetic showcase, excluded from Production.
 
-F3 removes the Development capability switch. Only sidebar preference persists in `siamis.ui.sidebar.v1`; credentials/tokens/capabilities do not persist. Real account sign-out uses the backend; profile/settings remain deferred.
+## API and accounts
 
-`http://localhost:5173/dev/ui` retains the independent Development-only F1 showcase without requiring authentication or API calls. It is excluded from Production.
+Start the API separately following [Development setup](../deployment/DEVELOPMENT.md). Vite proxies same-origin `/api` to loopback HTTPS `https://localhost:7142`, with certificate verification. If Node needs explicit trust, set `NODE_EXTRA_CA_CERTS` to your public localhost certificate before starting Vite. Do not disable TLS, cookie or CSRF protections.
+
+Copy [the environment example](../../frontend/.env.example) to local `.env` only when overrides are needed. Vite variables are public bundled configuration, never secrets. Production requires approved HTTPS hosting, SPA fallback and API routing; the Development proxy is not Production infrastructure.
+
+Existing QA accounts are local identities, not startup seeds. Sign in privately through normal Identity authentication. User Accounts requires `Security.Manage`; provisioning remains passwordless followed by secure activation. Do not run the superseded QA PowerShell provisioner or consume old credential files.
+
+[Authentication](AUTHENTICATION.md) is the current session contract. Public login remains visible if the initial probe cannot reach the API. Protected content remains fail-closed. Same-context refresh preserves page state; unavailable authenticated revalidation blocks protected access/commands while retaining drafts in RAM. No browser draft or credential persistence was added.
+
+## Verification
 
 ```powershell
-npm run build
+npx tsc -p tsconfig.json --noEmit
+npm run test -- --maxWorkers=2
 npm run lint
-npm run test
 npm run format:check
+npm run build
 ```
 
-## API connection
+Stage 2 verified a genuine isolated clean installation and **386 tests / 23 suites**, TypeScript, lint, formatting and production build. See [verification evidence](../releases/v0.5.1.md#verification-evidence). Stage 3 does not claim a fresh application regression run.
 
-Copy [`.env.example`](../../frontend/.env.example) to a local `.env` if overrides are needed. `VITE_API_BASE_URL` is public, bundled configuration; never put secrets in Vite variables. Empty uses same-origin `/api` paths. The Vite Development proxy forwards `/api` to the existing loopback HTTPS API at `https://localhost:7142`, with certificate verification enabled.
-
-Run the API separately using its existing launch profile. Node must trust the local development certificate: supply its public certificate as `NODE_EXTRA_CA_CERTS` before starting Vite if Node does not already trust it. Do not disable backend HTTPS, CSRF or cookie security. No certificate is created/exported automatically by F1. The showcase itself does not require the API or a certificate.
-
-Production should serve the application and API under one HTTPS origin with SPA routing configured by the deployment host. The Vite Development proxy is not Production infrastructure. A separate-origin deployment requires explicit approved CORS/cookie configuration; setting a public base URL alone does not authorize it.
-
-Read [architecture](ARCHITECTURE.md), [design system](DESIGN-SYSTEM.md), the historical [F1 report](F1-REPORT.md), and the [F2 report](F2-REPORT.md). The official school logo remains required; the shell uses approved text branding.
-
-See [authentication/setup](AUTHENTICATION.md) and [F3 report](F3-REPORT.md). No permanent test account remains; first-administrator provisioning requires explicit approval.
+Use [architecture](ARCHITECTURE.md) and [design authority](DESIGN-SYSTEM.md). Earlier F1/F2/F3 placeholder and account-cleanup statements remain historical evidence.

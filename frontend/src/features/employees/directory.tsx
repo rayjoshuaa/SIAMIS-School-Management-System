@@ -13,6 +13,7 @@ import { FilterToolbar, TableViewport, SystemState } from '../../components/shar
 import { Pagination } from '../../components/ui/navigation';
 import { Sheet } from '../../components/ui/overlays';
 import { employeeName, type EmployeePage } from './contracts';
+import { EmployeeAvatar } from './photo';
 import { useMasters, useEmployee } from './data';
 import { ContactSummary, EmploymentSummary, QueryState } from './presentation';
 import './employees.css';
@@ -215,14 +216,22 @@ export function EmployeeDirectory() {
                     {query.data.items.map((employee) => (
                       <TableRow key={employee.employeeId}>
                         <TableCell>
-                          <Link
-                            className="ui-link font-semibold"
-                            to={`/hr/employees/${employee.employeeId}`}
-                          >
-                            {employeeName(employee)}
-                          </Link>
-                          <div className="mt-1 text-sm text-muted-foreground">
-                            {employee.employeeNumber}
+                          <div className="flex items-center gap-3">
+                            <EmployeeAvatar
+                              id={employee.employeeId}
+                              name={employeeName(employee)}
+                            />
+                            <div>
+                              <Link
+                                className="ui-link font-semibold"
+                                to={`/hr/employees/${employee.employeeId}`}
+                              >
+                                {employeeName(employee)}
+                              </Link>
+                              <div className="mt-1 text-sm text-muted-foreground">
+                                {employee.employeeNumber}
+                              </div>
+                            </div>
                           </div>
                         </TableCell>
                         <TableCell>

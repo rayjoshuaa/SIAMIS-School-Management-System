@@ -1,11 +1,16 @@
+import { AuthProvider } from '../app/providers/auth-provider';
 import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest';
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { createQueryClient } from '../app/providers/query-client';
 import { AuthContext } from '../lib/auth/auth-context';
-import { CapabilityRoute, ProtectedRoutes } from '../features/auth/auth-boundaries';
+import {
+  SessionBoundary,
+  CapabilityRoute,
+  ProtectedRoutes,
+} from '../features/auth/auth-boundaries';
 import { UserAccounts } from '../features/administration/user-accounts';
 import { permanentRoles } from '../features/administration/account-contracts';
 import { availableModules, moduleDestinations } from '../app/router/navigation';
@@ -368,5 +373,53 @@ describe('real D13 account administration contract', () => {
       label: 'User Accounts',
       capability: 'Security.Manage',
     });
+  });
+});
+describe('Stage 1 account form preservation using the real session lifecycle', () => {
+  it('keeps the provisioning draft and role selection during same-user focus refresh', async () => {
+    const normal = vi.mocked(fetch).getMockImplementation()!;
+    vi.mocked(fetch).mockImplementation(async (input, init) => {
+      if (String(input) === '/api/auth/me')
+        return new Response(
+          JSON.stringify({
+            userId: 'actor',
+            userName: 'Synthetic',
+            roles: ['SystemAdmin'],
+            capabilities: ['Security.Manage'],
+            employeeId: null,
+            isActive: true,
+            requiresPasswordChange: false,
+          }),
+          { status: 200, headers: { 'Content-Type': 'application/json' } },
+        );
+      return normal(input, init);
+    });
+    render(
+      <QueryClientProvider client={createQueryClient()}>
+        <AuthProvider>
+          <MemoryRouter initialEntries={['/hr/security']}>
+            <Routes>
+              <Route element={<SessionBoundary />}>
+                <Route element={<ProtectedRoutes />}>
+                  <Route element={<CapabilityRoute />}>
+                    <Route path="/hr/security" element={<UserAccounts />} />
+                  </Route>
+                </Route>
+              </Route>
+            </Routes>
+          </MemoryRouter>
+        </AuthProvider>
+      </QueryClientProvider>,
+    );
+    await openCreate();
+    await fill();
+    const username = screen.getByRole('textbox', { name: 'Username' });
+    await act(async () => {
+      fireEvent(window, new Event('focus'));
+    });
+    expect(screen.getByRole('textbox', { name: 'Username' })).toBe(username);
+    expect(username).toHaveValue('synthetic-user');
+    expect(screen.getByRole('checkbox', { name: 'Management' })).toBeChecked();
+    expect(calls.some((call) => call.method === 'POST')).toBe(false);
   });
 });

@@ -1,4 +1,6 @@
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace SIAMIS.Application.Employees;
 
@@ -95,6 +97,8 @@ public sealed class EmergencyContactDto
     public string? Mobile { get; init; }
     public string? Phone { get; init; }
     public string? Email { get; init; }
+    public string? AlternativePhone { get; init; }
+    public string? Address { get; init; }
     public bool IsPrimary { get; init; }
 }
 
@@ -143,9 +147,19 @@ public sealed class CompensationSummaryDto
     public DateOnly? EffectiveTo { get; init; }
 }
 
-public class EmployeeWriteRequest
+public class EmployeeWriteRequest : IValidatableObject
 {
-    [Required, StringLength(30, MinimumLength = 1)] public string EmployeeNumber { get; set; } = string.Empty;
+    // Capture the retired write field so explicit attempts cannot be silently ignored.
+    [JsonExtensionData] public Dictionary<string, JsonElement>? AdditionalProperties { get; set; }
+    public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+    {
+        if (ProfilePhoto is not null)
+            yield return new ValidationResult("Use the authorized employee photo endpoint; photo locators cannot be supplied in profile writes.", ["ProfilePhoto"]);
+        if (AdditionalProperties?.Keys.Any(key => key.Equals("employeeNumber", StringComparison.OrdinalIgnoreCase)) == true)
+            yield return new ValidationResult("EmployeeNumber is server-generated and permanent; it cannot be supplied or changed.", ["EmployeeNumber"]);
+        if (this is CreateEmployeeRequest && AdditionalProperties?.Keys.Any(key => key.Equals("employmentStatusId", StringComparison.OrdinalIgnoreCase)) == true)
+            yield return new ValidationResult("Initial employment status is assigned by the server. Use employment lifecycle operations after registration.", ["EmploymentStatusId"]);
+    }
     [Required, StringLength(100, MinimumLength = 1)] public string FirstName { get; set; } = string.Empty;
     [StringLength(100)] public string? MiddleName { get; set; }
     [Required, StringLength(100, MinimumLength = 1)] public string LastName { get; set; } = string.Empty;
@@ -159,7 +173,6 @@ public class EmployeeWriteRequest
     [Required] public Guid? DesignationId { get; set; }
     public Guid? LocationId { get; set; }
     [Required] public Guid? EmploymentTypeId { get; set; }
-    [Required] public Guid? EmploymentStatusId { get; set; }
     public Guid? HiringSourceId { get; set; }
     public Guid? ReportingToEmployeeId { get; set; }
     [Required] public DateOnly? HireDate { get; set; }
@@ -172,7 +185,10 @@ public class EmployeeWriteRequest
 }
 
 public sealed class CreateEmployeeRequest : EmployeeWriteRequest { }
-public sealed class UpdateEmployeeRequest : EmployeeWriteRequest { }
+public sealed class UpdateEmployeeRequest : EmployeeWriteRequest
+{
+    [Required] public Guid? EmploymentStatusId { get; set; }
+}
 
 public sealed class EmployeeContactRequest
 {
@@ -233,7 +249,7 @@ public interface IEmployeeService
 {
     Task<PagedResult<EmployeeListItemDto>> GetEmployeesAsync(EmployeeListQuery query, CancellationToken cancellationToken);
     Task<EmployeeDetailDto?> GetEmployeeAsync(Guid employeeId, CancellationToken cancellationToken);
-    Task<ServiceResult<EmployeeDetailDto>> CreateEmployeeAsync(CreateEmployeeRequest request, CancellationToken cancellationToken);
+    Task<ServiceResult<EmployeeDetailDto>> CreateEmployeeAsync(CreateEmployeeRequest request, Guid requestKey, CancellationToken cancellationToken);
     Task<ServiceResult<EmployeeDetailDto>> UpdateEmployeeAsync(Guid employeeId, UpdateEmployeeRequest request, CancellationToken cancellationToken);
     Task<ServiceResult<bool>> SetEmployeeStatusAsync(Guid employeeId, bool isActive, CancellationToken cancellationToken);
 }

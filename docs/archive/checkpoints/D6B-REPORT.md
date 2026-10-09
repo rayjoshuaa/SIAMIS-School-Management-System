@@ -34,14 +34,14 @@ Live component edits leave stored snapshots unchanged. Explicit regeneration cap
 
 `IPitIncomeResolver` / `PitIncomeResolver` is a shared pure classification service registered in DI. It is not called from monetary generation/preview.
 
-| Final line | Result |
-|---|---|
-| Earning + Included | Final Amount contributes once. |
-| Earning + Excluded | Does not contribute. |
-| Earning + Unknown | Unresolved; no complete candidate exposed; issue identifies line/component/source. |
-| Deduction | Ignored, including Unknown classifications. |
-| Invalid type/treatment, negative earning, overflow | InvalidInput; no candidate. |
-| Empty/all Excluded valid set | Resolved with explicit zero candidate. |
+| Final line                                         | Result                                                                             |
+| -------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| Earning + Included                                 | Final Amount contributes once.                                                     |
+| Earning + Excluded                                 | Does not contribute.                                                               |
+| Earning + Unknown                                  | Unresolved; no complete candidate exposed; issue identifies line/component/source. |
+| Deduction                                          | Ignored, including Unknown classifications.                                        |
+| Invalid type/treatment, negative earning, overflow | InvalidInput; no candidate.                                                        |
+| Empty/all Excluded valid set                       | Resolved with explicit zero candidate.                                             |
 
 Mixed Included/Excluded/Unknown is Unresolved with null candidate rather than a misleading partial resolved base. DTO adapters consume calculated or stored line snapshots. It resolves no policy, year, opening balance, annualization, expense, allowance or tax and writes nothing.
 
@@ -81,38 +81,38 @@ No writable snapshot/source fields were added. The manual request now explicitly
 
 ## 13. API/Swagger changes
 
-| Endpoint | Purpose / principal responses |
-|---|---|
-| Existing POST/PUT `/api/payroll-components` | Configure optional PitIncomeTreatment; existing 201/200 and validation responses. |
-| Existing GET component list/detail | Returns PitIncomeTreatment. |
-| PUT `/api/employees/{employeeId}/tax-declarations/{id}/treatment` | Owned Draft treatment; 200, 400 invalid, 404 ownership/missing, 409 immutable Verified. |
-| Existing declaration verify endpoint | Explicitly verifies the revision containing treatment and updates selection. |
-| GET `/api/employees/{employeeId}/tax-treatment?taxYear=2026` | Resolves selected year treatment; 200 Approved/Blocked/Unresolved, 400 invalid year, 404 missing employee. |
-| Existing declaration detail / verify response | Adds focused Treatment DTO. |
-| Existing preview / payroll-line detail | Adds read-only PitIncomeTreatmentSnapshot. |
+| Endpoint                                                          | Purpose / principal responses                                                                              |
+| ----------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| Existing POST/PUT `/api/payroll-components`                       | Configure optional PitIncomeTreatment; existing 201/200 and validation responses.                          |
+| Existing GET component list/detail                                | Returns PitIncomeTreatment.                                                                                |
+| PUT `/api/employees/{employeeId}/tax-declarations/{id}/treatment` | Owned Draft treatment; 200, 400 invalid, 404 ownership/missing, 409 immutable Verified.                    |
+| Existing declaration verify endpoint                              | Explicitly verifies the revision containing treatment and updates selection.                               |
+| GET `/api/employees/{employeeId}/tax-treatment?taxYear=2026`      | Resolves selected year treatment; 200 Approved/Blocked/Unresolved, 400 invalid year, 404 missing employee. |
+| Existing declaration detail / verify response                     | Adds focused Treatment DTO.                                                                                |
+| Existing preview / payroll-line detail                            | Adds read-only PitIncomeTreatmentSnapshot.                                                                 |
 
 Live Swagger exposes both new routes and component request classification. Manual request schema contains no snapshot field. The existing Application/Infrastructure separation is retained; controllers do not use DbContext.
 
 ## 14. Database constraints
 
-| Table / column | Required type/default | Added check |
-|---|---|---|
-| PayrollComponents.PitIncomeTreatment | nvarchar(20), Unknown | CK_PayrollComponents_PitIncomeTreatment |
+| Table / column                                  | Required type/default | Added check                                        |
+| ----------------------------------------------- | --------------------- | -------------------------------------------------- |
+| PayrollComponents.PitIncomeTreatment            | nvarchar(20), Unknown | CK_PayrollComponents_PitIncomeTreatment            |
 | EmployeePayrollLines.PitIncomeTreatmentSnapshot | nvarchar(20), Unknown | CK_EmployeePayrollLines_PitIncomeTreatmentSnapshot |
-| EmployeeTaxDeclarations.ResidencyStatus | nvarchar(20), Unknown | CK_EmployeeTaxDeclarations_ResidencyStatus |
-| EmployeeTaxDeclarations.EmploymentTaxTreatment | nvarchar(30), Unknown | CK_EmployeeTaxDeclarations_EmploymentTaxTreatment |
+| EmployeeTaxDeclarations.ResidencyStatus         | nvarchar(20), Unknown | CK_EmployeeTaxDeclarations_ResidencyStatus         |
+| EmployeeTaxDeclarations.EmploymentTaxTreatment  | nvarchar(30), Unknown | CK_EmployeeTaxDeclarations_EmploymentTaxTreatment  |
 
 Checks allow only the corresponding approved vocabulary under the database's existing SQL collation conventions. Live SQL confirmed all four enabled/trusted; invalid-value attempts failed and rolled back. Existing ownership FKs, filtered Draft index, unique revision/selection keys and NoAction behaviors were preserved. No nationality constraint exists.
 
 ## 15. Verification counts/results
 
-| Suite | Final result |
-|---|---:|
+| Suite                                  |          Final result |
+| -------------------------------------- | --------------------: |
 | Dependency-free D5A/B/C + D6A/B runner | 195 assertions passed |
-| Existing D5A live API/SQL suite | 70 passed |
-| Existing D5C live API/SQL suite | 306 passed |
-| New D6B live API/SQL suite | 76 passed |
-| Total across final successful runs | 647 passed |
+| Existing D5A live API/SQL suite        |             70 passed |
+| Existing D5C live API/SQL suite        |            306 passed |
+| New D6B live API/SQL suite             |             76 passed |
+| Total across final successful runs     |            647 passed |
 
 D6B covers default/explicit classifications, invalid create/update, SQL persistence and constraints, all three generated origins, historical retention/regeneration, preview parity, manual snapshot/forgery behavior, candidate resolution including mixed Unknown, every residence/treatment gate, year ownership, immutable correction/selection, foreign/Thai independence and privacy/Swagger.
 
@@ -158,90 +158,90 @@ No annualization, PIT brackets/calculator, PIT deduction, policy resolution, ope
 
 - [D6A-REPORT.md](D6A-REPORT.md) (preserved D6A)
 - [D6B-REPORT.md](D6B-REPORT.md)
-- [src/SIAMIS.Api/Controllers/EmployeeTaxController.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Api/Controllers/EmployeeTaxController.cs>)
-- [src/SIAMIS.Api/Program.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Api/Program.cs>)
-- [src/SIAMIS.Application/MasterData/PayrollComponentContracts.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Application/MasterData/PayrollComponentContracts.cs>)
-- [src/SIAMIS.Application/Payroll/EmployeePayrollContracts.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Application/Payroll/EmployeePayrollContracts.cs>)
-- [src/SIAMIS.Application/Payroll/EmployeeStatutoryContracts.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Application/Payroll/EmployeeStatutoryContracts.cs>)
-- [src/SIAMIS.Application/Payroll/PayrollCalculationContracts.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Application/Payroll/PayrollCalculationContracts.cs>)
-- [src/SIAMIS.Application/Payroll/PayrollPreviewContracts.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Application/Payroll/PayrollPreviewContracts.cs>)
-- [src/SIAMIS.Application/Payroll/PayrollRuleEvaluationContracts.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Application/Payroll/PayrollRuleEvaluationContracts.cs>)
-- [src/SIAMIS.Application/Payroll/PitFoundationContracts.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Application/Payroll/PitFoundationContracts.cs>)
-- [src/SIAMIS.Domain/Entities/MasterData/MasterDataEntity.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Domain/Entities/MasterData/MasterDataEntity.cs>)
-- [src/SIAMIS.Domain/Entities/Payroll/EmployeePayrollLine.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Domain/Entities/Payroll/EmployeePayrollLine.cs>)
-- [src/SIAMIS.Domain/Entities/Payroll/EmployeeStatutoryProfiles.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Domain/Entities/Payroll/EmployeeStatutoryProfiles.cs>)
-- [src/SIAMIS.Infrastructure/Configurations/AdditionalMasterDataConfigurations.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Infrastructure/Configurations/AdditionalMasterDataConfigurations.cs>)
-- [src/SIAMIS.Infrastructure/Configurations/EmployeePayrollConfigurations.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Infrastructure/Configurations/EmployeePayrollConfigurations.cs>)
-- [src/SIAMIS.Infrastructure/Configurations/EmployeeStatutoryConfigurations.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Infrastructure/Configurations/EmployeeStatutoryConfigurations.cs>)
-- [src/SIAMIS.Infrastructure/Migrations/20261002042159_AddPitIncomeClassificationAndTaxTreatment.Designer.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Infrastructure/Migrations/20261002042159_AddPitIncomeClassificationAndTaxTreatment.Designer.cs>)
-- [src/SIAMIS.Infrastructure/Migrations/20261002042159_AddPitIncomeClassificationAndTaxTreatment.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Infrastructure/Migrations/20261002042159_AddPitIncomeClassificationAndTaxTreatment.cs>)
-- [src/SIAMIS.Infrastructure/Migrations/SIAMISDbContextModelSnapshot.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Infrastructure/Migrations/SIAMISDbContextModelSnapshot.cs>)
-- [src/SIAMIS.Infrastructure/Services/EmployeePayrollService.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Infrastructure/Services/EmployeePayrollService.cs>)
-- [src/SIAMIS.Infrastructure/Services/EmployeeStatutoryService.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Infrastructure/Services/EmployeeStatutoryService.cs>)
-- [src/SIAMIS.Infrastructure/Services/EmployeeTaxTreatmentResolver.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Infrastructure/Services/EmployeeTaxTreatmentResolver.cs>)
-- [src/SIAMIS.Infrastructure/Services/PayrollCalculationService.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Infrastructure/Services/PayrollCalculationService.cs>)
-- [src/SIAMIS.Infrastructure/Services/PayrollComponentService.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Infrastructure/Services/PayrollComponentService.cs>)
-- [src/SIAMIS.Infrastructure/Services/PayrollGenerationService.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Infrastructure/Services/PayrollGenerationService.cs>)
-- [src/SIAMIS.Infrastructure/Services/PayrollPreviewService.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Infrastructure/Services/PayrollPreviewService.cs>)
-- [src/SIAMIS.Infrastructure/Services/PayrollRuleEvaluator.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Infrastructure/Services/PayrollRuleEvaluator.cs>)
-- [src/SIAMIS.Infrastructure/Services/PitIncomeResolver.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Infrastructure/Services/PitIncomeResolver.cs>)
-- [tests/SIAMIS.Payroll.RegressionTests/D6AContractRegressionTests.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/tests/SIAMIS.Payroll.RegressionTests/D6AContractRegressionTests.cs>) (preserved D6A)
-- [tests/SIAMIS.Payroll.RegressionTests/D6BFoundationRegressionTests.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/tests/SIAMIS.Payroll.RegressionTests/D6BFoundationRegressionTests.cs>)
-- [tests/SIAMIS.Payroll.RegressionTests/Program.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/tests/SIAMIS.Payroll.RegressionTests/Program.cs>)
-- [tests/verify_d6b_live.py](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/tests/verify_d6b_live.py>)
+- [src/SIAMIS.Api/Controllers/EmployeeTaxController.cs](../../../src/SIAMIS.Api/Controllers/EmployeeTaxController.cs)
+- [src/SIAMIS.Api/Program.cs](../../../src/SIAMIS.Api/Program.cs)
+- [src/SIAMIS.Application/MasterData/PayrollComponentContracts.cs](../../../src/SIAMIS.Application/MasterData/PayrollComponentContracts.cs)
+- [src/SIAMIS.Application/Payroll/EmployeePayrollContracts.cs](../../../src/SIAMIS.Application/Payroll/EmployeePayrollContracts.cs)
+- [src/SIAMIS.Application/Payroll/EmployeeStatutoryContracts.cs](../../../src/SIAMIS.Application/Payroll/EmployeeStatutoryContracts.cs)
+- [src/SIAMIS.Application/Payroll/PayrollCalculationContracts.cs](../../../src/SIAMIS.Application/Payroll/PayrollCalculationContracts.cs)
+- [src/SIAMIS.Application/Payroll/PayrollPreviewContracts.cs](../../../src/SIAMIS.Application/Payroll/PayrollPreviewContracts.cs)
+- [src/SIAMIS.Application/Payroll/PayrollRuleEvaluationContracts.cs](../../../src/SIAMIS.Application/Payroll/PayrollRuleEvaluationContracts.cs)
+- [src/SIAMIS.Application/Payroll/PitFoundationContracts.cs](../../../src/SIAMIS.Application/Payroll/PitFoundationContracts.cs)
+- [src/SIAMIS.Domain/Entities/MasterData/MasterDataEntity.cs](../../../src/SIAMIS.Domain/Entities/MasterData/MasterDataEntity.cs)
+- [src/SIAMIS.Domain/Entities/Payroll/EmployeePayrollLine.cs](../../../src/SIAMIS.Domain/Entities/Payroll/EmployeePayrollLine.cs)
+- [src/SIAMIS.Domain/Entities/Payroll/EmployeeStatutoryProfiles.cs](../../../src/SIAMIS.Domain/Entities/Payroll/EmployeeStatutoryProfiles.cs)
+- [src/SIAMIS.Infrastructure/Configurations/AdditionalMasterDataConfigurations.cs](../../../src/SIAMIS.Infrastructure/Configurations/AdditionalMasterDataConfigurations.cs)
+- [src/SIAMIS.Infrastructure/Configurations/EmployeePayrollConfigurations.cs](../../../src/SIAMIS.Infrastructure/Configurations/EmployeePayrollConfigurations.cs)
+- [src/SIAMIS.Infrastructure/Configurations/EmployeeStatutoryConfigurations.cs](../../../src/SIAMIS.Infrastructure/Configurations/EmployeeStatutoryConfigurations.cs)
+- [src/SIAMIS.Infrastructure/Migrations/20261002042159_AddPitIncomeClassificationAndTaxTreatment.Designer.cs](../../../src/SIAMIS.Infrastructure/Migrations/20261002042159_AddPitIncomeClassificationAndTaxTreatment.Designer.cs)
+- [src/SIAMIS.Infrastructure/Migrations/20261002042159_AddPitIncomeClassificationAndTaxTreatment.cs](../../../src/SIAMIS.Infrastructure/Migrations/20261002042159_AddPitIncomeClassificationAndTaxTreatment.cs)
+- [src/SIAMIS.Infrastructure/Migrations/SIAMISDbContextModelSnapshot.cs](../../../src/SIAMIS.Infrastructure/Migrations/SIAMISDbContextModelSnapshot.cs)
+- [src/SIAMIS.Infrastructure/Services/EmployeePayrollService.cs](../../../src/SIAMIS.Infrastructure/Services/EmployeePayrollService.cs)
+- [src/SIAMIS.Infrastructure/Services/EmployeeStatutoryService.cs](../../../src/SIAMIS.Infrastructure/Services/EmployeeStatutoryService.cs)
+- [src/SIAMIS.Infrastructure/Services/EmployeeTaxTreatmentResolver.cs](../../../src/SIAMIS.Infrastructure/Services/EmployeeTaxTreatmentResolver.cs)
+- [src/SIAMIS.Infrastructure/Services/PayrollCalculationService.cs](../../../src/SIAMIS.Infrastructure/Services/PayrollCalculationService.cs)
+- [src/SIAMIS.Infrastructure/Services/PayrollComponentService.cs](../../../src/SIAMIS.Infrastructure/Services/PayrollComponentService.cs)
+- [src/SIAMIS.Infrastructure/Services/PayrollGenerationService.cs](../../../src/SIAMIS.Infrastructure/Services/PayrollGenerationService.cs)
+- [src/SIAMIS.Infrastructure/Services/PayrollPreviewService.cs](../../../src/SIAMIS.Infrastructure/Services/PayrollPreviewService.cs)
+- [src/SIAMIS.Infrastructure/Services/PayrollRuleEvaluator.cs](../../../src/SIAMIS.Infrastructure/Services/PayrollRuleEvaluator.cs)
+- [src/SIAMIS.Infrastructure/Services/PitIncomeResolver.cs](../../../src/SIAMIS.Infrastructure/Services/PitIncomeResolver.cs)
+- [tests/SIAMIS.Payroll.RegressionTests/D6AContractRegressionTests.cs](../../../tests/SIAMIS.Payroll.RegressionTests/D6AContractRegressionTests.cs) (preserved D6A)
+- [tests/SIAMIS.Payroll.RegressionTests/D6BFoundationRegressionTests.cs](../../../tests/SIAMIS.Payroll.RegressionTests/D6BFoundationRegressionTests.cs)
+- [tests/SIAMIS.Payroll.RegressionTests/Program.cs](../../../tests/SIAMIS.Payroll.RegressionTests/Program.cs)
+- [tests/verify_d6b_live.py](../../../tests/verify_d6b_live.py)
 
 ## Complete final application table counts
 
-| Table | Rows |
-|---|---:|
-| AddressTypes | 3 |
-| Attendance | 0 |
-| AttendanceStatuses | 11 |
-| ContractTypes | 7 |
-| Countries | 13 |
-| Departments | 12 |
-| Designations | 20 |
-| DocumentTypes | 15 |
-| EmergencyContacts | 0 |
-| EmployeeAddresses | 0 |
-| EmployeeCompensations | 0 |
-| EmployeeContacts | 0 |
-| EmployeeContracts | 0 |
-| EmployeeDocuments | 0 |
-| EmployeeHistory | 0 |
-| EmployeeLeave | 0 |
-| EmployeePayrollComponentAssignments | 0 |
-| EmployeePayrollLines | 0 |
-| EmployeePayrollSocialSecurityResults | 0 |
-| EmployeePayrollStatutoryResults | 0 |
-| EmployeePayrolls | 0 |
-| EmployeePerformance | 0 |
-| EmployeeStatutoryEnrollments | 0 |
-| EmployeeTaxClaims | 0 |
-| EmployeeTaxDeclarationSelections | 0 |
-| EmployeeTaxDeclarations | 0 |
-| EmployeeTaxOpeningBalances | 0 |
-| EmployeeTaxProfiles | 0 |
-| Employees | 1 |
-| EmploymentRecords | 1 |
-| EmploymentStatuses | 9 |
-| EmploymentTypes | 6 |
-| Genders | 4 |
-| HiringSources | 10 |
-| LeaveTypes | 10 |
-| Locations | 5 |
-| MaritalStatuses | 6 |
-| Nationalities | 13 |
-| PayTypes | 6 |
-| PayrollComponents | 17 |
-| PayrollPeriods | 0 |
-| PayrollRuleTargets | 0 |
-| PayrollRules | 0 |
-| PayrollSettings | 0 |
-| PerformanceRatings | 5 |
-| PitPolicyConfigurations | 0 |
-| PitTaxBrackets | 0 |
-| SocialSecurityPolicyConfigurations | 0 |
-| StatutoryPolicyVersions | 0 |
-| StatutorySchemes | 0 |
-| TeacherProfiles | 0 |
+| Table                                | Rows |
+| ------------------------------------ | ---: |
+| AddressTypes                         |    3 |
+| Attendance                           |    0 |
+| AttendanceStatuses                   |   11 |
+| ContractTypes                        |    7 |
+| Countries                            |   13 |
+| Departments                          |   12 |
+| Designations                         |   20 |
+| DocumentTypes                        |   15 |
+| EmergencyContacts                    |    0 |
+| EmployeeAddresses                    |    0 |
+| EmployeeCompensations                |    0 |
+| EmployeeContacts                     |    0 |
+| EmployeeContracts                    |    0 |
+| EmployeeDocuments                    |    0 |
+| EmployeeHistory                      |    0 |
+| EmployeeLeave                        |    0 |
+| EmployeePayrollComponentAssignments  |    0 |
+| EmployeePayrollLines                 |    0 |
+| EmployeePayrollSocialSecurityResults |    0 |
+| EmployeePayrollStatutoryResults      |    0 |
+| EmployeePayrolls                     |    0 |
+| EmployeePerformance                  |    0 |
+| EmployeeStatutoryEnrollments         |    0 |
+| EmployeeTaxClaims                    |    0 |
+| EmployeeTaxDeclarationSelections     |    0 |
+| EmployeeTaxDeclarations              |    0 |
+| EmployeeTaxOpeningBalances           |    0 |
+| EmployeeTaxProfiles                  |    0 |
+| Employees                            |    1 |
+| EmploymentRecords                    |    1 |
+| EmploymentStatuses                   |    9 |
+| EmploymentTypes                      |    6 |
+| Genders                              |    4 |
+| HiringSources                        |   10 |
+| LeaveTypes                           |   10 |
+| Locations                            |    5 |
+| MaritalStatuses                      |    6 |
+| Nationalities                        |   13 |
+| PayTypes                             |    6 |
+| PayrollComponents                    |   17 |
+| PayrollPeriods                       |    0 |
+| PayrollRuleTargets                   |    0 |
+| PayrollRules                         |    0 |
+| PayrollSettings                      |    0 |
+| PerformanceRatings                   |    5 |
+| PitPolicyConfigurations              |    0 |
+| PitTaxBrackets                       |    0 |
+| SocialSecurityPolicyConfigurations   |    0 |
+| StatutoryPolicyVersions              |    0 |
+| StatutorySchemes                     |    0 |
+| TeacherProfiles                      |    0 |

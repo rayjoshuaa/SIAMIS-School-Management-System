@@ -52,6 +52,20 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--space-4) var(--space-6);
 }
+.employee-form-grid > * {
+  min-width: 0;
+}
+.employee-form-wide {
+  grid-column: 1 / -1;
+}
+.employee-support-record {
+  display: grid;
+  gap: var(--space-3);
+  padding-block: var(--space-3);
+}
+.employee-support-record + .employee-support-record {
+  border-top: 1px solid var(--border);
+}
 .employee-native-select {
   width: 100%;
   min-height: var(--control-height);

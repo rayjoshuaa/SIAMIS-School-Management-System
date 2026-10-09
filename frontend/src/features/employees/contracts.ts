@@ -1,4 +1,12 @@
 export type Master = { id: string; name: string; isActive: boolean; isTerminal?: boolean };
+export function employmentContext(employee: { currentEmployment: Employment | null }): string {
+  const record = employee.currentEmployment;
+  if (!record) return 'No current employment';
+  const start = record.startDate ?? record.hireDate;
+  return start && start > new Date().toISOString().slice(0, 10)
+    ? `Scheduled to start ${start}`
+    : (record.employmentStatus ?? 'Not recorded');
+}
 export type EmployeeRow = {
   employeeId: string;
   employeeNumber: string;
@@ -52,6 +60,8 @@ export type Employee = EmployeeRow & {
   }[];
   addresses: {
     employeeAddressId: string;
+    addressTypeId: string;
+    countryId: string | null;
     addressType: string;
     addressLine1: string;
     addressLine2: string | null;
@@ -68,6 +78,8 @@ export type Employee = EmployeeRow & {
     mobile: string | null;
     phone: string | null;
     email: string | null;
+    alternativePhone?: string | null;
+    address?: string | null;
     isPrimary: boolean;
   }[];
   teacherProfile: {

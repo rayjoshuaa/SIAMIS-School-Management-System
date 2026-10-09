@@ -1,35 +1,32 @@
 # SIAMIS School Management System
 
-SIAMIS is an API-first school management system. Its HR backend covers employment, leave, attendance, payroll, accounts and confidential HR documents. Future clients can use the same API.
+SIAMIS is an API-first school management platform. Current development is the HR module; future school, admissions, finance and learning modules follow the [official roadmap](docs/ROADMAP.md).
 
 ## Current status
 
-| Area | Status |
-|---|---|
-| HR | Backend V1 Frozen — authoritative Git tag: `hr-backend-v1` |
-| School Management | Planned; next major backend module |
-| Frontend | F1 design system, F2 school shell and F3 authentication/session/account access; business screens deferred |
-| Production | Deployment validation and infrastructure setup remain required |
+**v0.5.1 — HR Foundation & Employee Management** is a release candidate, not a Production deployment. Authentication-refresh remediation (Stage 1) and deterministic frontend installation (Stage 2) are approved. Stage 3 documentation/artifact reconciliation awaits review; final release verification and owner Git operations remain outstanding.
+
+Implemented: premium V3 shared UI, authenticated shell, HR Dashboard, Employee Directory/360, employment/account lifecycle, User Accounts, Attendance Management and employee clocking. Employee numbering, private photos, controlled deletion and registration idempotency extend the historical HR V1 foundation. See [HR status](docs/modules/hr/README.md) and [release notes](docs/releases/v0.5.1.md). F5.2 QR credentials are planned, not implemented.
 
 ## Technology and architecture
 
-C#, .NET 10, ASP.NET Core Web API, EF Core 10, SQL Server, ASP.NET Core Identity, Swagger/OpenAPI and Git. The new frontend uses React, TypeScript, Vite, Tailwind CSS and Radix primitives. The original static AdminLTE starter remains historical and is not used by the new frontend.
+C#, .NET 10, ASP.NET Core Web API, EF Core 10, SQL Server and ASP.NET Core Identity. Frontend: React, TypeScript, Vite, Tailwind CSS, Radix UI, Lucide, TanStack Query, React Hook Form and Zod. Exact versions remain in project manifests and the repaired frontend lockfile.
 
-| Directory | Responsibility |
-|---|---|
-| `src/SIAMIS.Api` | Controllers, HTTP contracts/routing, authentication and authorization wiring |
-| `src/SIAMIS.Application` | DTOs, application contracts and interfaces |
-| `src/SIAMIS.Domain` | Domain entities |
-| `src/SIAMIS.Infrastructure` | EF Core persistence and service implementations |
-| `tests/` | Established regression runner and verification scripts |
-| `frontend/` | React frontend and Development design-system showcase |
-| `docs/` | Current documentation and archived engineering evidence |
+| Directory                   | Responsibility                                           |
+| --------------------------- | -------------------------------------------------------- |
+| `src/SIAMIS.Api`            | HTTP routing, authentication and authorization wiring    |
+| `src/SIAMIS.Application`    | DTOs, contracts and interfaces                           |
+| `src/SIAMIS.Domain`         | Domain entities                                          |
+| `src/SIAMIS.Infrastructure` | EF persistence and service implementations               |
+| `tests/`                    | Established regression runner and verification utilities |
+| `frontend/`                 | React application and isolated Development showcase      |
+| `docs/`                     | Current guides and historical engineering evidence       |
 
-Controllers use application interfaces; EF entities are not API responses. See [system architecture](docs/architecture/SYSTEM-ARCHITECTURE.md).
+Controllers use application interfaces; EF entities are not API responses. See [architecture](docs/architecture/SYSTEM-ARCHITECTURE.md).
 
 ## Development startup
 
-Install the .NET 10 SDK and configure a local SQL Server connection using the [Development guide](docs/deployment/DEVELOPMENT.md). From the repository root:
+Install .NET 10 and configure local SQL Server using the [Development guide](docs/deployment/DEVELOPMENT.md).
 
 ```powershell
 dotnet restore .\SIAMIS.sln
@@ -37,14 +34,13 @@ dotnet build .\SIAMIS.sln -c Release
 dotnet run --project .\src\SIAMIS.Api\SIAMIS.Api.csproj --launch-profile SIAMIS.Api
 ```
 
-The launch profile uses `https://localhost:7142` and `http://localhost:5142`. Swagger is available at `/swagger` in Development; `/health` reports application status. Protected API routes require authentication. Local account setup and database initialization are explicit setup steps, not part of starting the API.
+API: `https://localhost:7142` / `http://localhost:5142`; Development Swagger: `/swagger`. `/health` reports application status, not database readiness. Database setup and account bootstrap require separate explicit approval. Follow [frontend setup](docs/frontend/README.md) for the React app, normally port 5173; current review uses 5175.
 
 ## Documentation
 
 - [Documentation index](docs/README.md)
-- [Frontend setup and design system](docs/frontend/README.md)
-- [Frozen HR V1 contract](docs/modules/hr/HR-V1-FREEZE.md)
 - [Development](docs/deployment/DEVELOPMENT.md) and [Production requirements](docs/deployment/PRODUCTION.md)
-- [Historical checkpoint archive](docs/archive/checkpoints/README.md)
+- [Historical HR V1 freeze](docs/modules/hr/HR-V1-FREEZE.md)
+- [Historical checkpoints](docs/archive/checkpoints/README.md)
 
-Changing frozen HR business semantics requires a new explicitly approved checkpoint.
+The API's original static AdminLTE landing page remains present; it is not the React product UI. Changing frozen business semantics requires a separately approved checkpoint.

@@ -88,7 +88,6 @@ export function EmployeeForm({ mode }: { mode: Mode }) {
     if (mode === 'edit' && employee.data) {
       if (!record) throw new Error('Profile editing requires an existing employment record.');
       initial = {
-        employeeNumber: employee.data.employeeNumber,
         firstName: employee.data.firstName,
         lastName: employee.data.lastName,
         middleName: employee.data.middleName ?? '',
@@ -144,10 +143,18 @@ function EmployeeEditor({
   const cache = useQueryClient();
   const saved = useRef(false);
   const submitting = useRef(false);
+  const registration = useRef<{
+    key: string;
+    fingerprint: string;
+    body: unknown;
+    values: Values;
+  } | null>(null);
+  const [registrationState, setRegistrationState] = useState<'ready' | 'uncertain' | 'terminal'>(
+    'ready',
+  );
   const [general, setGeneral] = useState<string | null>(null);
   const [confirmation, setConfirmation] = useState<Values | null>(null);
   const personalFields = [
-    'employeeNumber',
     'firstName',
     'middleName',
     'lastName',
@@ -157,7 +164,10 @@ function EmployeeEditor({
     'maritalStatusId',
     'nationalityId',
   ];
-  const employmentFields = [...contextFields.map(([name]) => name), 'reportingToEmployeeId'];
+  const visibleContextFields = contextFields.filter(
+    ([name]) => mode !== 'create' || name !== 'employmentStatusId',
+  );
+  const employmentFields = [...visibleContextFields.map(([name]) => name), 'reportingToEmployeeId'];
   const fields =
     mode === 'edit'
       ? personalFields
@@ -168,7 +178,7 @@ function EmployeeEditor({
             ...(account?.requiresOffboardingDecision ? ['disableLinkedAccount'] : []),
           ]
         : [
-            ...(mode === 'create' ? personalFields : []),
+            ...(mode === 'create' ? [...personalFields, 'initialWorkEmail', 'initialMobile'] : []),
             ...employmentFields,
             ...(mode === 'employment-change' ? ['effectiveDate'] : ['hireDate', 'startDate']),
           ];
@@ -206,6 +216,19 @@ function EmployeeEditor({
         Object.entries(values).map(([key, value]) => [key, (value ?? '').trim() || null]),
       );
       let body: Record<string, unknown> = nonempty;
+      if (mode === 'create') {
+        body = Object.fromEntries(
+          Object.entries(nonempty).filter(([key]) => !key.startsWith('initial')),
+        );
+        if (nonempty.initialWorkEmail || nonempty.initialMobile)
+          body.contacts = [
+            {
+              workEmail: nonempty.initialWorkEmail,
+              mobile: nonempty.initialMobile,
+              isPrimary: true,
+            },
+          ];
+      }
       if (mode === 'edit' && employee && record) {
         body = {
           ...nonempty,
@@ -216,7 +239,6 @@ function EmployeeEditor({
           hireDate: record.hireDate,
           startDate: record.startDate,
           endDate: record.endDate,
-          profilePhoto: employee.profilePhoto,
         };
         // Child collections and TeacherProfile are intentionally omitted: existing data is retained by PUT.
       }
@@ -238,15 +260,66 @@ function EmployeeEditor({
         mode === 'create'
           ? '/api/employees'
           : `/api/employees/${employee!.employeeId}${mode === 'edit' ? '' : `/${mode === 'employment-change' ? 'employment-changes' : mode}`}`;
-      return api(endpoint, { method: mode === 'edit' ? 'PUT' : 'POST', body });
+      if (mode === 'create') {
+        const fingerprint = JSON.stringify(body);
+        if (
+          !registration.current ||
+          (registrationState === 'ready' && registration.current.fingerprint !== fingerprint)
+        )
+          registration.current = {
+            key: crypto.randomUUID(),
+            fingerprint,
+            body,
+            values: { ...values },
+          };
+        // Retry the frozen original request after an uncertain outcome, never silently
+        // submit edited values or generate a new key after a timeout.
+        return api<Employee>(endpoint, {
+          method: 'POST',
+          body: registration.current.body,
+          idempotencyKey: registration.current.key,
+        });
+      }
+      return api<Employee>(endpoint, { method: mode === 'edit' ? 'PUT' : 'POST', body });
     },
-    onSuccess: async () => {
+    onSuccess: async (result) => {
       saved.current = true;
       setConfirmation(null);
       await cache.invalidateQueries({ queryKey: ['employees'] });
-      navigate(mode === 'create' ? '/hr/employees?notice=created' : `${back}?notice=saved`);
+      navigate(
+        mode === 'create'
+          ? `/hr/employees/${result.employeeId}?notice=created`
+          : `${back}?notice=saved`,
+      );
     },
     onError: (error: Error) => {
+      if (mode === 'create') {
+        if (
+          error instanceof ApiError &&
+          (error.code === 'idempotency_conflict' || error.code === 'registration_key_expired')
+        ) {
+          setRegistrationState('terminal');
+          setGeneral(
+            error.code === 'registration_key_expired'
+              ? 'This registration key has expired and cannot create another employee. Review the directory before starting a new registration.'
+              : 'This registration key was used with different details. No new employee was created by this request. Review the directory before starting a new registration.',
+          );
+          return;
+        }
+        if (
+          !(error instanceof ApiError) ||
+          error.status === 0 ||
+          error.status >= 500 ||
+          error.status === 409
+        ) {
+          setRegistrationState('uncertain');
+          setGeneral(
+            'The registration outcome is not confirmed. Retry the original submission to safely retrieve its result. The original details and registration key are retained.',
+          );
+          return;
+        }
+        setRegistrationState('ready');
+      }
       const fieldMessages: string[] = [];
       if (error instanceof ApiError)
         for (const [key, messages] of Object.entries(error.fieldErrors)) {
@@ -261,7 +334,7 @@ function EmployeeEditor({
         fieldMessages.join(' ') ||
           (error instanceof ApiError
             ? error.status === 409
-              ? 'The employee number may already exist, or this record changed. Reload the record before retrying.'
+              ? 'This record changed or conflicts with existing data. Reload before retrying.'
               : error.message
             : 'Unable to save. Try again later.'),
       );
@@ -297,7 +370,7 @@ function EmployeeEditor({
           <Input
             {...props}
             type={type}
-            maxLength={type === 'text' ? maxLength : undefined}
+            maxLength={type !== 'date' ? maxLength : undefined}
             disabled={mutation.isPending}
             {...register(name, {
               validate: (value) => !required || !!value?.trim() || `${label} is required.`,
@@ -305,6 +378,14 @@ function EmployeeEditor({
                 value: maxLength,
                 message: `${label} must be ${maxLength} characters or fewer.`,
               },
+              ...(type === 'email'
+                ? {
+                    pattern: {
+                      value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                      message: 'Enter a valid email address.',
+                    },
+                  }
+                : {}),
             })}
           />
         )}
@@ -414,113 +495,157 @@ function EmployeeEditor({
           {general && (
             <div role="alert" className="rounded-md border border-danger p-4 text-sm">
               <p>{general}</p>
-              {mutation.error instanceof ApiError && mutation.error.status === 409 && (
-                <Button variant="outline" onClick={() => window.location.reload()}>
-                  Reload record
-                </Button>
-              )}
+              {mode !== 'create' &&
+                mutation.error instanceof ApiError &&
+                mutation.error.status === 409 && (
+                  <Button variant="outline" onClick={() => window.location.reload()}>
+                    Reload record
+                  </Button>
+                )}
             </div>
           )}
-          {(mode === 'create' || mode === 'edit') && (
-            <section className="employee-section">
-              <h2>Personal information</h2>
-              <div className="employee-form-grid">
-                {text('employeeNumber', 'Employee number', true, 30)}
-                {text('firstName', 'First name', true)}
-                {text('middleName', 'Middle name')}
-                {text('lastName', 'Last name', true)}
-                {text('preferredName', 'Preferred name')}
-                {text('dateOfBirth', 'Date of birth', false, 100, 'date')}
-                {select('genderId', 'genders', 'Gender')}
-                {select('maritalStatusId', 'marital-statuses', 'Marital status')}
-                {select('nationalityId', 'nationalities', 'Nationality')}
-              </div>
-            </section>
-          )}
-          {mode !== 'edit' && (
-            <section className="employee-section">
-              <h2>
-                {mode === 'end-employment' ? 'End current employment' : 'Employment information'}
-              </h2>
-              <div className="employee-form-grid">
-                {mode === 'end-employment' ? (
-                  <>
-                    {text('endDate', 'End date', true, 100, 'date')}
-                    {select(
-                      'employmentStatusId',
-                      'employment-statuses',
-                      'End-of-employment status',
-                      true,
-                    )}
-                    {account?.requiresOffboardingDecision && (
+          <fieldset
+            className="min-w-0 space-y-6 border-0 p-0"
+            disabled={mode === 'create' && (mutation.isPending || registrationState !== 'ready')}
+          >
+            {(mode === 'create' || mode === 'edit') && (
+              <section className="employee-section">
+                <h2>Personal information</h2>
+                <p className="mb-4 text-sm text-muted-foreground">
+                  {employee
+                    ? `Employee number: ${employee.employeeNumber} · Permanent`
+                    : 'Employee number is assigned automatically after registration.'}
+                </p>
+                <p className="mb-4 text-sm text-muted-foreground">
+                  {mode === 'create'
+                    ? 'A private profile photograph can be added from Employee 360 after registration.'
+                    : 'Manage the private profile photograph from Employee 360. Photo changes are saved separately from profile details.'}
+                </p>
+                <div className="employee-form-grid">
+                  {text('firstName', 'First name', true)}
+                  {text('middleName', 'Middle name')}
+                  {text('lastName', 'Last name', true)}
+                  {text('preferredName', 'Preferred name')}
+                  {text('dateOfBirth', 'Date of birth', false, 100, 'date')}
+                  {select('genderId', 'genders', 'Gender')}
+                  {select('maritalStatusId', 'marital-statuses', 'Marital status')}
+                  {select('nationalityId', 'nationalities', 'Nationality')}
+                </div>
+              </section>
+            )}
+            {mode === 'create' && (
+              <section className="employee-section">
+                <h2>Initial contact information</h2>
+                <p className="mb-4 text-sm text-muted-foreground">
+                  Optional. This contact is saved with registration. Addresses and emergency
+                  contacts can be added from Employee 360 after registration.
+                </p>
+                <div className="employee-form-grid">
+                  {text('initialWorkEmail', 'Initial work email', false, 254, 'email')}
+                  {text('initialMobile', 'Initial mobile', false, 30, 'tel')}
+                </div>
+              </section>
+            )}
+            {mode !== 'edit' && (
+              <section className="employee-section">
+                <h2>
+                  {mode === 'end-employment' ? 'End current employment' : 'Employment information'}
+                </h2>
+                <div className="employee-form-grid">
+                  {mode === 'end-employment' ? (
+                    <>
+                      {text('endDate', 'End date', true, 100, 'date')}
+                      {select(
+                        'employmentStatusId',
+                        'employment-statuses',
+                        'End-of-employment status',
+                        true,
+                      )}
+                      {account?.requiresOffboardingDecision && (
+                        <FormField
+                          id="disableLinkedAccount"
+                          label="Linked account decision"
+                          required
+                          error={errors.disableLinkedAccount?.message}
+                        >
+                          {(props) => (
+                            <select
+                              {...props}
+                              className="ui-control employee-native-select"
+                              disabled={mutation.isPending}
+                              {...register('disableLinkedAccount', {
+                                required: 'Choose an explicit account decision.',
+                              })}
+                            >
+                              <option value="">Select a decision</option>
+                              <option value="false">Keep linked account active</option>
+                              <option value="true">Disable linked account</option>
+                            </select>
+                          )}
+                        </FormField>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      {visibleContextFields.map(([name, master, label, required]) =>
+                        select(name, master, label, required && mode !== 'employment-change'),
+                      )}
+                      {mode === 'employment-change' ? (
+                        text('effectiveDate', 'Effective date', true, 100, 'date')
+                      ) : (
+                        <>
+                          {text('hireDate', 'Hire date', true, 100, 'date')}
+                          {text('startDate', 'Start date', false, 100, 'date')}
+                        </>
+                      )}
                       <FormField
-                        id="disableLinkedAccount"
-                        label="Linked account decision"
-                        required
-                        error={errors.disableLinkedAccount?.message}
+                        id="reportingToEmployeeId"
+                        label="Reporting employee"
+                        hint="Optional. Search for an existing active employee."
+                        error={errors.reportingToEmployeeId?.message}
                       >
                         {(props) => (
-                          <select
-                            {...props}
-                            className="ui-control employee-native-select"
-                            disabled={mutation.isPending}
-                            {...register('disableLinkedAccount', {
-                              required: 'Choose an explicit account decision.',
-                            })}
-                          >
-                            <option value="">Select a decision</option>
-                            <option value="false">Keep linked account active</option>
-                            <option value="true">Disable linked account</option>
-                          </select>
+                          <Controller
+                            name="reportingToEmployeeId"
+                            defaultValue=""
+                            control={control}
+                            render={({ field }) => (
+                              <ReportingEmployee
+                                {...props}
+                                value={field.value ?? ''}
+                                onChange={field.onChange}
+                                employeeId={employee?.employeeId}
+                                disabled={mutation.isPending}
+                                retainCurrent={mode === 'employment-change'}
+                              />
+                            )}
+                          />
                         )}
                       </FormField>
-                    )}
-                  </>
-                ) : (
-                  <>
-                    {contextFields.map(([name, master, label, required]) =>
-                      select(name, master, label, required && mode !== 'employment-change'),
-                    )}
-                    {mode === 'employment-change' ? (
-                      text('effectiveDate', 'Effective date', true, 100, 'date')
-                    ) : (
-                      <>
-                        {text('hireDate', 'Hire date', true, 100, 'date')}
-                        {text('startDate', 'Start date', false, 100, 'date')}
-                      </>
-                    )}
-                    <FormField
-                      id="reportingToEmployeeId"
-                      label="Reporting employee"
-                      hint="Optional. Search for an existing active employee."
-                      error={errors.reportingToEmployeeId?.message}
-                    >
-                      {(props) => (
-                        <Controller
-                          name="reportingToEmployeeId"
-                          defaultValue=""
-                          control={control}
-                          render={({ field }) => (
-                            <ReportingEmployee
-                              {...props}
-                              value={field.value ?? ''}
-                              onChange={field.onChange}
-                              employeeId={employee?.employeeId}
-                              disabled={mutation.isPending}
-                              retainCurrent={mode === 'employment-change'}
-                            />
-                          )}
-                        />
-                      )}
-                    </FormField>
-                  </>
-                )}
-              </div>
-            </section>
-          )}
+                    </>
+                  )}
+                </div>
+              </section>
+            )}
+          </fieldset>
           <div className="employee-form-actions">
-            <Button type="submit" loading={mutation.isPending}>
-              {mode === 'end-employment' ? 'Review end of employment' : 'Save employee'}
+            <Button
+              type={mode === 'create' && registrationState === 'uncertain' ? 'button' : 'submit'}
+              loading={mutation.isPending}
+              disabled={mode === 'create' && registrationState === 'terminal'}
+              onClick={
+                mode === 'create' && registrationState === 'uncertain'
+                  ? () => {
+                      if (registration.current) submit(registration.current.values);
+                    }
+                  : undefined
+              }
+            >
+              {mode === 'create' && registrationState === 'uncertain'
+                ? 'Retry original submission'
+                : mode === 'end-employment'
+                  ? 'Review end of employment'
+                  : 'Save employee'}
             </Button>
             <LinkButton to={back}>Cancel</LinkButton>
           </div>

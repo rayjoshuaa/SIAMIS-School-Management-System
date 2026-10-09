@@ -76,6 +76,8 @@ internal static class F72ClockTests
                 created = true; await db.Database.MigrateAsync();
                 Check(db.Database.GetDbConnection().Database == database && database != "SIAMIS", "isolated target, never Development SIAMIS");
                 var employees = Enumerable.Range(1, 2).Select(n => new Employee { EmployeeNumber = "F72-ISOLATED-" + n, FirstName = "Synthetic", LastName = "Fixture" }).ToArray();
+                foreach (var e in employees)
+                    e.EmployeeNumber = await EmployeeNumberAllocator.ReserveAsync(connection.ConnectionString, e.EmployeeId, default);
                 db.Employees.AddRange(employees);
                 var department = await db.Departments.Where(x => x.IsActive).Select(x => x.Id).FirstAsync();
                 var designation = await db.Designations.Where(x => x.IsActive).Select(x => x.Id).FirstAsync();
@@ -187,7 +189,7 @@ internal static class F72ClockTests
             using (var scope = app.Services.CreateScope())
             {
                 var db = scope.ServiceProvider.GetRequiredService<SIAMISDbContext>();
-                employeeId = await db.Employees.Where(x => x.EmployeeNumber == "F72-ISOLATED-1").Select(x => x.EmployeeId).SingleAsync();
+                employeeId = (await db.Users.SingleAsync(x => x.UserName == "clock-one")).EmployeeId!.Value;
                 var calendar = new SIAMIS.Domain.Entities.Leave.WorkCalendar { Code = "F72-ISOLATED", Name = "Isolated clock schedule", IsActive = true };
                 db.WorkCalendars.Add(calendar);
                 db.Add(new SIAMIS.Domain.Entities.Leave.EmployeeWorkCalendarAssignment { EmployeeId = employeeId, WorkCalendarId = calendar.Id, EffectiveFrom = new(2026, 9, 1) });

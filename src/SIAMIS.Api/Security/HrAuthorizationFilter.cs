@@ -23,6 +23,12 @@ public sealed class HrAuthorizationFilter(IAuthorizationService authorization, I
     {
         if (context.ActionDescriptor.EndpointMetadata.OfType<IAllowAnonymous>().Any()) return;
         var http = context.HttpContext;
+        var descriptor = (ControllerActionDescriptor)context.ActionDescriptor;
+        if (descriptor.ControllerName == "EmployeeDeletion" && !HttpMethods.IsGet(http.Request.Method) && !HttpMethods.IsHead(http.Request.Method))
+        {
+            if (Guid.TryParse(context.RouteData.Values["id"]?.ToString(), out var deletionId))
+                await http.RequestServices.GetRequiredService<SIAMIS.Application.Employees.IEmployeeDeletionService>().AuditAttemptAsync(deletionId, http.RequestAborted);
+        }
         if (http.User.Identity?.IsAuthenticated != true) { context.Result = new UnauthorizedResult(); return; }
         var action = (ControllerActionDescriptor)context.ActionDescriptor;
         if (action.ControllerName == "Auth") return;
@@ -31,7 +37,9 @@ public sealed class HrAuthorizationFilter(IAuthorizationService authorization, I
         string capability = name switch
         {
             "AdminUsers" or "DevelopmentCredentialDelivery" => "Security.Manage",
+            "EmployeeDeletion" => "Employee.DeletePermanent",
             "EmployeeDocuments" or "HrDocuments" => read ? "HRDocuments.Read" : "HRDocuments.Manage",
+            "EmployeePhotos" => read ? "Employee.Read" : "Employee.Manage",
             "AttendanceReporting" => action.ActionName == "Queue" ? "Attendance.Read" : "Reporting.Read",
             "HrOverview" => "Reporting.Read",
             "SelfService" or "EmployeeClock" => "SelfService",
@@ -65,6 +73,11 @@ public sealed class HrAuthorizationFilter(IAuthorizationService authorization, I
             var raw = context.RouteData.Values["payrollId"] ?? context.RouteData.Values["id"];
             if (Guid.TryParse(raw?.ToString(), out var payroll)) allowed = await resources.OwnFinalPayrollAsync(payroll, actor.EmployeeId!.Value, http.RequestAborted);
         }
-        if (!allowed) context.Result = new ForbidResult();
+        if (!allowed)
+        {
+            if (name == "EmployeeDeletion" && !read && Guid.TryParse(context.RouteData.Values["id"]?.ToString(), out var deniedId))
+                await http.RequestServices.GetRequiredService<SIAMIS.Application.Employees.IEmployeeDeletionService>().AuditDeniedAsync(deniedId, http.RequestAborted);
+            context.Result = new ForbidResult();
+        }
     }
 }

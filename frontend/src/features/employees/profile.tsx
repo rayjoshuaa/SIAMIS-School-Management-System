@@ -3,14 +3,17 @@ import { useAuth } from '../../lib/auth/auth-context';
 import { Table, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/table';
 import { Tabs } from '../../components/ui/navigation';
 import { TableViewport } from '../../components/shared/workspace';
-import { Avatar, Badge } from '../../components/ui/feedback';
+import { Badge } from '../../components/ui/feedback';
 import { Pencil, CalendarRange, UserRoundMinus, UserRoundPlus } from 'lucide-react';
 import { BackLink, LinkButton } from '../../components/ui/button';
-import { employeeName } from './contracts';
+import { employeeName, employmentContext } from './contracts';
 import { masterLabel, useEmployee, useHistory, useMasters } from './data';
-import { ContactSummary, EmploymentSummary, Facts, QueryState } from './presentation';
+import { EmploymentSummary, Facts, QueryState } from './presentation';
 import './employees.css';
 import { AccountAccess } from './account-access';
+import { SupportingInformation } from './supporting-information';
+import { EmployeeAvatar, EmployeePhotoControl } from './photo';
+import { PermanentDeletion } from './permanent-deletion';
 
 export function EmployeeProfile() {
   const { employeeId } = useParams();
@@ -33,10 +36,15 @@ export function EmployeeProfile() {
     <div className="employee-workspace employee-profile">
       <BackLink to="/hr/employees">Employee directory</BackLink>
       {params.get('notice') === 'saved' && <p role="status">Employee saved successfully.</p>}
+      {params.get('notice') === 'created' && (
+        <p role="status">
+          Employee registered successfully. Permanent employee number: {value.employeeNumber}.
+        </p>
+      )}
       <header className="employee-toolbar employee-profile-header">
         <div className="employee-identity">
           <span aria-hidden="true">
-            <Avatar name={employeeName(value)} />
+            <EmployeeAvatar id={value.employeeId} name={employeeName(value)} />
           </span>
           <div>
             <h2 className="text-lg font-semibold">{employeeName(value)}</h2>
@@ -48,14 +56,17 @@ export function EmployeeProfile() {
               <Badge intent={value.isActive ? 'success' : 'neutral'}>
                 Record {value.isActive ? 'active' : 'inactive'}
               </Badge>
-              <span className="employee-context">
-                Employment: {value.currentEmployment?.employmentStatus ?? 'No current employment'}
-              </span>
+              <span className="employee-context">Employment: {employmentContext(value)}</span>
             </div>
           </div>
         </div>
         {manage && (
           <div className="ui-record-actions">
+            <EmployeePhotoControl
+              id={value.employeeId}
+              name={employeeName(value)}
+              manage={!!manage}
+            />
             <LinkButton to="edit">
               <Pencil aria-hidden="true" className="size-4" />
               Edit profile
@@ -96,72 +107,7 @@ export function EmployeeProfile() {
           {
             value: 'personal',
             label: 'Personal & contacts',
-            content: (
-              <div className="space-y-6">
-                <Facts
-                  items={[
-                    ['Date of birth', value.dateOfBirth],
-                    ['Gender', value.gender],
-                    ['Marital status', value.maritalStatus],
-                    ['Nationality', value.nationality],
-                  ]}
-                />
-                <section className="employee-section">
-                  <h2 className="ui-section-title">Contact information</h2>
-                  <ContactSummary employee={value} />
-                </section>
-                <section className="employee-section">
-                  <h2 className="ui-section-title">Addresses</h2>
-                  {value.addresses.length ? (
-                    value.addresses.map((address) => (
-                      <div className="mb-4 text-sm" key={address.employeeAddressId}>
-                        <h3 className="ui-subsection-title">
-                          {address.addressType}
-                          {address.isPrimary ? ' · Primary' : ''}
-                        </h3>
-                        <p className="break-words">
-                          {[
-                            address.addressLine1,
-                            address.addressLine2,
-                            address.city,
-                            address.stateProvince,
-                            address.postalCode,
-                            address.country,
-                          ]
-                            .filter(Boolean)
-                            .join(', ')}
-                        </p>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-sm text-muted-foreground">No addresses recorded.</p>
-                  )}
-                </section>
-                <section className="employee-section">
-                  <h2 className="ui-section-title">Emergency contacts</h2>
-                  {value.emergencyContacts.length ? (
-                    value.emergencyContacts.map((contact) => (
-                      <div className="mb-4" key={contact.emergencyContactId}>
-                        <h3 className="ui-subsection-title mb-2">
-                          {contact.name}
-                          {contact.isPrimary ? ' · Primary' : ''}
-                        </h3>
-                        <Facts
-                          items={[
-                            ['Relationship', contact.relationship],
-                            ['Mobile', contact.mobile],
-                            ['Phone', contact.phone],
-                            ['Email', contact.email],
-                          ]}
-                        />
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-sm text-muted-foreground">No emergency contacts recorded.</p>
-                  )}
-                </section>
-              </div>
-            ),
+            content: <SupportingInformation employee={value} manage={!!manage} />,
           },
           {
             value: 'employment',
@@ -262,6 +208,7 @@ export function EmployeeProfile() {
             : []),
         ]}
       />
+      <PermanentDeletion id={value.employeeId} number={value.employeeNumber} />
     </div>
   );
 }

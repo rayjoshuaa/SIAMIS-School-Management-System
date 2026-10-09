@@ -229,7 +229,11 @@ describe('navigation contract', () => {
       'System Administration',
     ]);
     expect(schoolNavigation).toHaveLength(16);
-    expect(routes).toHaveLength(9);
+    expect(routes).toHaveLength(10);
+    expect(routes.find((route) => route.path === '/self/attendance')).toMatchObject({
+      capability: 'SelfService',
+      label: 'My Attendance',
+    });
     expect(routes.filter((r) => r.status === 'planned')).toHaveLength(1);
   });
   it('expands planned school destinations without making them business links', async () => {

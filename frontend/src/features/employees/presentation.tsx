@@ -4,6 +4,8 @@ import { Button } from '../../components/ui/button';
 import { SystemState } from '../../components/shared/workspace';
 import { ApiError } from '../../lib/api/errors';
 import type { Employee } from './contracts';
+import { employmentContext } from './contracts';
+import type { ReactNode } from 'react';
 
 export function QueryState({
   loading,
@@ -44,7 +46,8 @@ export function EmploymentSummary({ employee }: { employee: Employee }) {
         <Facts
           items={[
             ['Employee record', employee.isActive ? 'Active' : 'Inactive'],
-            ['Current employment status', current?.employmentStatus ?? 'No current employment'],
+            ['Employment context', employmentContext(employee)],
+            ['Employment record status', current?.employmentStatus],
             ['Department', current?.department],
             ['Designation', current?.designation],
             ['Employment type', current?.employmentType],
@@ -65,14 +68,23 @@ export function EmploymentSummary({ employee }: { employee: Employee }) {
     </div>
   );
 }
-export function ContactSummary({ employee }: { employee: Employee }) {
+export function ContactSummary({
+  employee,
+  actions,
+}: {
+  employee: Employee;
+  actions?: (contact: Employee['contacts'][number]) => ReactNode;
+}) {
   return employee.contacts.length ? (
     <div className="space-y-4">
       {employee.contacts.map((contact) => (
         <section key={contact.employeeContactId}>
-          <h3 className="ui-subsection-title mb-2">
-            {contact.isPrimary ? 'Primary contact' : 'Contact'}
-          </h3>
+          <div className="employee-toolbar mb-2">
+            <h3 className="ui-subsection-title">
+              {contact.isPrimary ? 'Primary contact' : 'Contact'}
+            </h3>
+            {actions?.(contact)}
+          </div>
           <Facts
             items={[
               ['Work email', contact.workEmail],

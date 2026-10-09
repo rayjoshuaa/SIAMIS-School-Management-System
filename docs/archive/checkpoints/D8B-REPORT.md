@@ -72,47 +72,46 @@ Mutation DTOs reject unmapped JSON properties, so callers cannot supply publicat
 
 All 19 actions are documented in Swagger with DTO response types and applicable 400/404/409 responses. Creates return 201; reads/updates/publication return 200. Creation Location headers point to the corresponding readable collection.
 
-| Method | Route |
-|---|---|
-| GET, POST | /api/work-calendars |
-| PUT | /api/work-calendars/{calendarId} |
-| GET, POST | /api/work-calendars/{calendarId}/weekly-intervals |
-| GET, POST | /api/work-calendars/{calendarId}/overrides |
-| GET, POST | /api/employees/{employeeId}/work-calendar-assignments |
-| GET | /api/employees/{employeeId}/work-calendar?date=YYYY-MM-DD |
-| GET, POST | /api/leave-policies (GET supports leaveTypeId) |
-| PUT | /api/leave-policies/{policyId} |
-| POST | /api/leave-policies/{policyId}/publish |
-| GET | /api/leave-policies/resolve?leaveTypeId=...&date=YYYY-MM-DD |
-| GET, POST | /api/employees/{employeeId}/leave-entitlements |
+| Method    | Route                                                                      |
+| --------- | -------------------------------------------------------------------------- |
+| GET, POST | /api/work-calendars                                                        |
+| PUT       | /api/work-calendars/{calendarId}                                           |
+| GET, POST | /api/work-calendars/{calendarId}/weekly-intervals                          |
+| GET, POST | /api/work-calendars/{calendarId}/overrides                                 |
+| GET, POST | /api/employees/{employeeId}/work-calendar-assignments                      |
+| GET       | /api/employees/{employeeId}/work-calendar?date=YYYY-MM-DD                  |
+| GET, POST | /api/leave-policies (GET supports leaveTypeId)                             |
+| PUT       | /api/leave-policies/{policyId}                                             |
+| POST      | /api/leave-policies/{policyId}/publish                                     |
+| GET       | /api/leave-policies/resolve?leaveTypeId=...&date=YYYY-MM-DD                |
+| GET, POST | /api/employees/{employeeId}/leave-entitlements                             |
 | GET, POST | /api/employees/{employeeId}/leave-entitlements/{entitlementId}/adjustments |
 
 ## Verification
 
-| Verification | Result |
-|---|---|
-| Restore | Succeeded; dependencies up to date |
-| Final Release build | Succeeded, 0 warnings / 0 errors |
-| Pure contract/regression runner | 440 passed: 40 new D8B + 400 existing |
-| Focused D8B live API/SQL | 127 passed, including D1, legacy leave, Swagger and cleanup |
-| D5A / D5C live regressions | 70 / 306 passed |
-| D6B / D6C / D6D live regressions | 76 / 48 / 38 passed |
-| D6E / D6E boundary regressions | 88 / 128 passed |
-| D7 operations / lifecycle / payslip | 83 passed |
-| Existing live payroll regressions total | 837 passed |
-| Primary assertion total | 1,404 passed |
-| EF pending-model-changes | None |
-| git diff --check | Passed, no whitespace errors |
-| Exact cleanup | All 65 tables; original rows and timestamps preserved |
-| Final Employee list / legacy leave GET | HTTP 200, totalCount = 1 / [] |
-| TEST-EMP-001 | Remains inactive; core data unchanged |
-| New foundation tables | All eight empty |
-| Existing master data | 172 rows; all 10 LeaveTypes unchanged |
+| Verification                            | Result                                                      |
+| --------------------------------------- | ----------------------------------------------------------- |
+| Restore                                 | Succeeded; dependencies up to date                          |
+| Final Release build                     | Succeeded, 0 warnings / 0 errors                            |
+| Pure contract/regression runner         | 440 passed: 40 new D8B + 400 existing                       |
+| Focused D8B live API/SQL                | 127 passed, including D1, legacy leave, Swagger and cleanup |
+| D5A / D5C live regressions              | 70 / 306 passed                                             |
+| D6B / D6C / D6D live regressions        | 76 / 48 / 38 passed                                         |
+| D6E / D6E boundary regressions          | 88 / 128 passed                                             |
+| D7 operations / lifecycle / payslip     | 83 passed                                                   |
+| Existing live payroll regressions total | 837 passed                                                  |
+| Primary assertion total                 | 1,404 passed                                                |
+| EF pending-model-changes                | None                                                        |
+| git diff --check                        | Passed, no whitespace errors                                |
+| Exact cleanup                           | All 65 tables; original rows and timestamps preserved       |
+| Final Employee list / legacy leave GET  | HTTP 200, totalCount = 1 / []                               |
+| TEST-EMP-001                            | Remains inactive; core data unchanged                       |
+| New foundation tables                   | All eight empty                                             |
+| Existing master data                    | 172 rows; all 10 LeaveTypes unchanged                       |
 
 Payroll regressions cover Supplement, ReplaceAssignment, conflicts, failed-new-generation rollback, failed-regeneration preservation, provenance/audit metadata, manual reconciliation, payroll/period lifecycles, D3 salary entitlement, D4 policy/profile behavior, SSO/PIT and payslip integrity. Payroll and Attendance implementation files are unchanged. The temporary verification API was stopped after testing.
 
 The initial unadapted payroll runner stopped at its obsolete 57-table precondition. The complete D8B-adapted run passed without changing monetary assertions or baseline comparisons. Initial sandbox restore access and test harness issues were resolved. No outstanding build/test/EF failures remain.
-
 
 D8B live tests verify default uniqueness, multiple intervals, minute validation, overlap rejection, all override categories, replacement semantics, explicit assignments, future/inclusive assignments, missing/ambiguous resolution, default changes, policy typed round-trips/publication/immutability/coverage/document references, entitlement uniqueness/zero/missing precision, signed adjustments/reasons/audit, four concurrent adjustments, SQL constraints, hourly snapshot persistence, Swagger and D1/legacy leave regressions. Fixtures are removed in finally blocks and complete application rows/timestamps compared exactly.
 
@@ -132,73 +131,73 @@ D8D implements sensitive evidence linking/delivery and approved sandwich semanti
 
 Independent exact comparison confirmed all original application rows/timestamps unchanged and all new tables empty. Only the D8B migration was added to history.
 
-| Table | Rows |
-|---|---|
-| AddressTypes | 3 |
-| Attendance | 0 |
-| AttendanceStatuses | 11 |
-| ContractTypes | 7 |
-| Countries | 13 |
-| Departments | 12 |
-| Designations | 20 |
-| DocumentTypes | 15 |
-| EmergencyContacts | 0 |
-| EmployeeAddresses | 0 |
-| EmployeeCompensations | 0 |
-| EmployeeContacts | 0 |
-| EmployeeContracts | 0 |
-| EmployeeDocuments | 0 |
-| EmployeeHistory | 0 |
-| EmployeeLeave | 0 |
-| EmployeeLeaveEntitlementAdjustments | 0 |
-| EmployeeLeaveEntitlements | 0 |
-| EmployeePayrollComponentAssignments | 0 |
-| EmployeePayrollLines | 0 |
-| EmployeePayrollPitResults | 0 |
-| EmployeePayrollSocialSecurityResults | 0 |
-| EmployeePayrollStatutoryResults | 0 |
-| EmployeePayrolls | 0 |
-| EmployeePayslips | 0 |
-| EmployeePerformance | 0 |
-| EmployeePitPaymentScheduleEntries | 0 |
-| EmployeePitPaymentScheduleSelections | 0 |
-| EmployeePitPaymentSchedules | 0 |
-| EmployeeStatutoryEnrollments | 0 |
-| EmployeeTaxClaims | 0 |
-| EmployeeTaxDeclarationSelections | 0 |
-| EmployeeTaxDeclarations | 0 |
-| EmployeeTaxOpeningBalances | 0 |
-| EmployeeTaxProfiles | 0 |
-| EmployeeWorkCalendarAssignments | 0 |
-| Employees | 1 |
-| EmploymentRecords | 1 |
-| EmploymentStatuses | 9 |
-| EmploymentTypes | 6 |
-| Genders | 4 |
-| HiringSources | 10 |
-| LeavePolicies | 0 |
-| LeaveTypes | 10 |
-| Locations | 5 |
-| MaritalStatuses | 6 |
-| Nationalities | 13 |
-| OrganizationProfiles | 0 |
-| PayTypes | 6 |
-| PayrollComponents | 17 |
-| PayrollPeriods | 0 |
-| PayrollRuleTargets | 0 |
-| PayrollRules | 0 |
-| PayrollSettings | 0 |
-| PerformanceRatings | 5 |
-| PitPolicyConfigurations | 0 |
-| PitTaxBrackets | 0 |
-| SocialSecurityPolicyConfigurations | 0 |
-| StatutoryPolicyVersions | 0 |
-| StatutorySchemes | 0 |
-| TeacherProfiles | 0 |
-| WorkCalendarDateOverrides | 0 |
-| WorkCalendarOverrideIntervals | 0 |
-| WorkCalendarWeeklyIntervals | 0 |
-| WorkCalendars | 0 |
+| Table                                | Rows |
+| ------------------------------------ | ---- |
+| AddressTypes                         | 3    |
+| Attendance                           | 0    |
+| AttendanceStatuses                   | 11   |
+| ContractTypes                        | 7    |
+| Countries                            | 13   |
+| Departments                          | 12   |
+| Designations                         | 20   |
+| DocumentTypes                        | 15   |
+| EmergencyContacts                    | 0    |
+| EmployeeAddresses                    | 0    |
+| EmployeeCompensations                | 0    |
+| EmployeeContacts                     | 0    |
+| EmployeeContracts                    | 0    |
+| EmployeeDocuments                    | 0    |
+| EmployeeHistory                      | 0    |
+| EmployeeLeave                        | 0    |
+| EmployeeLeaveEntitlementAdjustments  | 0    |
+| EmployeeLeaveEntitlements            | 0    |
+| EmployeePayrollComponentAssignments  | 0    |
+| EmployeePayrollLines                 | 0    |
+| EmployeePayrollPitResults            | 0    |
+| EmployeePayrollSocialSecurityResults | 0    |
+| EmployeePayrollStatutoryResults      | 0    |
+| EmployeePayrolls                     | 0    |
+| EmployeePayslips                     | 0    |
+| EmployeePerformance                  | 0    |
+| EmployeePitPaymentScheduleEntries    | 0    |
+| EmployeePitPaymentScheduleSelections | 0    |
+| EmployeePitPaymentSchedules          | 0    |
+| EmployeeStatutoryEnrollments         | 0    |
+| EmployeeTaxClaims                    | 0    |
+| EmployeeTaxDeclarationSelections     | 0    |
+| EmployeeTaxDeclarations              | 0    |
+| EmployeeTaxOpeningBalances           | 0    |
+| EmployeeTaxProfiles                  | 0    |
+| EmployeeWorkCalendarAssignments      | 0    |
+| Employees                            | 1    |
+| EmploymentRecords                    | 1    |
+| EmploymentStatuses                   | 9    |
+| EmploymentTypes                      | 6    |
+| Genders                              | 4    |
+| HiringSources                        | 10   |
+| LeavePolicies                        | 0    |
+| LeaveTypes                           | 10   |
+| Locations                            | 5    |
+| MaritalStatuses                      | 6    |
+| Nationalities                        | 13   |
+| OrganizationProfiles                 | 0    |
+| PayTypes                             | 6    |
+| PayrollComponents                    | 17   |
+| PayrollPeriods                       | 0    |
+| PayrollRuleTargets                   | 0    |
+| PayrollRules                         | 0    |
+| PayrollSettings                      | 0    |
+| PerformanceRatings                   | 5    |
+| PitPolicyConfigurations              | 0    |
+| PitTaxBrackets                       | 0    |
+| SocialSecurityPolicyConfigurations   | 0    |
+| StatutoryPolicyVersions              | 0    |
+| StatutorySchemes                     | 0    |
+| TeacherProfiles                      | 0    |
+| WorkCalendarDateOverrides            | 0    |
+| WorkCalendarOverrideIntervals        | 0    |
+| WorkCalendarWeeklyIntervals          | 0    |
+| WorkCalendars                        | 0    |
 
 ## Running verification again
 
@@ -216,21 +215,21 @@ Live scripts require the Development API on http://localhost:5155 and local Wind
 
 ## Complete changed-file list
 
-- [src/SIAMIS.Api/Controllers/LeaveFoundationController.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Api/Controllers/LeaveFoundationController.cs>)
-- [src/SIAMIS.Api/Program.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Api/Program.cs>)
-- [src/SIAMIS.Application/Leave/LeaveFoundationContracts.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Application/Leave/LeaveFoundationContracts.cs>)
-- [src/SIAMIS.Domain/Entities/Leave/LeaveFoundation.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Domain/Entities/Leave/LeaveFoundation.cs>)
-- [src/SIAMIS.Domain/Entities/Employees/EmployeeLeave.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Domain/Entities/Employees/EmployeeLeave.cs>)
-- [src/SIAMIS.Infrastructure/Configurations/LeaveFoundationConfiguration.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Infrastructure/Configurations/LeaveFoundationConfiguration.cs>)
-- [src/SIAMIS.Infrastructure/Configurations/EmployeeConfigurations.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Infrastructure/Configurations/EmployeeConfigurations.cs>)
-- [src/SIAMIS.Infrastructure/Data/SIAMISDbContext.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Infrastructure/Data/SIAMISDbContext.cs>)
-- [src/SIAMIS.Infrastructure/Services/LeaveFoundationService.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Infrastructure/Services/LeaveFoundationService.cs>)
-- [src/SIAMIS.Infrastructure/Services/LeavePolicyEntitlementService.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Infrastructure/Services/LeavePolicyEntitlementService.cs>)
-- [src/SIAMIS.Infrastructure/Migrations/20261003091135_AddLeaveCalendarPolicyEntitlementFoundation.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Infrastructure/Migrations/20261003091135_AddLeaveCalendarPolicyEntitlementFoundation.cs>)
-- [src/SIAMIS.Infrastructure/Migrations/20261003091135_AddLeaveCalendarPolicyEntitlementFoundation.Designer.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Infrastructure/Migrations/20261003091135_AddLeaveCalendarPolicyEntitlementFoundation.Designer.cs>)
-- [src/SIAMIS.Infrastructure/Migrations/SIAMISDbContextModelSnapshot.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Infrastructure/Migrations/SIAMISDbContextModelSnapshot.cs>)
-- [tests/SIAMIS.Payroll.RegressionTests/D8BFoundationContractTests.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/tests/SIAMIS.Payroll.RegressionTests/D8BFoundationContractTests.cs>)
-- [tests/SIAMIS.Payroll.RegressionTests/Program.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/tests/SIAMIS.Payroll.RegressionTests/Program.cs>)
-- [tests/verify_d8b_live.py](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/tests/verify_d8b_live.py>)
-- [tests/verify_d8b_regressions.py](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/tests/verify_d8b_regressions.py>)
+- [src/SIAMIS.Api/Controllers/LeaveFoundationController.cs](../../../src/SIAMIS.Api/Controllers/LeaveFoundationController.cs)
+- [src/SIAMIS.Api/Program.cs](../../../src/SIAMIS.Api/Program.cs)
+- [src/SIAMIS.Application/Leave/LeaveFoundationContracts.cs](../../../src/SIAMIS.Application/Leave/LeaveFoundationContracts.cs)
+- [src/SIAMIS.Domain/Entities/Leave/LeaveFoundation.cs](../../../src/SIAMIS.Domain/Entities/Leave/LeaveFoundation.cs)
+- [src/SIAMIS.Domain/Entities/Employees/EmployeeLeave.cs](../../../src/SIAMIS.Domain/Entities/Employees/EmployeeLeave.cs)
+- [src/SIAMIS.Infrastructure/Configurations/LeaveFoundationConfiguration.cs](../../../src/SIAMIS.Infrastructure/Configurations/LeaveFoundationConfiguration.cs)
+- [src/SIAMIS.Infrastructure/Configurations/EmployeeConfigurations.cs](../../../src/SIAMIS.Infrastructure/Configurations/EmployeeConfigurations.cs)
+- [src/SIAMIS.Infrastructure/Data/SIAMISDbContext.cs](../../../src/SIAMIS.Infrastructure/Data/SIAMISDbContext.cs)
+- [src/SIAMIS.Infrastructure/Services/LeaveFoundationService.cs](../../../src/SIAMIS.Infrastructure/Services/LeaveFoundationService.cs)
+- [src/SIAMIS.Infrastructure/Services/LeavePolicyEntitlementService.cs](../../../src/SIAMIS.Infrastructure/Services/LeavePolicyEntitlementService.cs)
+- [src/SIAMIS.Infrastructure/Migrations/20261003091135_AddLeaveCalendarPolicyEntitlementFoundation.cs](../../../src/SIAMIS.Infrastructure/Migrations/20261003091135_AddLeaveCalendarPolicyEntitlementFoundation.cs)
+- [src/SIAMIS.Infrastructure/Migrations/20261003091135_AddLeaveCalendarPolicyEntitlementFoundation.Designer.cs](../../../src/SIAMIS.Infrastructure/Migrations/20261003091135_AddLeaveCalendarPolicyEntitlementFoundation.Designer.cs)
+- [src/SIAMIS.Infrastructure/Migrations/SIAMISDbContextModelSnapshot.cs](../../../src/SIAMIS.Infrastructure/Migrations/SIAMISDbContextModelSnapshot.cs)
+- [tests/SIAMIS.Payroll.RegressionTests/D8BFoundationContractTests.cs](../../../tests/SIAMIS.Payroll.RegressionTests/D8BFoundationContractTests.cs)
+- [tests/SIAMIS.Payroll.RegressionTests/Program.cs](../../../tests/SIAMIS.Payroll.RegressionTests/Program.cs)
+- [tests/verify_d8b_live.py](../../../tests/verify_d8b_live.py)
+- [tests/verify_d8b_regressions.py](../../../tests/verify_d8b_regressions.py)
 - [D8B-REPORT.md](D8B-REPORT.md)

@@ -13,6 +13,8 @@ namespace SIAMIS.Infrastructure.Data;
 
 public sealed class SIAMISDbContext(DbContextOptions<SIAMISDbContext> options, ICurrentActor? actor = null) : IdentityDbContext<ApplicationUser, IdentityRole<Guid>, Guid>(options)
 {
+    public DbSet<EmployeeNumberReservation> EmployeeNumberReservations => Set<EmployeeNumberReservation>();
+    public DbSet<EmployeeRegistrationReceipt> EmployeeRegistrationReceipts => Set<EmployeeRegistrationReceipt>();
     public DbSet<SIAMIS.Domain.Entities.Leave.WorkCalendar> WorkCalendars => Set<SIAMIS.Domain.Entities.Leave.WorkCalendar>();
     public DbSet<SIAMIS.Domain.Entities.Leave.EmployeeLeaveEntitlement> EmployeeLeaveEntitlements => Set<SIAMIS.Domain.Entities.Leave.EmployeeLeaveEntitlement>();
     public DbSet<SIAMIS.Domain.Entities.OrganizationProfile> OrganizationProfiles => Set<SIAMIS.Domain.Entities.OrganizationProfile>();
@@ -80,6 +82,7 @@ public sealed class SIAMISDbContext(DbContextOptions<SIAMISDbContext> options, I
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+        modelBuilder.HasSequence<long>("EmployeeNumberSequence", "dbo").StartsAt(100000).IncrementsBy(1).HasMin(100000).HasMax(long.MaxValue - 1).IsCyclic(false);
         SecurityConfiguration.Configure(modelBuilder);
         LeaveFoundationConfiguration.Configure(modelBuilder);
 
@@ -132,6 +135,11 @@ public sealed class SIAMISDbContext(DbContextOptions<SIAMISDbContext> options, I
 
     private void UpdateTimestamps()
     {
+        foreach (var entry in ChangeTracker.Entries<EmployeePhotoRevision>())
+            if (entry.State == EntityState.Deleted || entry.State == EntityState.Modified &&
+                (entry.Properties.Any(p => p.IsModified && p.Metadata.Name != nameof(EmployeePhotoRevision.IsCurrent)) ||
+                 !entry.Property(x => x.IsCurrent).OriginalValue || entry.Entity.IsCurrent))
+                throw new InvalidOperationException("Photo revisions are immutable; only retiring the current head is permitted.");
         AttributeActor();
         foreach (var entry in ChangeTracker.Entries<EmployeeClockSession>())
         {
@@ -185,7 +193,18 @@ public sealed class SIAMISDbContext(DbContextOptions<SIAMISDbContext> options, I
                 }
             }
             var key=string.Join("/",entry.Metadata.FindPrimaryKey()!.Properties.Select(p=>entry.Property(p.Name).CurrentValue));
-            var operation=$"{actor.Operation}:{entry.State}";
+            var ownership = entry.Metadata.FindProperty("EmployeeId");
+            var ownerId = ownership is null ? null : entry.Property("EmployeeId").CurrentValue as Guid?;
+            if (entry.Entity is PayrollRuleTarget target)
+            {
+                if (target.TargetType == "Employee") ownerId = target.TargetId;
+                if (entry.State == EntityState.Modified && entry.Property("TargetType").OriginalValue as string == "Employee"
+                    && entry.Property("TargetId").OriginalValue is Guid previousOwner && previousOwner != ownerId)
+                    Set<SecurityAuditEvent>().Add(new() { ActorUserId = userId, ResourceType = nameof(PayrollRuleTarget), ResourceId = key,
+                        Operation = $"EmployeeId={previousOwner};ProtectedReferenceMoved" });
+            }
+            // Permanent deletion must be able to find retained audit evidence even after a child is removed.
+            var operation=$"{(ownerId.HasValue ? $"EmployeeId={ownerId};" : "")}{actor.Operation}:{entry.State}";
             Set<SecurityAuditEvent>().Add(new(){ActorUserId=userId,Operation=operation.Length>200?operation[..200]:operation,ResourceType=entry.Metadata.ClrType.Name,ResourceId=key.Length>100?key[..100]:key});
         }
     }

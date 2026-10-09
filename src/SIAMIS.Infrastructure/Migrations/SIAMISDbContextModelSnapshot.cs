@@ -22,6 +22,11 @@ namespace SIAMIS.Infrastructure.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.HasSequence("EmployeeNumberSequence", "dbo")
+                .StartsAt(100000L)
+                .HasMin(100000L)
+                .HasMax(9223372036854775806L);
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole<System.Guid>", b =>
                 {
                     b.Property<Guid>("Id")
@@ -532,7 +537,12 @@ namespace SIAMIS.Infrastructure.Migrations
 
                     b.HasIndex("LastName", "FirstName");
 
-                    b.ToTable("Employees", (string)null);
+                    b.ToTable("Employees", null, t =>
+                        {
+                            t.HasTrigger("TR_Employees_PermanentIdentity");
+                        });
+
+                    b.HasAnnotation("SqlServer:UseSqlOutputClause", false);
                 });
 
             modelBuilder.Entity("SIAMIS.Domain.Entities.Employees.EmployeeAddress", b =>
@@ -1102,6 +1112,39 @@ namespace SIAMIS.Infrastructure.Migrations
                         });
                 });
 
+            modelBuilder.Entity("SIAMIS.Domain.Entities.Employees.EmployeeNumberReservation", b =>
+                {
+                    b.Property<string>("EmployeeNumber")
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<DateTime?>("AssignedAtUtc")
+                        .HasColumnType("datetime2(7)");
+
+                    b.Property<Guid>("EmployeeId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("ReservedAtUtc")
+                        .HasColumnType("datetime2(7)");
+
+                    b.Property<DateTime?>("RetiredAtUtc")
+                        .HasColumnType("datetime2(7)");
+
+                    b.HasKey("EmployeeNumber");
+
+                    b.HasIndex("EmployeeId")
+                        .IsUnique();
+
+                    b.ToTable("EmployeeNumberReservations", null, t =>
+                        {
+                            t.HasTrigger("TR_EmployeeNumberReservations_Permanent");
+
+                            t.HasCheckConstraint("CK_EmployeeNumberReservations_State", "([AssignedAtUtc] IS NULL AND [RetiredAtUtc] IS NULL) OR ([AssignedAtUtc] IS NOT NULL AND ([RetiredAtUtc] IS NULL OR [RetiredAtUtc] >= [AssignedAtUtc]))");
+                        });
+
+                    b.HasAnnotation("SqlServer:UseSqlOutputClause", false);
+                });
+
             modelBuilder.Entity("SIAMIS.Domain.Entities.Employees.EmployeePerformance", b =>
                 {
                     b.Property<Guid>("PerformanceRecordId")
@@ -1152,6 +1195,125 @@ namespace SIAMIS.Infrastructure.Migrations
                         .HasDatabaseName("IX_EmployeePerformance_EmployeeId_ReviewDate");
 
                     b.ToTable("EmployeePerformance", (string)null);
+                });
+
+            modelBuilder.Entity("SIAMIS.Domain.Entities.Employees.EmployeePhotoRevision", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ActorUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ContentType")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2(7)");
+
+                    b.Property<Guid>("EmployeeId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int?>("Height")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsCurrent")
+                        .IsConcurrencyToken()
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Operation")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<string>("Sha256")
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<long?>("SizeBytes")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("StorageKey")
+                        .HasMaxLength(37)
+                        .HasColumnType("nvarchar(37)");
+
+                    b.Property<int?>("Width")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EmployeeId")
+                        .IsUnique()
+                        .HasFilter("[IsCurrent] = 1");
+
+                    b.HasIndex("EmployeeId", "CreatedAtUtc");
+
+                    b.ToTable("EmployeePhotoRevisions", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_EmployeePhoto_Binary", "([Operation]='Remove' AND [StorageKey] IS NULL AND [Sha256] IS NULL AND [ContentType] IS NULL AND [SizeBytes] IS NULL AND [Width] IS NULL AND [Height] IS NULL) OR ([Operation] IN ('Upload','Replace') AND [StorageKey] IS NOT NULL AND [Sha256] IS NOT NULL AND [ContentType] IS NOT NULL AND [SizeBytes] IS NOT NULL AND [Width] IS NOT NULL AND [Height] IS NOT NULL AND [ContentType] IN ('image/jpeg','image/png') AND [SizeBytes] > 0 AND [SizeBytes] <= 5242880 AND [Width] BETWEEN 1 AND 4096 AND [Height] BETWEEN 1 AND 4096)");
+                        });
+                });
+
+            modelBuilder.Entity("SIAMIS.Domain.Entities.Employees.EmployeeRegistrationReceipt", b =>
+                {
+                    b.Property<Guid>("ActorUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Operation")
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)")
+                        .UseCollation("Latin1_General_100_BIN2");
+
+                    b.Property<Guid>("RequestKey")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CompletedAtUtc")
+                        .HasColumnType("datetime2(7)");
+
+                    b.Property<byte[]>("PayloadHash")
+                        .IsRequired()
+                        .HasColumnType("varbinary(32)");
+
+                    b.Property<DateTime>("ReplayUntilUtc")
+                        .HasColumnType("datetime2(7)");
+
+                    b.Property<string>("ResponseJson")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("ResultEmployeeId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ResultEmployeeNumber")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.HasKey("ActorUserId", "Operation", "RequestKey");
+
+                    b.HasIndex("ReplayUntilUtc")
+                        .HasFilter("[ResponseJson] IS NOT NULL");
+
+                    b.HasIndex("ResultEmployeeId")
+                        .IsUnique();
+
+                    b.ToTable("EmployeeRegistrationReceipts", null, t =>
+                        {
+                            t.HasTrigger("TR_EmployeeRegistrationReceipts_Permanent");
+
+                            t.HasCheckConstraint("CK_EmployeeRegistrationReceipt_Hash", "DATALENGTH([PayloadHash]) = 32");
+
+                            t.HasCheckConstraint("CK_EmployeeRegistrationReceipt_Identity", "[ActorUserId] <> '00000000-0000-0000-0000-000000000000' AND [RequestKey] <> '00000000-0000-0000-0000-000000000000' AND [ResultEmployeeId] <> '00000000-0000-0000-0000-000000000000'");
+
+                            t.HasCheckConstraint("CK_EmployeeRegistrationReceipt_Operation", "[Operation] = N'Employee.Register.v1'");
+
+                            t.HasCheckConstraint("CK_EmployeeRegistrationReceipt_ReplayWindow", "[ReplayUntilUtc] > [CompletedAtUtc]");
+
+                            t.HasCheckConstraint("CK_EmployeeRegistrationReceipt_Response", "[ResponseJson] IS NULL OR ISJSON([ResponseJson]) = 1");
+                        });
+
+                    b.HasAnnotation("SqlServer:UseSqlOutputClause", false);
                 });
 
             modelBuilder.Entity("SIAMIS.Domain.Entities.Employees.EmploymentRecord", b =>
@@ -6194,6 +6356,15 @@ namespace SIAMIS.Infrastructure.Migrations
                     b.Navigation("PerformanceRating");
 
                     b.Navigation("ReviewerEmployee");
+                });
+
+            modelBuilder.Entity("SIAMIS.Domain.Entities.Employees.EmployeePhotoRevision", b =>
+                {
+                    b.HasOne("SIAMIS.Domain.Entities.Employees.Employee", null)
+                        .WithMany()
+                        .HasForeignKey("EmployeeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("SIAMIS.Domain.Entities.Employees.EmploymentRecord", b =>

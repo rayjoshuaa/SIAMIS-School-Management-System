@@ -1,7 +1,5 @@
 # School Management
 
-**Status: Planned — next major backend module.**
+School Management is planned after the HR phase in the [official roadmap](../../ROADMAP.md). The global shell/navigation foundation supports future modules; placeholders and route metadata do not imply implemented school, student, admissions or academic workflows.
 
-SIAMIS is intended to support school operations through shared APIs, with future teacher, parent and mobile clients. Detailed module contracts and frontend implementation require separately approved checkpoints.
-
-The existing [HR Backend V1](../hr/HR-V1-FREEZE.md) is frozen. No School Management architecture or business implementation is introduced by this placeholder.
+Follow the shared [design authority](../../frontend/DESIGN-SYSTEM.md), capability model and existing architecture when this module receives approval. No school functionality or data was added during v0.5.1 documentation reconciliation.

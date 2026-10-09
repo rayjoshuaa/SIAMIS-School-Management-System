@@ -1,5 +1,5 @@
 import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest';
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createMemoryRouter, RouterProvider, MemoryRouter } from 'react-router-dom';
 import { ShellNavigation } from '../components/layout/shell-navigation';
@@ -17,6 +17,7 @@ import { EmployeeProfile } from '../features/employees/profile';
 import { EmployeeForm } from '../features/employees/form';
 import { activeRoute, currentModule } from '../app/router/navigation';
 import { resolveMasterId } from '../features/employees/data';
+import { employmentContext } from '../features/employees/contracts';
 
 const id = '11111111-1111-4111-8111-111111111111';
 const record = {
@@ -73,15 +74,22 @@ const masters: Record<string, unknown[]> = {
 };
 let capabilities: string[];
 let failures: Record<string, number>;
+let failureCodes: Record<string, string>;
 let empty: boolean;
 let paused: boolean;
 let expired: boolean;
 let accountDecision: boolean;
 let history: (typeof record)[];
-let calls: { path: string; method: string; body: Record<string, unknown> | null }[];
+let calls: {
+  path: string;
+  method: string;
+  body: Record<string, unknown> | null;
+  key: string | null;
+}[];
 beforeEach(() => {
   capabilities = ['Employee.Read', 'Employee.Manage'];
   failures = {};
+  failureCodes = {};
   empty = false;
   paused = false;
   expired = false;
@@ -96,6 +104,7 @@ beforeEach(() => {
       calls.push({
         path,
         method,
+        key: new Headers(init?.headers).get('Idempotency-Key'),
         body: typeof init?.body === 'string' ? JSON.parse(init.body) : null,
       });
       if (paused && path.startsWith('/api/employees?')) return new Promise<Response>(() => {});
@@ -141,6 +150,7 @@ beforeEach(() => {
           };
         else body = employee;
       }
+      if (failureCodes[path]) body = { code: failureCodes[path] };
       return new Response(JSON.stringify(body), {
         status: status === 200 && method === 'POST' ? 201 : status,
         headers: { 'Content-Type': 'application/json' },
@@ -193,6 +203,7 @@ describe('V3.5 employee workspace presentation', () => {
       '2026-01-01',
     );
     expect(screen.queryByRole('link', { name: 'Edit profile' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Manage photo' })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'End employment' })).not.toBeInTheDocument();
     overview.focus();
     await userEvent.keyboard('{ArrowRight}');
@@ -203,6 +214,31 @@ describe('V3.5 employee workspace presentation', () => {
     expect(await screen.findByText('No contact information recorded.')).toBeVisible();
     expect(calls.some((call) => call.path.startsWith('/api/admin/'))).toBe(false);
   });
+});
+it('uses one shared compact sizing contract for all four profile actions', async () => {
+  setup(`/hr/employees/${id}`);
+  const photo = await screen.findByRole('button', { name: 'Manage photo' });
+  const actions = [
+    photo,
+    screen.getByRole('link', { name: 'Edit profile' }),
+    screen.getByRole('link', { name: 'Record employment change' }),
+    screen.getByRole('link', { name: 'End employment' }),
+  ];
+  for (const action of actions) {
+    expect(action).toHaveAttribute('data-density', 'compact');
+    expect(action).toHaveClass('ui-button');
+    expect(action).not.toHaveAttribute('style');
+  }
+  photo.focus();
+  await userEvent.keyboard('{Tab}');
+  expect(actions[1]).toHaveFocus();
+  await userEvent.keyboard('{Tab}');
+  expect(actions[2]).toHaveFocus();
+  await userEvent.keyboard('{Tab}');
+  expect(actions[3]).toHaveFocus();
+  expect(actions[1]).toHaveAttribute('href', `/hr/employees/${id}/edit`);
+  expect(actions[2]).toHaveAttribute('href', `/hr/employees/${id}/employment-change`);
+  expect(actions[3]).toHaveAttribute('href', `/hr/employees/${id}/end-employment`);
 });
 afterEach(() => vi.unstubAllGlobals());
 function setup(path = '/hr/employees') {
@@ -259,19 +295,50 @@ function setup(path = '/hr/employees') {
 async function fillCreate() {
   const user = userEvent.setup();
   await screen.findByRole('form', { name: 'Create employee' });
-  await user.type(screen.getByLabelText(/^Employee number/), 'FIXTURE-NEW');
   await user.type(screen.getByLabelText(/^First name/), 'New');
   await user.type(screen.getByLabelText(/^Last name/), 'Fixture');
   for (const [label, value] of [
     ['Department', 'dept'],
     ['Designation', 'designation'],
     ['Employment type', 'type'],
-    ['Employment status', 'status'],
   ])
     await user.selectOptions(screen.getByLabelText(new RegExp(`^${label}`)), value);
   await user.type(screen.getByLabelText(/^Hire date/), '2026-01-01');
   return user;
 }
+
+describe('F5.1B registration', () => {
+  it('distinguishes scheduled employment from current work using the effective start date', () => {
+    const future = new Date();
+    future.setUTCDate(future.getUTCDate() + 30);
+    const futureDate = future.toISOString().slice(0, 10);
+    expect(
+      employmentContext({ ...employee, currentEmployment: { ...record, hireDate: futureDate } }),
+    ).toBe(`Scheduled to start ${futureDate}`);
+    expect(
+      employmentContext({ ...employee, currentEmployment: { ...record, startDate: futureDate } }),
+    ).toBe(`Scheduled to start ${futureDate}`);
+    expect(employmentContext(employee)).toBe('Active');
+  });
+  it('saves optional initial contact in the same registration request without provisioning an account', async () => {
+    setup('/hr/employees/new');
+    await screen.findByRole('form', { name: 'Create employee' });
+    expect(screen.queryByLabelText(/^Employment status/)).not.toBeInTheDocument();
+    const user = await fillCreate();
+    await user.type(screen.getByLabelText('Initial work email'), 'synthetic@example.invalid');
+    await user.type(screen.getByLabelText('Initial mobile'), '0100000000');
+    await user.click(screen.getByRole('button', { name: 'Save employee' }));
+    expect(await screen.findByText(/Employee registered successfully/)).toBeVisible();
+    const post = calls.find((call) => call.path === '/api/employees' && call.method === 'POST');
+    expect(post?.body?.contacts).toEqual([
+      { workEmail: 'synthetic@example.invalid', mobile: '0100000000', isPrimary: true },
+    ]);
+    expect(post?.body).not.toHaveProperty('employeeNumber');
+    expect(post?.body).not.toHaveProperty('employmentStatusId');
+    expect(post?.body).not.toHaveProperty('initialWorkEmail');
+    expect(calls.some((call) => call.path.startsWith('/api/admin/users'))).toBe(false);
+  });
+});
 describe('F5 employee workspace', () => {
   it('loads real-shaped directory data and server pagination', async () => {
     setup();
@@ -387,11 +454,17 @@ describe('F5 employee workspace', () => {
     const router = setup('/hr/employees/new');
     const user = await fillCreate();
     await user.click(screen.getByRole('button', { name: 'Save employee' }));
-    expect(await screen.findByText('Employee created successfully.')).toBeInTheDocument();
-    expect(router.state.location.pathname).toBe('/hr/employees');
+    expect(
+      await screen.findByText(
+        'Employee registered successfully. Permanent employee number: FIXTURE-001.',
+      ),
+    ).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe(`/hr/employees/${id}`);
     const writes = calls.filter((call) => call.path === '/api/employees' && call.method === 'POST');
     expect(writes).toHaveLength(1);
     expect(writes[0].body).toMatchObject({ departmentId: 'dept', firstName: 'New' });
+    expect(writes[0].body).not.toHaveProperty('employeeNumber');
+    expect(screen.queryByLabelText(/^Employee number/)).not.toBeInTheDocument();
     expect(calls.some((call) => call.path === '/api/auth/csrf')).toBe(true);
     expect(calls.some((call) => /security|accounts/.test(call.path))).toBe(false);
   });
@@ -410,9 +483,105 @@ describe('F5 employee workspace', () => {
     vi.mocked(fetch).mockRejectedValueOnce(new TypeError('offline'));
     await user.click(screen.getByRole('button', { name: 'Save employee' }));
     expect(
-      await screen.findByText('Unable to reach the service. Check your connection.'),
+      await screen.findByText(/The registration outcome is not confirmed/),
     ).toBeInTheDocument();
     expect(screen.getByRole('form')).toBeInTheDocument();
+  });
+  it('retries a lost response with the same key and frozen payload, then gives a new registration a new key', async () => {
+    const router = setup('/hr/employees/new');
+    const user = await fillCreate();
+    const normal = vi.mocked(fetch).getMockImplementation()!;
+    let loseResponse = true;
+    vi.mocked(fetch).mockImplementation(async (input, init) => {
+      const response = await normal(input, init);
+      if (String(input) === '/api/employees' && init?.method === 'POST' && loseResponse) {
+        loseResponse = false;
+        throw new TypeError('response lost');
+      }
+      return response;
+    });
+    await user.click(screen.getByRole('button', { name: 'Save employee' }));
+    await screen.findByText(/The registration outcome is not confirmed/);
+    expect(screen.getByLabelText(/^First name/)).toBeDisabled();
+    await act(async () => {
+      fireEvent(window, new Event('focus'));
+    });
+    expect(screen.getByLabelText(/^First name/)).toHaveValue('New');
+    await user.click(screen.getByRole('button', { name: 'Retry original submission' }));
+    await screen.findByText(/Employee registered successfully/);
+    const firstAttempts = calls.filter(
+      (call) => call.path === '/api/employees' && call.method === 'POST',
+    );
+    expect(firstAttempts).toHaveLength(2);
+    expect(firstAttempts[0].key).toMatch(/^[a-f0-9-]{36}$/);
+    expect(firstAttempts[1].key).toBe(firstAttempts[0].key);
+    expect(firstAttempts[1].body).toEqual(firstAttempts[0].body);
+    await router.navigate('/hr/employees/new');
+    await fillCreate();
+    await user.click(screen.getByRole('button', { name: 'Save employee' }));
+    await screen.findByText(/Employee registered successfully/);
+    const finalAttempts = calls.filter(
+      (call) => call.path === '/api/employees' && call.method === 'POST',
+    );
+    expect(finalAttempts[2].key).not.toBe(firstAttempts[0].key);
+  });
+  it('keeps one pending request on a double click', async () => {
+    setup('/hr/employees/new');
+    const user = await fillCreate();
+    const normal = vi.mocked(fetch).getMockImplementation()!;
+    let complete!: () => void;
+    const pending = new Promise<void>((resolve) => {
+      complete = resolve;
+    });
+    let submissions = 0;
+    vi.mocked(fetch).mockImplementation(async (input, init) => {
+      if (String(input) === '/api/employees' && init?.method === 'POST') {
+        submissions++;
+        await pending;
+      }
+      return normal(input, init);
+    });
+    await user.dblClick(screen.getByRole('button', { name: 'Save employee' }));
+    await waitFor(() => expect(submissions).toBe(1));
+    expect(screen.getByLabelText(/^First name/)).toBeDisabled();
+    complete();
+    await screen.findByText(/Employee registered successfully/);
+    expect(submissions).toBe(1);
+  });
+  it.each([
+    [409, 'idempotency_conflict', /used with different details/],
+    [410, 'registration_key_expired', /key has expired/],
+  ])(
+    'announces terminal registration error %s without silently starting again',
+    async (status, code, message) => {
+      failures['/api/employees'] = status as number;
+      failureCodes['/api/employees'] = code as string;
+      setup('/hr/employees/new');
+      const user = await fillCreate();
+      await user.click(screen.getByRole('button', { name: 'Save employee' }));
+      expect(await screen.findByText(message as RegExp)).toBeVisible();
+      expect(screen.getByRole('button', { name: 'Save employee' })).toBeDisabled();
+      expect(screen.queryByRole('button', { name: 'Reload record' })).not.toBeInTheDocument();
+      expect(
+        calls.filter((call) => call.path === '/api/employees' && call.method === 'POST'),
+      ).toHaveLength(1);
+    },
+  );
+  it('retains the key for an in-progress response', async () => {
+    failures['/api/employees'] = 409;
+    failureCodes['/api/employees'] = 'registration_in_progress';
+    setup('/hr/employees/new');
+    const user = await fillCreate();
+    await user.click(screen.getByRole('button', { name: 'Save employee' }));
+    await screen.findByText(/The registration outcome is not confirmed/);
+    delete failures['/api/employees'];
+    delete failureCodes['/api/employees'];
+    await user.click(screen.getByRole('button', { name: 'Retry original submission' }));
+    await screen.findByText(/Employee registered successfully/);
+    const attempts = calls.filter(
+      (call) => call.path === '/api/employees' && call.method === 'POST',
+    );
+    expect(attempts[0].key).toBe(attempts[1].key);
   });
   it('preserves demographic IDs, photo, employment and omitted children during profile PUT', async () => {
     setup(`/hr/employees/${id}/edit`);
@@ -425,12 +594,13 @@ describe('F5 employee workspace', () => {
     expect(body).toMatchObject({
       firstName: 'Corrected',
       genderId: 'gender',
-      profilePhoto: 'existing-photo',
       hireDate: record.hireDate,
       departmentId: record.departmentId,
     });
     expect(body).not.toHaveProperty('contacts');
     expect(body).not.toHaveProperty('teacherProfile');
+    expect(body).not.toHaveProperty('employeeNumber');
+    expect(body).not.toHaveProperty('profilePhoto');
   });
   it('uses the latest ended record for inactive profile corrections', async () => {
     history = [
@@ -554,15 +724,18 @@ describe('F5 employee workspace', () => {
       calls.filter((call) => call.path === '/api/employees' && call.method === 'POST'),
     ).toHaveLength(1);
     release();
-    expect(await screen.findByText('Employee created successfully.')).toBeInTheDocument();
+    expect(await screen.findByText(/Employee registered/)).toBeInTheDocument();
   });
   it('shows a conflict without assuming success or clearing entered data', async () => {
     failures['/api/employees'] = 409;
     setup('/hr/employees/new');
     const user = await fillCreate();
     await user.click(screen.getByRole('button', { name: 'Save employee' }));
-    expect(await screen.findByRole('button', { name: 'Reload record' })).toBeInTheDocument();
-    expect(screen.getByLabelText(/^Employee number/)).toHaveValue('FIXTURE-NEW');
+    expect(
+      await screen.findByRole('button', { name: 'Retry original submission' }),
+    ).toBeInTheDocument();
+    expect(screen.queryByLabelText(/^Employee number/)).not.toBeInTheDocument();
+    expect(screen.getByLabelText(/^First name/)).toHaveValue('New');
     expect(screen.queryByText('Employee created successfully.')).not.toBeInTheDocument();
   });
   it('rehire uses the dedicated endpoint without an account or status PATCH', async () => {
@@ -646,5 +819,43 @@ describe('F5 employee workspace', () => {
     expect(await screen.findByText('Employee information unavailable')).toBeVisible();
     expect(screen.getByRole('heading', { name: 'Fixture Employee' })).toBeVisible();
     expect(screen.queryByRole('link', { name: 'Open User Accounts' })).not.toBeInTheDocument();
+  });
+});
+describe('Stage 1 same-session page-state preservation', () => {
+  it('preserves unsaved registration input during window-focus revalidation', async () => {
+    setup('/hr/employees/new');
+    const user = await fillCreate();
+    const first = screen.getByLabelText(/^First name/);
+    await user.type(first, ' unsaved');
+    await act(async () => {
+      fireEvent(window, new Event('focus'));
+    });
+    expect(screen.getByLabelText(/^First name/)).toBe(first);
+    expect(first).toHaveValue('New unsaved');
+    expect(calls.filter((call) => call.path === '/api/auth/me')).toHaveLength(2);
+    expect(calls.some((call) => call.method === 'POST')).toBe(false);
+  });
+  it('preserves the Employee 360 profile editor draft during focus revalidation', async () => {
+    setup(`/hr/employees/${id}/edit`);
+    const first = await screen.findByLabelText(/^First name/);
+    await userEvent.clear(first);
+    await userEvent.type(first, 'Unsaved profile edit');
+    await act(async () => {
+      fireEvent(window, new Event('focus'));
+    });
+    expect(screen.getByLabelText(/^First name/)).toBe(first);
+    expect(first).toHaveValue('Unsaved profile edit');
+    expect(calls.some((call) => call.method === 'PUT')).toBe(false);
+  });
+  it('preserves unapplied directory search input without silently applying it', async () => {
+    const router = setup();
+    const search = await screen.findByLabelText(/^Search employees/);
+    await userEvent.type(search, 'Unapplied directory draft');
+    await act(async () => {
+      fireEvent(window, new Event('focus'));
+    });
+    expect(screen.getByLabelText(/^Search employees/)).toBe(search);
+    expect(search).toHaveValue('Unapplied directory draft');
+    expect(router.state.location.search).not.toContain('Unapplied');
   });
 });

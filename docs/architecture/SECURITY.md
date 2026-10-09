@@ -8,6 +8,10 @@ Accounts are distinct from employees. Provisioning, activation, role changes, re
 
 HR document binaries use private storage, opaque server-generated keys, SHA-256 integrity, immutable versions and archival lifecycle. Uploads support PDF/JPEG/PNG with a 20 MiB limit. Storage/metadata failure handling is established by D14; malware scanning integration remains deferred.
 
+Employee photos use dedicated private metadata/storage and Employee.Read/Manage, without broadening HRDocuments access. Actual JPEG/PNG decoding validates the 5 MiB and 4096 × 4096 limits. Superseded/removed revisions are retained; no automatic purge or EXIF stripping is claimed. Coordinate privacy/retention and binary/database backups before deployment.
+
+Employee identity reservations prevent renumbering/reuse. Controlled permanent deletion fails closed on protected dependencies and keeps permanent reservations/audit evidence. Durable registration receipts prevent duplicate creation without person matching. Public login remains available during an initial probe outage; protected authenticated refresh outages block access/commands while preserving RAM-only edits. See [current authentication lifecycle](../frontend/AUTHENTICATION.md).
+
 Production enforces HTTPS and secure cookies. Proxy trust and credentialed CORS require explicit configuration. Production credential delivery and private storage fail closed when suitable configuration is unavailable. [Production requirements](../deployment/PRODUCTION.md) are deployment obligations, not completed infrastructure.
 
-The [D15 audit](../archive/checkpoints/d15/D15-REPORT.md) records verification and practical limits. This document summarizes the frozen foundation; it does not introduce new security behavior.
+The [D15 audit](../archive/checkpoints/d15/D15-REPORT.md) records the historical foundation. [Current release notes](../releases/v0.5.1.md) distinguish subsequent verification, limitations and pending release approval. This document introduces no new security behavior.

@@ -8,10 +8,10 @@ No production connection, database creation, additional migration, SSO monetary 
 
 ## Exact schema changes and classifications
 
-| Table | New column | SQL storage | Nullable | Default |
-|---|---|---|---|---|
-| PayrollComponents | SsoWageTreatment | nvarchar(20) | No | Unknown |
-| EmployeePayrollLines | SsoWageTreatmentSnapshot | nvarchar(20) | No | Unknown |
+| Table                | New column               | SQL storage  | Nullable | Default |
+| -------------------- | ------------------------ | ------------ | -------- | ------- |
+| PayrollComponents    | SsoWageTreatment         | nvarchar(20) | No       | Unknown |
+| EmployeePayrollLines | SsoWageTreatmentSnapshot | nvarchar(20) | No       | Unknown |
 
 Check constraints:
 
@@ -36,36 +36,36 @@ The migration also sets only the new field to Unknown for the 17 seeded componen
 
 ## Verification outcomes
 
-| Verification | Result |
-|---|---|
-| EF migration application | Successful, only approved D5A migration applied |
-| Actual SQL columns/defaults/check constraints | Verified; enabled and trusted |
-| Synthetic component default/explicit classifications | POST 201; GET/update 200; SQL persistence verified |
-| Invalid component classification | Create/update HTTP 400 |
-| SQL invalid component/line classifications | Rejected with 547; rolled back |
-| Initial Preview/Generation | Matched amounts, classification snapshots, and provenance |
-| Live component changes | Entire stored payroll remained identical |
-| Deliberate regeneration | Current classifications; unchanged amounts |
-| Earning/Deduction Supplement | Passed |
-| Earning/Deduction ReplaceAssignment | Passed; only matching assignment suppressed |
-| Earning/Deduction Percentage formulas | Passed |
-| Conflicting replacements, failed NEW generation | Failed safely, no header/orphan lines |
-| Failed forced regeneration | Previous complete header/totals/line IDs/audits preserved |
-| Manual create/update/component replacement/delete | Snapshot behavior and totals reconciliation passed |
-| Generated-line protection | Manual deletion rejected (409) |
-| Payroll lifecycle | Approved/Paid/Cancelled regeneration protected; Approved adjustment/Paid cancellation rejected |
-| Payroll-period lifecycle | Processing/unfinished-close, Closed/Cancelled mutation guards passed |
-| D3 salary entitlement | Full-month 30,000; September 29 joiner 2,000; Basic Salary audit retained |
-| D4A policy behavior | Incomplete publication rejected; complete synthetic publication/resolution worked; Published edit rejected |
-| D4B behavior | Unknown absent enrollment; inclusive Applicable resolution; overlapping enrollment rejected; declaration opening/Verified guards passed |
-| Applicable enrollment + Published policy | Preview/Generation amounts unchanged; no SSO calculation |
-| Focused regression runner | 54 assertions passed |
-| Live Development API/SQL runner | 70 assertions passed |
-| Cleanup | Exact pre-fixture contents restored for all 49 application tables |
-| dotnet restore SIAMIS.sln | Successful |
-| Release build | Successful, 0 warnings, 0 errors |
-| EF has-pending-model-changes | No changes since last migration |
-| git diff --check | Passed |
+| Verification                                         | Result                                                                                                                                  |
+| ---------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| EF migration application                             | Successful, only approved D5A migration applied                                                                                         |
+| Actual SQL columns/defaults/check constraints        | Verified; enabled and trusted                                                                                                           |
+| Synthetic component default/explicit classifications | POST 201; GET/update 200; SQL persistence verified                                                                                      |
+| Invalid component classification                     | Create/update HTTP 400                                                                                                                  |
+| SQL invalid component/line classifications           | Rejected with 547; rolled back                                                                                                          |
+| Initial Preview/Generation                           | Matched amounts, classification snapshots, and provenance                                                                               |
+| Live component changes                               | Entire stored payroll remained identical                                                                                                |
+| Deliberate regeneration                              | Current classifications; unchanged amounts                                                                                              |
+| Earning/Deduction Supplement                         | Passed                                                                                                                                  |
+| Earning/Deduction ReplaceAssignment                  | Passed; only matching assignment suppressed                                                                                             |
+| Earning/Deduction Percentage formulas                | Passed                                                                                                                                  |
+| Conflicting replacements, failed NEW generation      | Failed safely, no header/orphan lines                                                                                                   |
+| Failed forced regeneration                           | Previous complete header/totals/line IDs/audits preserved                                                                               |
+| Manual create/update/component replacement/delete    | Snapshot behavior and totals reconciliation passed                                                                                      |
+| Generated-line protection                            | Manual deletion rejected (409)                                                                                                          |
+| Payroll lifecycle                                    | Approved/Paid/Cancelled regeneration protected; Approved adjustment/Paid cancellation rejected                                          |
+| Payroll-period lifecycle                             | Processing/unfinished-close, Closed/Cancelled mutation guards passed                                                                    |
+| D3 salary entitlement                                | Full-month 30,000; September 29 joiner 2,000; Basic Salary audit retained                                                               |
+| D4A policy behavior                                  | Incomplete publication rejected; complete synthetic publication/resolution worked; Published edit rejected                              |
+| D4B behavior                                         | Unknown absent enrollment; inclusive Applicable resolution; overlapping enrollment rejected; declaration opening/Verified guards passed |
+| Applicable enrollment + Published policy             | Preview/Generation amounts unchanged; no SSO calculation                                                                                |
+| Focused regression runner                            | 54 assertions passed                                                                                                                    |
+| Live Development API/SQL runner                      | 70 assertions passed                                                                                                                    |
+| Cleanup                                              | Exact pre-fixture contents restored for all 49 application tables                                                                       |
+| dotnet restore SIAMIS.sln                            | Successful                                                                                                                              |
+| Release build                                        | Successful, 0 warnings, 0 errors                                                                                                        |
+| EF has-pending-model-changes                         | No changes since last migration                                                                                                         |
+| git diff --check                                     | Passed                                                                                                                                  |
 
 Live monetary example: BasicSalary=30,000; GrossPay=33,300; TaxableEarnings=3,300; TotalDeductions=500; NetPay=32,800. TaxableEarnings respects the preexisting non-taxable Basic Salary; this setting was not modified. Switching synthetic classifications Included/Excluded did not change these amounts. D3 and existing formulas remain unchanged.
 
@@ -77,58 +77,58 @@ Cleanup deletes only recorded fixture identifiers, including synthetic finalized
 
 The temporary dedicated API process on localhost:5155 was stopped. Existing API processes were not stopped or restarted. The database intentionally retains the approved D5A schema and migration history entry.
 
-| Table | Final rows |
-|---|---:|
-| AddressTypes | 3 |
-| Attendance | 0 |
-| AttendanceStatuses | 11 |
-| ContractTypes | 7 |
-| Countries | 13 |
-| Departments | 12 |
-| Designations | 20 |
-| DocumentTypes | 15 |
-| EmergencyContacts | 0 |
-| EmployeeAddresses | 0 |
-| EmployeeCompensations | 0 |
-| EmployeeContacts | 0 |
-| EmployeeContracts | 0 |
-| EmployeeDocuments | 0 |
-| EmployeeHistory | 0 |
-| EmployeeLeave | 0 |
-| EmployeePayrollComponentAssignments | 0 |
-| EmployeePayrollLines | 0 |
-| EmployeePayrolls | 0 |
-| EmployeePerformance | 0 |
-| EmployeeStatutoryEnrollments | 0 |
-| EmployeeTaxClaims | 0 |
-| EmployeeTaxDeclarationSelections | 0 |
-| EmployeeTaxDeclarations | 0 |
-| EmployeeTaxOpeningBalances | 0 |
-| EmployeeTaxProfiles | 0 |
-| Employees | 1 |
-| EmploymentRecords | 1 |
-| EmploymentStatuses | 9 |
-| EmploymentTypes | 6 |
-| Genders | 4 |
-| HiringSources | 10 |
-| LeaveTypes | 10 |
-| Locations | 5 |
-| MaritalStatuses | 6 |
-| Nationalities | 13 |
-| PayTypes | 6 |
-| PayrollComponents | 17 |
-| PayrollPeriods | 0 |
-| PayrollRuleTargets | 0 |
-| PayrollRules | 0 |
-| PayrollSettings | 0 |
-| PerformanceRatings | 5 |
-| PitPolicyConfigurations | 0 |
-| PitTaxBrackets | 0 |
-| SocialSecurityPolicyConfigurations | 0 |
-| StatutoryPolicyVersions | 0 |
-| StatutorySchemes | 0 |
-| TeacherProfiles | 0 |
-| __EFMigrationsHistory | 26 |
+| Table                               | Final rows |
+| ----------------------------------- | ---------: |
+| AddressTypes                        |          3 |
+| Attendance                          |          0 |
+| AttendanceStatuses                  |         11 |
+| ContractTypes                       |          7 |
+| Countries                           |         13 |
+| Departments                         |         12 |
+| Designations                        |         20 |
+| DocumentTypes                       |         15 |
+| EmergencyContacts                   |          0 |
+| EmployeeAddresses                   |          0 |
+| EmployeeCompensations               |          0 |
+| EmployeeContacts                    |          0 |
+| EmployeeContracts                   |          0 |
+| EmployeeDocuments                   |          0 |
+| EmployeeHistory                     |          0 |
+| EmployeeLeave                       |          0 |
+| EmployeePayrollComponentAssignments |          0 |
+| EmployeePayrollLines                |          0 |
+| EmployeePayrolls                    |          0 |
+| EmployeePerformance                 |          0 |
+| EmployeeStatutoryEnrollments        |          0 |
+| EmployeeTaxClaims                   |          0 |
+| EmployeeTaxDeclarationSelections    |          0 |
+| EmployeeTaxDeclarations             |          0 |
+| EmployeeTaxOpeningBalances          |          0 |
+| EmployeeTaxProfiles                 |          0 |
+| Employees                           |          1 |
+| EmploymentRecords                   |          1 |
+| EmploymentStatuses                  |          9 |
+| EmploymentTypes                     |          6 |
+| Genders                             |          4 |
+| HiringSources                       |         10 |
+| LeaveTypes                          |         10 |
+| Locations                           |          5 |
+| MaritalStatuses                     |          6 |
+| Nationalities                       |         13 |
+| PayTypes                            |          6 |
+| PayrollComponents                   |         17 |
+| PayrollPeriods                      |          0 |
+| PayrollRuleTargets                  |          0 |
+| PayrollRules                        |          0 |
+| PayrollSettings                     |          0 |
+| PerformanceRatings                  |          5 |
+| PitPolicyConfigurations             |          0 |
+| PitTaxBrackets                      |          0 |
+| SocialSecurityPolicyConfigurations  |          0 |
+| StatutoryPolicyVersions             |          0 |
+| StatutorySchemes                    |          0 |
+| TeacherProfiles                     |          0 |
+| __EFMigrationsHistory               |         26 |
 
 Application tables=49. Master-data rows=172. Employees=1; EmploymentRecords=1; PayrollComponents=17. Rules/targets/settings/periods/compensations/assignments/payroll headers/lines and all D4A/D4B input tables are empty.
 
@@ -224,29 +224,29 @@ Harness issues encountered during preparation (SQL JSON chunking/truncation, exp
 ## Complete changed-file list (D5A implementation and verification)
 
 - [README.md](FOUNDATION-README.md)
-- [SIAMIS.sln](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/SIAMIS.sln>)
-- [src/SIAMIS.Application/MasterData/PayrollComponentContracts.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Application/MasterData/PayrollComponentContracts.cs>)
-- [src/SIAMIS.Application/Payroll/EmployeePayrollContracts.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Application/Payroll/EmployeePayrollContracts.cs>)
-- [src/SIAMIS.Application/Payroll/PayrollCalculationContracts.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Application/Payroll/PayrollCalculationContracts.cs>)
-- [src/SIAMIS.Application/Payroll/PayrollPreviewContracts.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Application/Payroll/PayrollPreviewContracts.cs>)
-- [src/SIAMIS.Application/Payroll/PayrollRuleEvaluationContracts.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Application/Payroll/PayrollRuleEvaluationContracts.cs>)
-- [src/SIAMIS.Domain/Entities/MasterData/MasterDataEntity.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Domain/Entities/MasterData/MasterDataEntity.cs>)
-- [src/SIAMIS.Domain/Entities/Payroll/EmployeePayrollLine.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Domain/Entities/Payroll/EmployeePayrollLine.cs>)
-- [src/SIAMIS.Infrastructure/Configurations/AdditionalMasterDataConfigurations.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Infrastructure/Configurations/AdditionalMasterDataConfigurations.cs>)
-- [src/SIAMIS.Infrastructure/Configurations/EmployeePayrollConfigurations.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Infrastructure/Configurations/EmployeePayrollConfigurations.cs>)
-- [src/SIAMIS.Infrastructure/Migrations/SIAMISDbContextModelSnapshot.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Infrastructure/Migrations/SIAMISDbContextModelSnapshot.cs>)
-- [src/SIAMIS.Infrastructure/Services/EmployeePayrollService.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Infrastructure/Services/EmployeePayrollService.cs>)
-- [src/SIAMIS.Infrastructure/Services/PayrollCalculationService.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Infrastructure/Services/PayrollCalculationService.cs>)
-- [src/SIAMIS.Infrastructure/Services/PayrollComponentService.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Infrastructure/Services/PayrollComponentService.cs>)
-- [src/SIAMIS.Infrastructure/Services/PayrollGenerationService.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Infrastructure/Services/PayrollGenerationService.cs>)
-- [src/SIAMIS.Infrastructure/Services/PayrollPreviewService.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Infrastructure/Services/PayrollPreviewService.cs>)
-- [src/SIAMIS.Infrastructure/Services/PayrollRuleEvaluator.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Infrastructure/Services/PayrollRuleEvaluator.cs>)
+- [SIAMIS.sln](../../../SIAMIS.sln)
+- [src/SIAMIS.Application/MasterData/PayrollComponentContracts.cs](../../../src/SIAMIS.Application/MasterData/PayrollComponentContracts.cs)
+- [src/SIAMIS.Application/Payroll/EmployeePayrollContracts.cs](../../../src/SIAMIS.Application/Payroll/EmployeePayrollContracts.cs)
+- [src/SIAMIS.Application/Payroll/PayrollCalculationContracts.cs](../../../src/SIAMIS.Application/Payroll/PayrollCalculationContracts.cs)
+- [src/SIAMIS.Application/Payroll/PayrollPreviewContracts.cs](../../../src/SIAMIS.Application/Payroll/PayrollPreviewContracts.cs)
+- [src/SIAMIS.Application/Payroll/PayrollRuleEvaluationContracts.cs](../../../src/SIAMIS.Application/Payroll/PayrollRuleEvaluationContracts.cs)
+- [src/SIAMIS.Domain/Entities/MasterData/MasterDataEntity.cs](../../../src/SIAMIS.Domain/Entities/MasterData/MasterDataEntity.cs)
+- [src/SIAMIS.Domain/Entities/Payroll/EmployeePayrollLine.cs](../../../src/SIAMIS.Domain/Entities/Payroll/EmployeePayrollLine.cs)
+- [src/SIAMIS.Infrastructure/Configurations/AdditionalMasterDataConfigurations.cs](../../../src/SIAMIS.Infrastructure/Configurations/AdditionalMasterDataConfigurations.cs)
+- [src/SIAMIS.Infrastructure/Configurations/EmployeePayrollConfigurations.cs](../../../src/SIAMIS.Infrastructure/Configurations/EmployeePayrollConfigurations.cs)
+- [src/SIAMIS.Infrastructure/Migrations/SIAMISDbContextModelSnapshot.cs](../../../src/SIAMIS.Infrastructure/Migrations/SIAMISDbContextModelSnapshot.cs)
+- [src/SIAMIS.Infrastructure/Services/EmployeePayrollService.cs](../../../src/SIAMIS.Infrastructure/Services/EmployeePayrollService.cs)
+- [src/SIAMIS.Infrastructure/Services/PayrollCalculationService.cs](../../../src/SIAMIS.Infrastructure/Services/PayrollCalculationService.cs)
+- [src/SIAMIS.Infrastructure/Services/PayrollComponentService.cs](../../../src/SIAMIS.Infrastructure/Services/PayrollComponentService.cs)
+- [src/SIAMIS.Infrastructure/Services/PayrollGenerationService.cs](../../../src/SIAMIS.Infrastructure/Services/PayrollGenerationService.cs)
+- [src/SIAMIS.Infrastructure/Services/PayrollPreviewService.cs](../../../src/SIAMIS.Infrastructure/Services/PayrollPreviewService.cs)
+- [src/SIAMIS.Infrastructure/Services/PayrollRuleEvaluator.cs](../../../src/SIAMIS.Infrastructure/Services/PayrollRuleEvaluator.cs)
 - [D5A-REPORT.md](D5A-REPORT.md)
-- [src/SIAMIS.Infrastructure/Migrations/20261001032904_AddSsoWageTreatmentClassification.Designer.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Infrastructure/Migrations/20261001032904_AddSsoWageTreatmentClassification.Designer.cs>)
-- [src/SIAMIS.Infrastructure/Migrations/20261001032904_AddSsoWageTreatmentClassification.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Infrastructure/Migrations/20261001032904_AddSsoWageTreatmentClassification.cs>)
-- [tests/SIAMIS.Payroll.RegressionTests/Program.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/tests/SIAMIS.Payroll.RegressionTests/Program.cs>)
-- [tests/SIAMIS.Payroll.RegressionTests/SIAMIS.Payroll.RegressionTests.csproj](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/tests/SIAMIS.Payroll.RegressionTests/SIAMIS.Payroll.RegressionTests.csproj>)
-- [tests/verify_d5a_live.py](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/tests/verify_d5a_live.py>)
+- [src/SIAMIS.Infrastructure/Migrations/20261001032904_AddSsoWageTreatmentClassification.Designer.cs](../../../src/SIAMIS.Infrastructure/Migrations/20261001032904_AddSsoWageTreatmentClassification.Designer.cs)
+- [src/SIAMIS.Infrastructure/Migrations/20261001032904_AddSsoWageTreatmentClassification.cs](../../../src/SIAMIS.Infrastructure/Migrations/20261001032904_AddSsoWageTreatmentClassification.cs)
+- [tests/SIAMIS.Payroll.RegressionTests/Program.cs](../../../tests/SIAMIS.Payroll.RegressionTests/Program.cs)
+- [tests/SIAMIS.Payroll.RegressionTests/SIAMIS.Payroll.RegressionTests.csproj](../../../tests/SIAMIS.Payroll.RegressionTests/SIAMIS.Payroll.RegressionTests.csproj)
+- [tests/verify_d5a_live.py](../../../tests/verify_d5a_live.py)
 
 ## Deferred decisions
 

@@ -12,6 +12,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.AddSiamisSecurity();
 builder.ConfigureDeploymentSecurity();
 builder.AddPrivateHrDocuments();
+builder.AddEmployeePhotos();
 
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
@@ -26,6 +27,7 @@ builder.Services.AddSwaggerGen(options =>
 builder.Services.AddDbContext<SIAMISDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("SIAMIS")));
 builder.Services.AddScoped<IEmployeeService, EmployeeService>();
+builder.Services.AddScoped<IEmployeeDeletionService, EmployeeDeletionService>();
 builder.Services.AddScoped<IEmployeeContactsService, EmployeeContactsService>();
 builder.Services.AddScoped<IEmployeeAddressesService, EmployeeAddressesService>();
 builder.Services.AddScoped<IEmployeeEmergencyContactsService, EmployeeEmergencyContactsService>();

@@ -2,14 +2,17 @@ using System.Data;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
+using System.Security.Cryptography;
+using System.Text.Json;
 using SIAMIS.Application.Employees;
+using SIAMIS.Application.Security;
 using SIAMIS.Domain.Entities.Employees;
 using SIAMIS.Domain.Entities.MasterData;
 using SIAMIS.Infrastructure.Data;
 
 namespace SIAMIS.Infrastructure.Services;
 
-public sealed class EmployeeService(SIAMISDbContext db) : IEmployeeService
+public sealed class EmployeeService(SIAMISDbContext db, ICurrentActor actor) : IEmployeeService
 {
     public async Task<PagedResult<EmployeeListItemDto>> GetEmployeesAsync(EmployeeListQuery query, CancellationToken cancellationToken)
     {
@@ -44,7 +47,7 @@ public sealed class EmployeeService(SIAMISDbContext db) : IEmployeeService
                 LastName = item.LastName,
                 PreferredName = item.PreferredName,
                 IsActive = item.IsActive,
-                ProfilePhoto = item.ProfilePhoto,
+                ProfilePhoto = null, // Legacy locator is never a public photo URL; use authorized photo retrieval.
                 HireDate = item.EmploymentRecords.Where(record => record.IsCurrent).Select(record => (DateOnly?)record.HireDate).FirstOrDefault(),
                 Department = item.EmploymentRecords.Where(record => record.IsCurrent).Select(record => record.Department == null ? null : record.Department.Name).FirstOrDefault(),
                 Designation = item.EmploymentRecords.Where(record => record.IsCurrent).Select(record => record.Designation == null ? null : record.Designation.Name).FirstOrDefault(),
@@ -59,27 +62,52 @@ public sealed class EmployeeService(SIAMISDbContext db) : IEmployeeService
         return employee is null ? null : Map(employee);
     }
 
-    public async Task<ServiceResult<EmployeeDetailDto>> CreateEmployeeAsync(CreateEmployeeRequest request, CancellationToken cancellationToken)
+    public async Task<ServiceResult<EmployeeDetailDto>> CreateEmployeeAsync(CreateEmployeeRequest request, Guid requestKey, CancellationToken cancellationToken)
     {
+        if (actor.UserId is not Guid actorId || !actor.HasCapability("Employee.Manage"))
+            return ServiceResult<EmployeeDetailDto>.Fail("forbidden", "Employee management access is required.");
+        if (requestKey == Guid.Empty) return Invalid("A registration request key is required.");
+        var requestValidation = new List<ValidationResult>();
+        if (!Validator.TryValidateObject(request, new ValidationContext(request), requestValidation, true))
+            return Invalid("The registration request is invalid.");
+        var payloadHash = EmployeeRegistrationIdempotency.Hash(request);
         await using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken);
+        if (!await EmployeeRegistrationIdempotency.LockAsync(db, actorId, requestKey, cancellationToken))
+            return ServiceResult<EmployeeDetailDto>.Fail("registration_in_progress", "Registration is still in progress. Retry the same submission and key.");
+        // The application lock serializes this exact key. Avoid serializable missing-key
+        // range locks that would unnecessarily deadlock independent registrations.
+        var operation = EmployeeRegistrationIdempotency.Operation;
+        var receipt = await db.EmployeeRegistrationReceipts.FromSqlInterpolated($"SELECT * FROM dbo.EmployeeRegistrationReceipts WITH (READCOMMITTEDLOCK) WHERE ActorUserId={actorId} AND Operation={operation} AND RequestKey={requestKey}")
+            .AsNoTracking().SingleOrDefaultAsync(cancellationToken);
+        if (receipt is not null)
+        {
+            if (!CryptographicOperations.FixedTimeEquals(receipt.PayloadHash, payloadHash))
+                return ServiceResult<EmployeeDetailDto>.Fail("idempotency_conflict", "This registration key has already been used with different details.");
+            // SQL UTC is authoritative for the persisted replay window, across API instances.
+            var now = await db.Database.SqlQueryRaw<DateTime>("SELECT SYSUTCDATETIME() AS [Value]").SingleAsync(cancellationToken);
+            if (receipt.ReplayUntilUtc <= now || receipt.ResponseJson is null)
+                return ServiceResult<EmployeeDetailDto>.Fail("registration_key_expired", "The registration replay window has expired. This key cannot create another employee.");
+            var original = JsonSerializer.Deserialize<EmployeeDetailDto>(receipt.ResponseJson, EmployeeRegistrationIdempotency.Json)
+                ?? throw new InvalidOperationException("The registration receipt is unreadable.");
+            await transaction.CommitAsync(cancellationToken);
+            return ServiceResult<EmployeeDetailDto>.Success(original);
+        }
         var validation = await ValidateWriteRequest(request, null, cancellationToken);
         if (validation is null && request.EndDate.HasValue) return Invalid("New employment must be open-ended; use end-employment after creation.");
-        if (validation is null && !await db.EmploymentStatuses.AnyAsync(x => x.Id == request.EmploymentStatusId && !x.IsTerminal, cancellationToken))
-            return Invalid("New employment requires a non-terminal status.");
         if (validation is not null) return validation;
-        var employeeNumber = request.EmployeeNumber.Trim();
-        if (await db.Employees.AnyAsync(item => item.EmployeeNumber == employeeNumber, cancellationToken))
-            return ServiceResult<EmployeeDetailDto>.Fail("conflict", "EmployeeNumber is already in use.");
-
+        var initialStatuses = await db.EmploymentStatuses.Where(x => x.Code == "ES-001" && x.Name == "Active" && x.IsActive && !x.IsTerminal)
+            .Select(x => x.Id).Take(2).ToListAsync(cancellationToken);
+        if (initialStatuses.Count != 1)
+            return ServiceResult<EmployeeDetailDto>.Fail("conflict", "The initial Active employment status is unavailable; review status master configuration.");
         var employee = new Employee
         {
-            EmployeeNumber = employeeNumber,
             FirstName = request.FirstName.Trim(), MiddleName = Clean(request.MiddleName), LastName = request.LastName.Trim(),
             PreferredName = Clean(request.PreferredName), DateOfBirth = request.DateOfBirth,
             GenderId = request.GenderId, MaritalStatusId = request.MaritalStatusId, NationalityId = request.NationalityId,
-            ProfilePhoto = Clean(request.ProfilePhoto), IsActive = true
+            IsActive = true
         };
-        employee.EmploymentRecords.Add(CreateEmployment(request));
+        employee.EmployeeNumber = await EmployeeNumberAllocator.ReserveAsync(db.Database.GetConnectionString()!, employee.EmployeeId, cancellationToken);
+        employee.EmploymentRecords.Add(CreateEmployment(request, initialStatuses[0]));
         AddChildren(employee, request);
         db.Employees.Add(employee);
         try
@@ -90,8 +118,21 @@ public sealed class EmployeeService(SIAMISDbContext db) : IEmployeeService
         {
             return ServiceResult<EmployeeDetailDto>.Fail("conflict", "EmployeeNumber is already in use.");
         }
+        // Newly created collections are already tracked. Load only their master/reference
+        // rows, rather than taking serializable ranges over unrelated empty collections.
+        await LoadRegistrationReferencesAsync(employee, cancellationToken);
+        var result = Map(employee);
+        var completedAt = await db.Database.SqlQueryRaw<DateTime>("SELECT SYSUTCDATETIME() AS [Value]").SingleAsync(cancellationToken);
+        db.EmployeeRegistrationReceipts.Add(new()
+        {
+            ActorUserId = actorId, Operation = EmployeeRegistrationIdempotency.Operation, RequestKey = requestKey,
+            PayloadHash = payloadHash, ResultEmployeeId = employee.EmployeeId, ResultEmployeeNumber = employee.EmployeeNumber,
+            CompletedAtUtc = completedAt, ReplayUntilUtc = completedAt.AddDays(30),
+            ResponseJson = JsonSerializer.Serialize(result, EmployeeRegistrationIdempotency.Json)
+        });
+        await db.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
-        return ServiceResult<EmployeeDetailDto>.Success(Map(await EmployeeGraph().SingleAsync(item => item.EmployeeId == employee.EmployeeId, cancellationToken)));
+        return ServiceResult<EmployeeDetailDto>.Success(result);
     }
 
     public async Task<ServiceResult<EmployeeDetailDto>> UpdateEmployeeAsync(Guid employeeId, UpdateEmployeeRequest request, CancellationToken cancellationToken)
@@ -103,9 +144,6 @@ public sealed class EmployeeService(SIAMISDbContext db) : IEmployeeService
         if (employee is null) return ServiceResult<EmployeeDetailDto>.Fail("not_found", "Employee was not found.");
         var validation = await ValidateWriteRequest(request, employeeId, cancellationToken);
         if (validation is not null) return validation;
-        var employeeNumber = request.EmployeeNumber.Trim();
-        if (await db.Employees.AnyAsync(item => item.EmployeeId != employeeId && item.EmployeeNumber == employeeNumber, cancellationToken))
-            return ServiceResult<EmployeeDetailDto>.Fail("conflict", "EmployeeNumber is already in use.");
 
         var history = await db.EmploymentRecords.Where(x => x.EmployeeId == employeeId).ToListAsync(cancellationToken);
         var current = history.SingleOrDefault(x => x.IsCurrent);
@@ -124,7 +162,7 @@ public sealed class EmployeeService(SIAMISDbContext db) : IEmployeeService
         {
             if (!employee.IsActive || current.EndDate.HasValue) return ServiceResult<EmployeeDetailDto>.Fail("conflict", "Current employment and active state are inconsistent; use lifecycle workflows or review legacy state.");
             if (request.EndDate.HasValue) return Invalid("Use end-employment to set EndDate.");
-            var candidate = CreateEmployment(request); candidate.EmployeeId = employeeId;
+            var candidate = CreateEmployment(request, request.EmploymentStatusId!.Value); candidate.EmployeeId = employeeId;
             candidate.ReportingToEmployeeId = request.ReportingToEmployeeId ?? current.ReportingToEmployeeId;
             var error = EmploymentIntegrity.Dates(candidate) ?? await EmploymentIntegrity.ContextAsync(db, candidate, cancellationToken);
             if (error is not null) return Invalid(error);
@@ -132,7 +170,6 @@ public sealed class EmployeeService(SIAMISDbContext db) : IEmployeeService
                 return Invalid("The corrected employment range overlaps historical employment.");
         }
 
-        employee.EmployeeNumber = employeeNumber;
         employee.FirstName = request.FirstName.Trim();
         employee.MiddleName = Clean(request.MiddleName);
         employee.LastName = request.LastName.Trim();
@@ -141,7 +178,7 @@ public sealed class EmployeeService(SIAMISDbContext db) : IEmployeeService
         employee.GenderId = request.GenderId;
         employee.MaritalStatusId = request.MaritalStatusId;
         employee.NationalityId = request.NationalityId;
-        employee.ProfilePhoto = Clean(request.ProfilePhoto);
+        // Preserve legacy photo data without exposing or changing its locator through profile writes.
 
         if (current is not null) UpdateEmployment(current, request);
 
@@ -207,6 +244,21 @@ public sealed class EmployeeService(SIAMISDbContext db) : IEmployeeService
         .Include(item => item.TeacherProfile)
         .Include(item => item.Compensations.Where(compensation => compensation.IsCurrent)).ThenInclude(item => item.PayType);
 
+    private async Task LoadRegistrationReferencesAsync(Employee employee, CancellationToken ct)
+    {
+        foreach (var name in new[] { nameof(Employee.Gender), nameof(Employee.MaritalStatus), nameof(Employee.Nationality) })
+            await db.Entry(employee).Reference(name).LoadAsync(ct);
+        var employment = employee.EmploymentRecords.Single();
+        foreach (var name in new[] { nameof(EmploymentRecord.Department), nameof(EmploymentRecord.Designation), nameof(EmploymentRecord.Location),
+            nameof(EmploymentRecord.EmploymentType), nameof(EmploymentRecord.EmploymentStatus), nameof(EmploymentRecord.HiringSource), nameof(EmploymentRecord.ReportingToEmployee) })
+            await db.Entry(employment).Reference(name).LoadAsync(ct);
+        foreach (var address in employee.Addresses)
+        {
+            await db.Entry(address).Reference(x => x.AddressType).LoadAsync(ct);
+            await db.Entry(address).Reference(x => x.Country).LoadAsync(ct);
+        }
+    }
+
     private static EmployeeDetailDto Map(Employee employee)
     {
         var current = employee.EmploymentRecords.SingleOrDefault(item => item.IsCurrent);
@@ -216,7 +268,7 @@ public sealed class EmployeeService(SIAMISDbContext db) : IEmployeeService
             EmployeeId = employee.EmployeeId, EmployeeNumber = employee.EmployeeNumber, FirstName = employee.FirstName,
             MiddleName = employee.MiddleName, LastName = employee.LastName, PreferredName = employee.PreferredName,
             DateOfBirth = employee.DateOfBirth, Gender = employee.Gender?.Name, MaritalStatus = employee.MaritalStatus?.Name,
-            Nationality = employee.Nationality?.Name, ProfilePhoto = employee.ProfilePhoto, IsActive = employee.IsActive,
+            Nationality = employee.Nationality?.Name, ProfilePhoto = null, IsActive = employee.IsActive,
             CreatedAt = employee.CreatedAt, UpdatedAt = employee.UpdatedAt,
             Contacts = employee.Contacts.Select(item => new EmployeeContactDto
             {
@@ -233,7 +285,8 @@ public sealed class EmployeeService(SIAMISDbContext db) : IEmployeeService
             EmergencyContacts = employee.EmergencyContacts.Select(item => new EmergencyContactDto
             {
                 EmergencyContactId = item.EmergencyContactId, Name = item.Name, Relationship = item.Relationship,
-                Mobile = item.Mobile, Phone = item.Phone, Email = item.Email, IsPrimary = item.IsPrimary
+                Mobile = item.Mobile, Phone = item.Phone, Email = item.Email, AlternativePhone = item.AlternativePhone,
+                Address = item.Address, IsPrimary = item.IsPrimary
             }).ToList(),
             CurrentEmployment = current is null ? null : new EmploymentSummaryDto
             {
@@ -272,11 +325,12 @@ public sealed class EmployeeService(SIAMISDbContext db) : IEmployeeService
             || request.EmergencyContacts?.Any(item => item is null || !IsValid(item)) == true
             || request.TeacherProfile is not null && !IsValid(request.TeacherProfile))
             return Invalid("One or more contact, address, emergency-contact, or teacher-profile fields are invalid.");
-        if (string.IsNullOrWhiteSpace(request.EmployeeNumber) || string.IsNullOrWhiteSpace(request.FirstName) || string.IsNullOrWhiteSpace(request.LastName))
-            return Invalid("EmployeeNumber, FirstName, and LastName are required.");
+        if (string.IsNullOrWhiteSpace(request.FirstName) || string.IsNullOrWhiteSpace(request.LastName))
+            return Invalid("FirstName and LastName are required.");
         if (request.DepartmentId is null || request.DesignationId is null || request.EmploymentTypeId is null
-            || request.EmploymentStatusId is null || request.HireDate is null)
-            return Invalid("DepartmentId, DesignationId, EmploymentTypeId, EmploymentStatusId, and HireDate are required.");
+            || request.HireDate is null)
+            return Invalid("DepartmentId, DesignationId, EmploymentTypeId, and HireDate are required.");
+        if (request is UpdateEmployeeRequest { EmploymentStatusId: null }) return Invalid("EmploymentStatusId is required for profile update.");
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
         if (request.DateOfBirth > today) return Invalid("DateOfBirth cannot be in the future.");
         if (request.HireDate > today.AddYears(1)) return Invalid("HireDate is outside the supported date range.");
@@ -289,7 +343,7 @@ public sealed class EmployeeService(SIAMISDbContext db) : IEmployeeService
         if (!await Active<Department>(request.DepartmentId!.Value, ct)) return Invalid("DepartmentId must reference an active department.");
         if (!await Active<Designation>(request.DesignationId!.Value, ct)) return Invalid("DesignationId must reference an active designation.");
         if (!await Active<EmploymentType>(request.EmploymentTypeId!.Value, ct)) return Invalid("EmploymentTypeId must reference an active employment type.");
-        if (!await Active<EmploymentStatus>(request.EmploymentStatusId!.Value, ct)) return Invalid("EmploymentStatusId must reference an active employment status.");
+        if (request is UpdateEmployeeRequest update && !await Active<EmploymentStatus>(update.EmploymentStatusId!.Value, ct)) return Invalid("EmploymentStatusId must reference an active employment status.");
         if (!await OptionalActive<Gender>(request.GenderId, ct) || !await OptionalActive<MaritalStatus>(request.MaritalStatusId, ct)
             || !await OptionalActive<Nationality>(request.NationalityId, ct) || !await OptionalActive<Location>(request.LocationId, ct)
             || !await OptionalActive<HiringSource>(request.HiringSourceId, ct)) return Invalid("A supplied master-data ID does not reference an active record.");
@@ -319,15 +373,15 @@ public sealed class EmployeeService(SIAMISDbContext db) : IEmployeeService
 
     private static bool IsValid(object value) => Validator.TryValidateObject(value, new ValidationContext(value), new List<ValidationResult>(), validateAllProperties: true);
 
-    private static EmploymentRecord CreateEmployment(EmployeeWriteRequest request) => new()
+    private static EmploymentRecord CreateEmployment(EmployeeWriteRequest request, Guid initialStatusId) => new()
     {
         DepartmentId = request.DepartmentId, DesignationId = request.DesignationId, LocationId = request.LocationId,
-        EmploymentTypeId = request.EmploymentTypeId, EmploymentStatusId = request.EmploymentStatusId,
+        EmploymentTypeId = request.EmploymentTypeId, EmploymentStatusId = initialStatusId,
         HiringSourceId = request.HiringSourceId, ReportingToEmployeeId = request.ReportingToEmployeeId,
         HireDate = request.HireDate!.Value, StartDate = request.StartDate, EndDate = request.EndDate, IsCurrent = true
     };
 
-    private static void UpdateEmployment(EmploymentRecord record, EmployeeWriteRequest request)
+    private static void UpdateEmployment(EmploymentRecord record, UpdateEmployeeRequest request)
     {
         record.DepartmentId = request.DepartmentId; record.DesignationId = request.DesignationId; record.LocationId = request.LocationId;
         record.EmploymentTypeId = request.EmploymentTypeId; record.EmploymentStatusId = request.EmploymentStatusId;

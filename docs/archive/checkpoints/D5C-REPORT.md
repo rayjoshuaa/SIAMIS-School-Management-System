@@ -130,17 +130,17 @@ or deleted through Manual APIs or masqueraded as manually generated provenance.
 
 ## 8. Verification results
 
-| Check | Result |
-|---|---|
-| Restore | Passed |
-| Final Release build | Passed: 0 warnings, 0 errors |
-| Focused D5A/D5B/D5C assertions | 111 passed |
-| Existing live payroll regression checks on final Release API | 70 passed |
-| D5C live API/SQL assertions | 306 passed |
-| Actual schema, FKs, checks and migration history | Verified |
-| Swagger response metadata and behavior documentation | Verified |
-| EF pending-model-changes | None |
-| git diff --check | Passed |
+| Check                                                        | Result                       |
+| ------------------------------------------------------------ | ---------------------------- |
+| Restore                                                      | Passed                       |
+| Final Release build                                          | Passed: 0 warnings, 0 errors |
+| Focused D5A/D5B/D5C assertions                               | 111 passed                   |
+| Existing live payroll regression checks on final Release API | 70 passed                    |
+| D5C live API/SQL assertions                                  | 306 passed                   |
+| Actual schema, FKs, checks and migration history             | Verified                     |
+| Swagger response metadata and behavior documentation         | Verified                     |
+| EF pending-model-changes                                     | None                         |
+| git diff --check                                             | Passed                       |
 
 D5C live coverage includes equal/unequal publication, future method validation,
 defensive incompatible Published policy rejection, Included/Excluded/Unknown,
@@ -198,59 +198,59 @@ Only the temporary verification API process was restarted and stopped.
 
 The following counts were verified by both live suites after cleanup.
 
-| Application table | Final rows |
-|---|---:|
-| AddressTypes | 3 |
-| Attendance | 0 |
-| AttendanceStatuses | 11 |
-| ContractTypes | 7 |
-| Countries | 13 |
-| Departments | 12 |
-| Designations | 20 |
-| DocumentTypes | 15 |
-| EmergencyContacts | 0 |
-| EmployeeAddresses | 0 |
-| EmployeeCompensations | 0 |
-| EmployeeContacts | 0 |
-| EmployeeContracts | 0 |
-| EmployeeDocuments | 0 |
-| EmployeeHistory | 0 |
-| EmployeeLeave | 0 |
-| EmployeePayrollComponentAssignments | 0 |
-| EmployeePayrollLines | 0 |
-| EmployeePayrollSocialSecurityResults | 0 |
-| EmployeePayrollStatutoryResults | 0 |
-| EmployeePayrolls | 0 |
-| EmployeePerformance | 0 |
-| EmployeeStatutoryEnrollments | 0 |
-| EmployeeTaxClaims | 0 |
-| EmployeeTaxDeclarationSelections | 0 |
-| EmployeeTaxDeclarations | 0 |
-| EmployeeTaxOpeningBalances | 0 |
-| EmployeeTaxProfiles | 0 |
-| Employees | 1 |
-| EmploymentRecords | 1 |
-| EmploymentStatuses | 9 |
-| EmploymentTypes | 6 |
-| Genders | 4 |
-| HiringSources | 10 |
-| LeaveTypes | 10 |
-| Locations | 5 |
-| MaritalStatuses | 6 |
-| Nationalities | 13 |
-| PayTypes | 6 |
-| PayrollComponents | 17 |
-| PayrollPeriods | 0 |
-| PayrollRuleTargets | 0 |
-| PayrollRules | 0 |
-| PayrollSettings | 0 |
-| PerformanceRatings | 5 |
-| PitPolicyConfigurations | 0 |
-| PitTaxBrackets | 0 |
-| SocialSecurityPolicyConfigurations | 0 |
-| StatutoryPolicyVersions | 0 |
-| StatutorySchemes | 0 |
-| TeacherProfiles | 0 |
+| Application table                    | Final rows |
+| ------------------------------------ | ---------: |
+| AddressTypes                         |          3 |
+| Attendance                           |          0 |
+| AttendanceStatuses                   |         11 |
+| ContractTypes                        |          7 |
+| Countries                            |         13 |
+| Departments                          |         12 |
+| Designations                         |         20 |
+| DocumentTypes                        |         15 |
+| EmergencyContacts                    |          0 |
+| EmployeeAddresses                    |          0 |
+| EmployeeCompensations                |          0 |
+| EmployeeContacts                     |          0 |
+| EmployeeContracts                    |          0 |
+| EmployeeDocuments                    |          0 |
+| EmployeeHistory                      |          0 |
+| EmployeeLeave                        |          0 |
+| EmployeePayrollComponentAssignments  |          0 |
+| EmployeePayrollLines                 |          0 |
+| EmployeePayrollSocialSecurityResults |          0 |
+| EmployeePayrollStatutoryResults      |          0 |
+| EmployeePayrolls                     |          0 |
+| EmployeePerformance                  |          0 |
+| EmployeeStatutoryEnrollments         |          0 |
+| EmployeeTaxClaims                    |          0 |
+| EmployeeTaxDeclarationSelections     |          0 |
+| EmployeeTaxDeclarations              |          0 |
+| EmployeeTaxOpeningBalances           |          0 |
+| EmployeeTaxProfiles                  |          0 |
+| Employees                            |          1 |
+| EmploymentRecords                    |          1 |
+| EmploymentStatuses                   |          9 |
+| EmploymentTypes                      |          6 |
+| Genders                              |          4 |
+| HiringSources                        |         10 |
+| LeaveTypes                           |         10 |
+| Locations                            |          5 |
+| MaritalStatuses                      |          6 |
+| Nationalities                        |         13 |
+| PayTypes                             |          6 |
+| PayrollComponents                    |         17 |
+| PayrollPeriods                       |          0 |
+| PayrollRuleTargets                   |          0 |
+| PayrollRules                         |          0 |
+| PayrollSettings                      |          0 |
+| PerformanceRatings                   |          5 |
+| PitPolicyConfigurations              |          0 |
+| PitTaxBrackets                       |          0 |
+| SocialSecurityPolicyConfigurations   |          0 |
+| StatutoryPolicyVersions              |          0 |
+| StatutorySchemes                     |          0 |
+| TeacherProfiles                      |          0 |
 
 ## 11. Complete working-tree changed-file list
 
@@ -259,29 +259,29 @@ Includes preserved D5B work; no claim that it was reimplemented. Ignored build, 
 - [D5B-REPORT.md](D5B-REPORT.md) (preserved D5B foundation)
 - [D5C-REPORT.md](D5C-REPORT.md)
 - [README.md](FOUNDATION-README.md)
-- [src/SIAMIS.Api/Controllers/EmployeePayrollsController.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Api/Controllers/EmployeePayrollsController.cs>)
-- [src/SIAMIS.Api/Controllers/PayrollPeriodsController.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Api/Controllers/PayrollPeriodsController.cs>)
-- [src/SIAMIS.Api/Program.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Api/Program.cs>)
-- [src/SIAMIS.Application/Payroll/EmployeePayrollContracts.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Application/Payroll/EmployeePayrollContracts.cs>)
-- [src/SIAMIS.Application/Payroll/PayrollPreviewContracts.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Application/Payroll/PayrollPreviewContracts.cs>)
-- [src/SIAMIS.Application/Payroll/Section33CalculationContracts.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Application/Payroll/Section33CalculationContracts.cs>)
-- [src/SIAMIS.Application/Payroll/Section33ContributionWageContracts.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Application/Payroll/Section33ContributionWageContracts.cs>) (preserved D5B foundation)
-- [src/SIAMIS.Domain/Entities/Payroll/EmployeePayrollStatutoryResult.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Domain/Entities/Payroll/EmployeePayrollStatutoryResult.cs>)
-- [src/SIAMIS.Infrastructure/Configurations/EmployeePayrollConfigurations.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Infrastructure/Configurations/EmployeePayrollConfigurations.cs>)
-- [src/SIAMIS.Infrastructure/Configurations/EmployeePayrollStatutoryConfigurations.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Infrastructure/Configurations/EmployeePayrollStatutoryConfigurations.cs>)
-- [src/SIAMIS.Infrastructure/Data/SIAMISDbContext.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Infrastructure/Data/SIAMISDbContext.cs>)
-- [src/SIAMIS.Infrastructure/Migrations/20261001044414_AddSection33PayrollResults.Designer.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Infrastructure/Migrations/20261001044414_AddSection33PayrollResults.Designer.cs>)
-- [src/SIAMIS.Infrastructure/Migrations/20261001044414_AddSection33PayrollResults.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Infrastructure/Migrations/20261001044414_AddSection33PayrollResults.cs>)
-- [src/SIAMIS.Infrastructure/Migrations/SIAMISDbContextModelSnapshot.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Infrastructure/Migrations/SIAMISDbContextModelSnapshot.cs>)
-- [src/SIAMIS.Infrastructure/Services/EmployeePayrollService.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Infrastructure/Services/EmployeePayrollService.cs>)
-- [src/SIAMIS.Infrastructure/Services/PayrollGenerationService.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Infrastructure/Services/PayrollGenerationService.cs>)
-- [src/SIAMIS.Infrastructure/Services/PayrollPreviewService.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Infrastructure/Services/PayrollPreviewService.cs>)
-- [src/SIAMIS.Infrastructure/Services/Section33Calculator.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Infrastructure/Services/Section33Calculator.cs>)
-- [src/SIAMIS.Infrastructure/Services/Section33ContributionWageResolver.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Infrastructure/Services/Section33ContributionWageResolver.cs>) (D5B resolver retained; integration documentation updated)
-- [src/SIAMIS.Infrastructure/Services/Section33PayrollService.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Infrastructure/Services/Section33PayrollService.cs>)
-- [src/SIAMIS.Infrastructure/Services/StatutoryPolicyService.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Infrastructure/Services/StatutoryPolicyService.cs>)
-- [tests/SIAMIS.Payroll.RegressionTests/Program.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/tests/SIAMIS.Payroll.RegressionTests/Program.cs>)
-- [tests/SIAMIS.Payroll.RegressionTests/Section33CalculationRegressionTests.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/tests/SIAMIS.Payroll.RegressionTests/Section33CalculationRegressionTests.cs>)
-- [tests/SIAMIS.Payroll.RegressionTests/Section33WageRegressionTests.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/tests/SIAMIS.Payroll.RegressionTests/Section33WageRegressionTests.cs>) (preserved D5B foundation)
-- [tests/verify_d5a_live.py](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/tests/verify_d5a_live.py>)
-- [tests/verify_d5c_live.py](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/tests/verify_d5c_live.py>)
+- [src/SIAMIS.Api/Controllers/EmployeePayrollsController.cs](../../../src/SIAMIS.Api/Controllers/EmployeePayrollsController.cs)
+- [src/SIAMIS.Api/Controllers/PayrollPeriodsController.cs](../../../src/SIAMIS.Api/Controllers/PayrollPeriodsController.cs)
+- [src/SIAMIS.Api/Program.cs](../../../src/SIAMIS.Api/Program.cs)
+- [src/SIAMIS.Application/Payroll/EmployeePayrollContracts.cs](../../../src/SIAMIS.Application/Payroll/EmployeePayrollContracts.cs)
+- [src/SIAMIS.Application/Payroll/PayrollPreviewContracts.cs](../../../src/SIAMIS.Application/Payroll/PayrollPreviewContracts.cs)
+- [src/SIAMIS.Application/Payroll/Section33CalculationContracts.cs](../../../src/SIAMIS.Application/Payroll/Section33CalculationContracts.cs)
+- [src/SIAMIS.Application/Payroll/Section33ContributionWageContracts.cs](../../../src/SIAMIS.Application/Payroll/Section33ContributionWageContracts.cs) (preserved D5B foundation)
+- [src/SIAMIS.Domain/Entities/Payroll/EmployeePayrollStatutoryResult.cs](../../../src/SIAMIS.Domain/Entities/Payroll/EmployeePayrollStatutoryResult.cs)
+- [src/SIAMIS.Infrastructure/Configurations/EmployeePayrollConfigurations.cs](../../../src/SIAMIS.Infrastructure/Configurations/EmployeePayrollConfigurations.cs)
+- [src/SIAMIS.Infrastructure/Configurations/EmployeePayrollStatutoryConfigurations.cs](../../../src/SIAMIS.Infrastructure/Configurations/EmployeePayrollStatutoryConfigurations.cs)
+- [src/SIAMIS.Infrastructure/Data/SIAMISDbContext.cs](../../../src/SIAMIS.Infrastructure/Data/SIAMISDbContext.cs)
+- [src/SIAMIS.Infrastructure/Migrations/20261001044414_AddSection33PayrollResults.Designer.cs](../../../src/SIAMIS.Infrastructure/Migrations/20261001044414_AddSection33PayrollResults.Designer.cs)
+- [src/SIAMIS.Infrastructure/Migrations/20261001044414_AddSection33PayrollResults.cs](../../../src/SIAMIS.Infrastructure/Migrations/20261001044414_AddSection33PayrollResults.cs)
+- [src/SIAMIS.Infrastructure/Migrations/SIAMISDbContextModelSnapshot.cs](../../../src/SIAMIS.Infrastructure/Migrations/SIAMISDbContextModelSnapshot.cs)
+- [src/SIAMIS.Infrastructure/Services/EmployeePayrollService.cs](../../../src/SIAMIS.Infrastructure/Services/EmployeePayrollService.cs)
+- [src/SIAMIS.Infrastructure/Services/PayrollGenerationService.cs](../../../src/SIAMIS.Infrastructure/Services/PayrollGenerationService.cs)
+- [src/SIAMIS.Infrastructure/Services/PayrollPreviewService.cs](../../../src/SIAMIS.Infrastructure/Services/PayrollPreviewService.cs)
+- [src/SIAMIS.Infrastructure/Services/Section33Calculator.cs](../../../src/SIAMIS.Infrastructure/Services/Section33Calculator.cs)
+- [src/SIAMIS.Infrastructure/Services/Section33ContributionWageResolver.cs](../../../src/SIAMIS.Infrastructure/Services/Section33ContributionWageResolver.cs) (D5B resolver retained; integration documentation updated)
+- [src/SIAMIS.Infrastructure/Services/Section33PayrollService.cs](../../../src/SIAMIS.Infrastructure/Services/Section33PayrollService.cs)
+- [src/SIAMIS.Infrastructure/Services/StatutoryPolicyService.cs](../../../src/SIAMIS.Infrastructure/Services/StatutoryPolicyService.cs)
+- [tests/SIAMIS.Payroll.RegressionTests/Program.cs](../../../tests/SIAMIS.Payroll.RegressionTests/Program.cs)
+- [tests/SIAMIS.Payroll.RegressionTests/Section33CalculationRegressionTests.cs](../../../tests/SIAMIS.Payroll.RegressionTests/Section33CalculationRegressionTests.cs)
+- [tests/SIAMIS.Payroll.RegressionTests/Section33WageRegressionTests.cs](../../../tests/SIAMIS.Payroll.RegressionTests/Section33WageRegressionTests.cs) (preserved D5B foundation)
+- [tests/verify_d5a_live.py](../../../tests/verify_d5a_live.py)
+- [tests/verify_d5c_live.py](../../../tests/verify_d5c_live.py)

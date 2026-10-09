@@ -41,6 +41,7 @@ public sealed class PayrollRuleTargetService(SIAMISDbContext db) : IPayrollRuleT
 
     public async Task<ServiceResult<PayrollRuleTargetDto>> CreateTargetAsync(Guid payrollRuleId, PayrollRuleTargetRequest request, CancellationToken cancellationToken)
     {
+        await using var transaction = await db.Database.BeginTransactionAsync(System.Data.IsolationLevel.Serializable, cancellationToken);
         if (!await db.PayrollRules.AnyAsync(item => item.PayrollRuleId == payrollRuleId, cancellationToken))
             return NotFound<PayrollRuleTargetDto>("Payroll rule was not found.");
         var values = await ValidateRequestAsync(request, cancellationToken);
@@ -59,6 +60,7 @@ public sealed class PayrollRuleTargetService(SIAMISDbContext db) : IPayrollRuleT
         try { await db.SaveChangesAsync(cancellationToken); }
         catch (DbUpdateException exception) when (IsUniqueViolation(exception))
         { return Conflict<PayrollRuleTargetDto>("This target is already configured for the payroll rule, either as an inclusion or exclusion."); }
+        await transaction.CommitAsync(cancellationToken);
         var displays = await GetDisplaysAsync([target], cancellationToken);
         return ServiceResult<PayrollRuleTargetDto>.Success(ToDto(target, displays.GetValueOrDefault((target.TargetType, target.TargetId))));
     }
@@ -66,6 +68,7 @@ public sealed class PayrollRuleTargetService(SIAMISDbContext db) : IPayrollRuleT
     public async Task<ServiceResult<PayrollRuleTargetDto>> UpdateTargetAsync(Guid payrollRuleId, Guid payrollRuleTargetId,
         PayrollRuleTargetRequest request, CancellationToken cancellationToken)
     {
+        await using var transaction = await db.Database.BeginTransactionAsync(System.Data.IsolationLevel.Serializable, cancellationToken);
         var target = await db.PayrollRuleTargets.SingleOrDefaultAsync(
             item => item.PayrollRuleId == payrollRuleId && item.PayrollRuleTargetId == payrollRuleTargetId, cancellationToken);
         if (target is null) return NotFound<PayrollRuleTargetDto>("Payroll rule target was not found.");
@@ -80,6 +83,7 @@ public sealed class PayrollRuleTargetService(SIAMISDbContext db) : IPayrollRuleT
         try { await db.SaveChangesAsync(cancellationToken); }
         catch (DbUpdateException exception) when (IsUniqueViolation(exception))
         { return Conflict<PayrollRuleTargetDto>("This target is already configured for the payroll rule, either as an inclusion or exclusion."); }
+        await transaction.CommitAsync(cancellationToken);
         var displays = await GetDisplaysAsync([target], cancellationToken);
         return ServiceResult<PayrollRuleTargetDto>.Success(ToDto(target, displays.GetValueOrDefault((target.TargetType, target.TargetId))));
     }
@@ -106,7 +110,7 @@ public sealed class PayrollRuleTargetService(SIAMISDbContext db) : IPayrollRuleT
         switch (targetType)
         {
             case "Employee":
-                if (!await db.Employees.AsNoTracking().AnyAsync(item => item.EmployeeId == id, cancellationToken))
+                if (await EmploymentIntegrity.LockAsync(db, id, cancellationToken) is null)
                     return Missing("Employee target was not found.");
                 break;
             case "Department":

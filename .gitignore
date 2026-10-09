@@ -24,6 +24,25 @@ secrets.json
 *.key
 ## Private HR binaries (never source controlled)
 **/App_Data/hr-documents/
+**/App_Data/employee-photos/
+
+## Local verification/build evidence and SQL data (never release source)
+**/.artifacts/
+**/TestResults/
+*.log
+*.pid
+*.bak
+*.trn
+*.mdf
+*.ndf
+*.ldf
+
+## Raw browser-review evidence: retain locally, privacy review before sharing
+docs/frontend/*-review/
+docs/frontend/v3.7-filter-correction/
+
+## Accidental historical command-output file; retained for owner disposition
+/-files --others --exclude-standard
 
 ## Frontend generated output and local configuration
 frontend/node_modules/

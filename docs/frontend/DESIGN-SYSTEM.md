@@ -1,39 +1,11 @@
-# SIAMIS design system
+# Design-system authority
 
-F1 establishes a professional light theme: burgundy identity, restrained warm gold, white surfaces and a warm neutral canvas. Borders, spacing and readable hierarchy provide structure. There are no decorative gradients, glass effects or page animations.
+Current platform-wide authority: [V3.1 Premium Design System Foundation](V3.1-PREMIUM-DESIGN-SYSTEM-FOUNDATION.md), implemented in [semantic tokens](../../frontend/src/app/styles/tokens.css), shared styles and owned components. [V3.2 shell](V3.2-PREMIUM-APPLICATION-SHELL.md) and [V3.3 authentication](V3.3-PREMIUM-AUTHENTICATION.md) apply it. F1 and V2.1 reports preserve earlier decisions, not competing current libraries.
 
-## Tokens
+The identity uses burgundy, warm white, charcoal, restrained gold and official school assets. Typography, spacing, density, borders, focus and interaction states come from shared tokens. Reuse buttons, fields, selects, tables, feedback and overlays rather than copying style constants into features.
 
-The authority is [tokens.css](../../frontend/src/app/styles/tokens.css), mapped to Tailwind semantic utilities. Components do not carry scattered literal colors.
+Layouts suit the workflow: tables, profiles, processing workspaces and dashboards share hierarchy and controls without identical composition. Maintain label/value hierarchy, compact gutters, safe select truncation and responsive filter wrapping. Static metrics/panels must not suggest interactivity.
 
-| Token family | Use |
-|---|---|
-| primary / primary-foreground | Burgundy action and white text |
-| secondary / secondary-foreground | Subordinate action |
-| accent / accent-foreground | Restrained gold highlight |
-| background / foreground | Canvas and body text |
-| surface / surface-muted | Content and grouped regions |
-| border / input / ring | Separators, control boundaries and visible focus |
-| muted / muted-foreground | Supporting surfaces and readable secondary text |
-| success / warning / destructive / info | Semantic visual intents, with supporting tinted surfaces |
-| sidebar / sidebar-foreground / sidebar-active | Light navigation surfaces and restrained active destination |
+Overlays retain focus, Escape handling, stable actions, responsive widths and pending/unsaved protections. Avoid nested overlays. Motion is fast and restrained, respects reduced motion and never delays commands or navigation. Focus and validation remain distinguishable.
 
-Spacing follows a 4px unit and the Tailwind scale. Control/card radius is 6px; badges may be pills. Shadows are reserved for overlays. The local sans-serif stack is Segoe UI, Noto Sans Thai if available, Tahoma, Arial, sans-serif. No external font service is required. A final licensed/self-hosted font and official logo can be approved later.
-
-Titles are 24–30px, sections 18px, card headings 16–20px, body 16px, labels/table content 14px and helper text 12px. Thai fallback and numeral readability are demonstrated. Do not make helper text the primary content.
-
-## Responsive behavior
-
-Tailwind breakpoints: sm 640px, md 768px, lg 1024px, xl 1280px, 2xl 1536px. Page actions wrap/stack; grids reduce columns; forms use one column on narrow screens; overlays remain within the viewport. The showcase's minimal navigation remains separate from the F2 application sidebar.
-
-F2 uses the existing tokens without palette, typography or spacing changes. The light application sidebar expands to 248px or collapses to a 72px module icon rail with labelled tooltips. Compact 44px rows, shallow child indentation and small planned indicators communicate the whole school platform. Below md it becomes a modal drawer. Active destinations combine accent border, surface, font weight and `aria-current`; the active HR parent is also labelled. Main content is fluid up to 100rem. Compact empty dashboard cards use F1 borders and radius, without chart libraries, heavy shadows or fabricated metrics. Mobile breadcrumbs show the current destination; primary actions remain visible while secondary actions can move into an overflow menu. Account names retain full accessible text even when their visible header label truncates. No official logo is invented; the Brand component contains the approved text treatment.
-
-Tables use semantic desktop markup and an explicit mobile card/list pattern below md. Native table primitives remain available for future priority-column/scroll/detail patterns; each feature must choose intentionally. No generic grid engine or TanStack Table is needed for F1. Sample sorting/pagination are local showcase interactions, not business API behavior.
-
-## Components and accessibility
-
-Primitives cover Button, Input, Textarea, Label, Select, Checkbox, RadioGroup, Switch, Badge, Card, Separator, Tabs, Tooltip, Popover, DropdownMenu, Dialog, AlertDialog, Sheet, notification Toast, Skeleton, Spinner, Alert, Avatar, Breadcrumb, Pagination, Table and EmptyState. Shared Page components and FormField prevent duplicated spacing/error wiring.
-
-Buttons have primary, secondary, outline, ghost and destructive variants; icon buttons need an accessible name. Interactive targets are at least 44px where these controls are used. Focus remains visible, controls have associated labels, validation errors use aria-describedby/aria-invalid, dialogs manage focus and Escape, and loading/notifications have accessible announcements. Reduced motion removes animation. StatusBadge accepts a visual intent and does not know business statuses or rules.
-
-The showcase is review evidence for a baseline, not a claim of complete accessibility certification. Future feature content needs keyboard, contrast, screen-reader and responsive verification of its own. See [F1 results](F1-REPORT.md).
+The Development-only `/dev/ui` showcase uses synthetic data without database writes. Raw review screenshots require privacy review before distribution. New features and individual page redesigns require separate approval.

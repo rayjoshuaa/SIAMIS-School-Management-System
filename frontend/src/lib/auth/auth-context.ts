@@ -3,6 +3,8 @@ import type { SessionUser } from './contracts';
 export type AuthState = {
   status: 'bootstrapping' | 'authenticated' | 'anonymous' | 'expired' | 'error';
   user?: SessionUser;
+  revalidation?: 'pending' | 'unavailable';
+  contextVersion?: number;
 };
 export type AuthContextValue = {
   state: AuthState;

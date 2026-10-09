@@ -14,6 +14,36 @@ using SIAMIS.Infrastructure.Data;
 using SIAMIS.Infrastructure.Services;
 
 // Dependency-free focused regression runner. No database connections or writes.
+if (args.Contains("--f51e1-isolated-tests", StringComparer.Ordinal))
+{
+    await F51ANumberingTests.RunAsync(includeSupporting: true, includePhotos: true, includeDeletion: true, includeAcceptance: true, includeIdempotency: true);
+    return;
+}
+if (args.Contains("--f51e-isolated-tests", StringComparer.Ordinal))
+{
+    await F51ANumberingTests.RunAsync(includeSupporting: true, includePhotos: true, includeDeletion: true, includeAcceptance: true);
+    return;
+}
+if (args.Contains("--f51d-isolated-tests", StringComparer.Ordinal))
+{
+    await F51ANumberingTests.RunAsync(includeSupporting: true, includePhotos: true, includeDeletion: true);
+    return;
+}
+if (args.Contains("--f51c-isolated-tests", StringComparer.Ordinal))
+{
+    await F51ANumberingTests.RunAsync(includeSupporting: true, includePhotos: true);
+    return;
+}
+if (args.Contains("--f51b-isolated-tests", StringComparer.Ordinal))
+{
+    await F51ANumberingTests.RunAsync(includeSupporting: true);
+    return;
+}
+if (args.Contains("--f51a-isolated-tests", StringComparer.Ordinal))
+{
+    await F51ANumberingTests.RunAsync();
+    return;
+}
 if (args.Contains("--f72-isolated-tests", StringComparer.Ordinal))
 {
     await F72ClockTests.RunAsync();

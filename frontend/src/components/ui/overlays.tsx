@@ -9,6 +9,7 @@ import {
 import { X, MoreHorizontal } from 'lucide-react';
 import { Button } from './button';
 import { cn } from '../../lib/utils/cn';
+import { areProtectedRequestsBlocked } from '../../lib/auth/session-events';
 const overlay = 'ui-floating fixed inset-0 z-40 bg-[var(--overlay)]';
 const floating =
   'ui-floating z-50 rounded-md border border-border bg-surface p-5 shadow-[var(--shadow-overlay)]';
@@ -59,6 +60,8 @@ export function Dialog({
   }, [discardRequested]);
   const canDismiss = dismissible && !pending;
   const changeOpen = (next: boolean) => {
+    // Session recovery is displayed above existing portals. Preserve their unsaved editors.
+    if (areProtectedRequestsBlocked()) return;
     if (!next && !canDismiss) return;
     if (!next && dirty) {
       returnFocus.current = document.activeElement as HTMLElement;
@@ -193,8 +196,16 @@ export function AlertDialog({
   size?: 'sm' | 'md' | 'lg';
   confirmDisabled?: boolean;
 }) {
+  const [internalOpen, setInternalOpen] = useState(false);
   return (
-    <A.Root open={open} onOpenChange={onOpenChange}>
+    <A.Root
+      open={open ?? internalOpen}
+      onOpenChange={(next) => {
+        if (areProtectedRequestsBlocked()) return;
+        setInternalOpen(next);
+        onOpenChange?.(next);
+      }}
+    >
       {trigger && <A.Trigger asChild>{trigger}</A.Trigger>}
       <A.Portal>
         <A.Overlay className={overlay} data-overlay-backdrop />

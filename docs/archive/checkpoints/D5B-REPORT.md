@@ -10,15 +10,15 @@ D5A was committed before this checkpoint; the starting working tree was clean. F
 
 Key evidence:
 
-- [Basic Salary snapshot source](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Infrastructure/Services/PayrollCalculationService.cs:24>)
-- [Replacement and final earning processing](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Infrastructure/Services/PayrollCalculationService.cs:33>)
-- [Stored Manual snapshot boundary](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Infrastructure/Services/EmployeePayrollService.cs:417>)
-- [Regeneration replaces existing lines](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Infrastructure/Services/PayrollGenerationService.cs:126>)
-- [Existing four-decimal rounding](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Infrastructure/Services/PayrollCalculationService.cs:226>)
-- [Complete calendar month restriction](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Application/Payroll/BasicSalaryEntitlementContracts.cs:26>)
-- [D4A caller-supplied governing date](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Infrastructure/Services/StatutoryPolicyService.cs:158>)
-- [D4A method/publication contract](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Infrastructure/Services/StatutoryPolicyService.cs:211>)
-- [D4B caller-supplied enrollment date](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Infrastructure/Services/EmployeeStatutoryService.cs:68>)
+- [Basic Salary snapshot source](../../../src/SIAMIS.Infrastructure/Services/PayrollCalculationService.cs)
+- [Replacement and final earning processing](../../../src/SIAMIS.Infrastructure/Services/PayrollCalculationService.cs)
+- [Stored Manual snapshot boundary](../../../src/SIAMIS.Infrastructure/Services/EmployeePayrollService.cs)
+- [Regeneration replaces existing lines](../../../src/SIAMIS.Infrastructure/Services/PayrollGenerationService.cs)
+- [Existing four-decimal rounding](../../../src/SIAMIS.Infrastructure/Services/PayrollCalculationService.cs)
+- [Complete calendar month restriction](../../../src/SIAMIS.Application/Payroll/BasicSalaryEntitlementContracts.cs)
+- [D4A caller-supplied governing date](../../../src/SIAMIS.Infrastructure/Services/StatutoryPolicyService.cs)
+- [D4A method/publication contract](../../../src/SIAMIS.Infrastructure/Services/StatutoryPolicyService.cs)
+- [D4B caller-supplied enrollment date](../../../src/SIAMIS.Infrastructure/Services/EmployeeStatutoryService.cs)
 
 ## 2. Contribution-wage contract
 
@@ -69,9 +69,9 @@ The official SSO-hosted [SP.S.1-10 instructions, page 2](https://catalog.sso.go.
 Illustrative competing rounding outcomes (raw contributions, not implemented formulas):
 
 | Raw amount | Whole-baht half-up | Whole-baht to-even | Truncate | Existing payroll four decimals |
-|---|---:|---:|---:|---:|
-| 82.49 | 82 | 82 | 82 | 82.4900 |
-| 82.50 | 83 | 82 | 82 | 82.5000 |
+| ---------- | -----------------: | -----------------: | -------: | -----------------------------: |
+| 82.49      |                 82 |                 82 |       82 |                        82.4900 |
+| 82.50      |                 83 |                 82 |       82 |                        82.5000 |
 
 Recommendation, not implemented: adopt an explicitly approved per-insured-person whole-baht half-up contract for V1, retain raw and remitted amounts plus rounding identity in the future snapshot, and prohibit implicit intermediate rounding. Confirm current applicability and employee/employer calculation ordering, including whether unequal configured rates are in V1 scope, before monetary implementation. The source's equal-remittance wording is not permission to alias employer cost to employee deductions for every policy. No rounding decision is encoded in D5B.
 
@@ -131,57 +131,57 @@ The broader payroll line contracts have no currency field. D5C must validate the
 
 The live suite restored exact pre-fixture row contents of all 49 application tables, not just counts. All 17 components remain Unknown; Included=0 / Excluded=0. TEST-EMP-001 remains inactive; Employees=1 and EmploymentRecords=1. No temporary data remains. There are 26 migrations; latest remains 20261001032904_AddSsoWageTreatmentClassification. Only the dedicated temporary verification API process was stopped.
 
-| Table | Final rows |
-|---|---:|
-| AddressTypes | 3 |
-| Attendance | 0 |
-| AttendanceStatuses | 11 |
-| ContractTypes | 7 |
-| Countries | 13 |
-| Departments | 12 |
-| Designations | 20 |
-| DocumentTypes | 15 |
-| EmergencyContacts | 0 |
-| EmployeeAddresses | 0 |
-| EmployeeCompensations | 0 |
-| EmployeeContacts | 0 |
-| EmployeeContracts | 0 |
-| EmployeeDocuments | 0 |
-| EmployeeHistory | 0 |
-| EmployeeLeave | 0 |
-| EmployeePayrollComponentAssignments | 0 |
-| EmployeePayrollLines | 0 |
-| EmployeePayrolls | 0 |
-| EmployeePerformance | 0 |
-| EmployeeStatutoryEnrollments | 0 |
-| EmployeeTaxClaims | 0 |
-| EmployeeTaxDeclarationSelections | 0 |
-| EmployeeTaxDeclarations | 0 |
-| EmployeeTaxOpeningBalances | 0 |
-| EmployeeTaxProfiles | 0 |
-| Employees | 1 |
-| EmploymentRecords | 1 |
-| EmploymentStatuses | 9 |
-| EmploymentTypes | 6 |
-| Genders | 4 |
-| HiringSources | 10 |
-| LeaveTypes | 10 |
-| Locations | 5 |
-| MaritalStatuses | 6 |
-| Nationalities | 13 |
-| PayTypes | 6 |
-| PayrollComponents | 17 |
-| PayrollPeriods | 0 |
-| PayrollRuleTargets | 0 |
-| PayrollRules | 0 |
-| PayrollSettings | 0 |
-| PerformanceRatings | 5 |
-| PitPolicyConfigurations | 0 |
-| PitTaxBrackets | 0 |
-| SocialSecurityPolicyConfigurations | 0 |
-| StatutoryPolicyVersions | 0 |
-| StatutorySchemes | 0 |
-| TeacherProfiles | 0 |
+| Table                               | Final rows |
+| ----------------------------------- | ---------: |
+| AddressTypes                        |          3 |
+| Attendance                          |          0 |
+| AttendanceStatuses                  |         11 |
+| ContractTypes                       |          7 |
+| Countries                           |         13 |
+| Departments                         |         12 |
+| Designations                        |         20 |
+| DocumentTypes                       |         15 |
+| EmergencyContacts                   |          0 |
+| EmployeeAddresses                   |          0 |
+| EmployeeCompensations               |          0 |
+| EmployeeContacts                    |          0 |
+| EmployeeContracts                   |          0 |
+| EmployeeDocuments                   |          0 |
+| EmployeeHistory                     |          0 |
+| EmployeeLeave                       |          0 |
+| EmployeePayrollComponentAssignments |          0 |
+| EmployeePayrollLines                |          0 |
+| EmployeePayrolls                    |          0 |
+| EmployeePerformance                 |          0 |
+| EmployeeStatutoryEnrollments        |          0 |
+| EmployeeTaxClaims                   |          0 |
+| EmployeeTaxDeclarationSelections    |          0 |
+| EmployeeTaxDeclarations             |          0 |
+| EmployeeTaxOpeningBalances          |          0 |
+| EmployeeTaxProfiles                 |          0 |
+| Employees                           |          1 |
+| EmploymentRecords                   |          1 |
+| EmploymentStatuses                  |          9 |
+| EmploymentTypes                     |          6 |
+| Genders                             |          4 |
+| HiringSources                       |         10 |
+| LeaveTypes                          |         10 |
+| Locations                           |          5 |
+| MaritalStatuses                     |          6 |
+| Nationalities                       |         13 |
+| PayTypes                            |          6 |
+| PayrollComponents                   |         17 |
+| PayrollPeriods                      |          0 |
+| PayrollRuleTargets                  |          0 |
+| PayrollRules                        |          0 |
+| PayrollSettings                     |          0 |
+| PerformanceRatings                  |          5 |
+| PitPolicyConfigurations             |          0 |
+| PitTaxBrackets                      |          0 |
+| SocialSecurityPolicyConfigurations  |          0 |
+| StatutoryPolicyVersions             |          0 |
+| StatutorySchemes                    |          0 |
+| TeacherProfiles                     |          0 |
 
 ## 20. Build / EF / diff status
 
@@ -201,9 +201,9 @@ Focused test command:
 
 ## Complete D5B changed-file list
 
-- [src/SIAMIS.Application/Payroll/Section33ContributionWageContracts.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Application/Payroll/Section33ContributionWageContracts.cs>)
-- [src/SIAMIS.Infrastructure/Services/Section33ContributionWageResolver.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Infrastructure/Services/Section33ContributionWageResolver.cs>)
-- [tests/SIAMIS.Payroll.RegressionTests/Section33WageRegressionTests.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/tests/SIAMIS.Payroll.RegressionTests/Section33WageRegressionTests.cs>)
-- [tests/SIAMIS.Payroll.RegressionTests/Program.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/tests/SIAMIS.Payroll.RegressionTests/Program.cs>)
+- [src/SIAMIS.Application/Payroll/Section33ContributionWageContracts.cs](../../../src/SIAMIS.Application/Payroll/Section33ContributionWageContracts.cs)
+- [src/SIAMIS.Infrastructure/Services/Section33ContributionWageResolver.cs](../../../src/SIAMIS.Infrastructure/Services/Section33ContributionWageResolver.cs)
+- [tests/SIAMIS.Payroll.RegressionTests/Section33WageRegressionTests.cs](../../../tests/SIAMIS.Payroll.RegressionTests/Section33WageRegressionTests.cs)
+- [tests/SIAMIS.Payroll.RegressionTests/Program.cs](../../../tests/SIAMIS.Payroll.RegressionTests/Program.cs)
 - [D5B-REPORT.md](D5B-REPORT.md)
 - [README.md](FOUNDATION-README.md)

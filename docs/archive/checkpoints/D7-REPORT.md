@@ -9,13 +9,13 @@ D7 is complete. Generated Calculated payroll has a structured payslip before app
 
 ## API additions and read models
 
-| Operation | Behavior |
-|---|---|
-| GET /api/organization-profile | Configured singleton profile; 404 if unconfigured. |
-| PUT /api/organization-profile | Creates/updates the singleton. DisplayName is required; address lines, phone and email optional. Identity and timestamps are server controlled. |
-| GET /api/employee-payrolls/{id}/payslip | Structured snapshot and separate current payroll status/timestamps; 404 missing payroll, 409 ineligible/inconsistent/not ready. |
-| GET /api/employee-payrolls/{id}/review | Machine-readable finding codes, human explanations, CanApprove and PayslipReady. No writes/calculators. |
-| GET /api/payroll-periods/{id}/summary | Actual header/employee counts, status counts, monetary groups by D3 currency and unresolved-currency count. |
+| Operation                               | Behavior                                                                                                                                        |
+| --------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| GET /api/organization-profile           | Configured singleton profile; 404 if unconfigured.                                                                                              |
+| PUT /api/organization-profile           | Creates/updates the singleton. DisplayName is required; address lines, phone and email optional. Identity and timestamps are server controlled. |
+| GET /api/employee-payrolls/{id}/payslip | Structured snapshot and separate current payroll status/timestamps; 404 missing payroll, 409 ineligible/inconsistent/not ready.                 |
+| GET /api/employee-payrolls/{id}/review  | Machine-readable finding codes, human explanations, CanApprove and PayslipReady. No writes/calculators.                                         |
+| GET /api/payroll-periods/{id}/summary   | Actual header/employee counts, status counts, monetary groups by D3 currency and unresolved-currency count.                                     |
 
 Existing payroll detail gains an Operations object: frozen presentation when available, authoritative currency, grouped earning/deduction lines, concise SSO/PIT amounts and review findings. Existing detail/history uses frozen employee/period labels where available. Without a snapshot, current display facts are explicitly marked HasFrozenPresentation=false. Existing filtered/paginated history is reused; no duplicate employee history route was created. Ordering remains deterministic.
 
@@ -85,22 +85,22 @@ Actual SQL verified four enabled/trusted check constraints, the unique payslip o
 
 ## Verification
 
-| Suite/check | Result |
-|---|---|
-| Pure model/calculation regressions including D7 | 400 passed (386 prior + 14 D7). |
-| Focused D7 live API/SQL | 81 passed. |
-| D5A live | 70 passed. |
-| D5C live salary/employment/SSO | 306 passed. |
-| D6B live | 76 passed. |
-| D6C live | 48 passed. |
-| D6D live | 38 passed. |
-| D6E live | 88 passed. |
-| D6E boundaries/concurrency | 128 passed. |
-| Swagger | Five operations plus detail schema verified. |
-| Final restore | Succeeded; dependencies up to date. |
-| Final Release build | Succeeded, 0 warnings / 0 errors. |
-| EF pending-model-changes | None. |
-| git diff --check | Passed. |
+| Suite/check                                     | Result                                       |
+| ----------------------------------------------- | -------------------------------------------- |
+| Pure model/calculation regressions including D7 | 400 passed (386 prior + 14 D7).              |
+| Focused D7 live API/SQL                         | 81 passed.                                   |
+| D5A live                                        | 70 passed.                                   |
+| D5C live salary/employment/SSO                  | 306 passed.                                  |
+| D6B live                                        | 76 passed.                                   |
+| D6C live                                        | 48 passed.                                   |
+| D6D live                                        | 38 passed.                                   |
+| D6E live                                        | 88 passed.                                   |
+| D6E boundaries/concurrency                      | 128 passed.                                  |
+| Swagger                                         | Five operations plus detail schema verified. |
+| Final restore                                   | Succeeded; dependencies up to date.          |
+| Final Release build                             | Succeeded, 0 warnings / 0 errors.            |
+| EF pending-model-changes                        | None.                                        |
+| git diff --check                                | Passed.                                      |
 
 Total: 1,235 pure/live assertions, plus Swagger verification. Existing suites cover relevant D1/D2/D3 history/eligibility/proration, D4A policy and D4B employee statutory contracts, D5/D6 financial behavior, Supplement/ReplaceAssignment, rollback, manual reconciliation/provenance, approval/payment and period lifecycle. No separate obsolete D1–D4 test suites were invented.
 
@@ -114,65 +114,65 @@ Early test failures were resolved: organization UTC serialization mismatch was f
 
 Independent final comparison matched every original row and timestamp plus two empty D7 tables. TEST-EMP-001 remains inactive. All 17 real payroll components retain Unknown SSO/PIT classifications. Employee API totalCount=1; filtered employee payroll history totalCount=0. No temporary employee, organization, payroll, payslip, policy, declaration or schedule remains.
 
-| Table | Rows |
-|---|---|
-| AddressTypes | 3 |
-| Attendance | 0 |
-| AttendanceStatuses | 11 |
-| ContractTypes | 7 |
-| Countries | 13 |
-| Departments | 12 |
-| Designations | 20 |
-| DocumentTypes | 15 |
-| EmergencyContacts | 0 |
-| EmployeeAddresses | 0 |
-| EmployeeCompensations | 0 |
-| EmployeeContacts | 0 |
-| EmployeeContracts | 0 |
-| EmployeeDocuments | 0 |
-| EmployeeHistory | 0 |
-| EmployeeLeave | 0 |
-| EmployeePayrollComponentAssignments | 0 |
-| EmployeePayrollLines | 0 |
-| EmployeePayrollPitResults | 0 |
-| EmployeePayrollSocialSecurityResults | 0 |
-| EmployeePayrollStatutoryResults | 0 |
-| EmployeePayrolls | 0 |
-| EmployeePayslips | 0 |
-| EmployeePerformance | 0 |
-| EmployeePitPaymentScheduleEntries | 0 |
-| EmployeePitPaymentScheduleSelections | 0 |
-| EmployeePitPaymentSchedules | 0 |
-| EmployeeStatutoryEnrollments | 0 |
-| EmployeeTaxClaims | 0 |
-| EmployeeTaxDeclarationSelections | 0 |
-| EmployeeTaxDeclarations | 0 |
-| EmployeeTaxOpeningBalances | 0 |
-| EmployeeTaxProfiles | 0 |
-| Employees | 1 |
-| EmploymentRecords | 1 |
-| EmploymentStatuses | 9 |
-| EmploymentTypes | 6 |
-| Genders | 4 |
-| HiringSources | 10 |
-| LeaveTypes | 10 |
-| Locations | 5 |
-| MaritalStatuses | 6 |
-| Nationalities | 13 |
-| OrganizationProfiles | 0 |
-| PayTypes | 6 |
-| PayrollComponents | 17 |
-| PayrollPeriods | 0 |
-| PayrollRuleTargets | 0 |
-| PayrollRules | 0 |
-| PayrollSettings | 0 |
-| PerformanceRatings | 5 |
-| PitPolicyConfigurations | 0 |
-| PitTaxBrackets | 0 |
-| SocialSecurityPolicyConfigurations | 0 |
-| StatutoryPolicyVersions | 0 |
-| StatutorySchemes | 0 |
-| TeacherProfiles | 0 |
+| Table                                | Rows |
+| ------------------------------------ | ---- |
+| AddressTypes                         | 3    |
+| Attendance                           | 0    |
+| AttendanceStatuses                   | 11   |
+| ContractTypes                        | 7    |
+| Countries                            | 13   |
+| Departments                          | 12   |
+| Designations                         | 20   |
+| DocumentTypes                        | 15   |
+| EmergencyContacts                    | 0    |
+| EmployeeAddresses                    | 0    |
+| EmployeeCompensations                | 0    |
+| EmployeeContacts                     | 0    |
+| EmployeeContracts                    | 0    |
+| EmployeeDocuments                    | 0    |
+| EmployeeHistory                      | 0    |
+| EmployeeLeave                        | 0    |
+| EmployeePayrollComponentAssignments  | 0    |
+| EmployeePayrollLines                 | 0    |
+| EmployeePayrollPitResults            | 0    |
+| EmployeePayrollSocialSecurityResults | 0    |
+| EmployeePayrollStatutoryResults      | 0    |
+| EmployeePayrolls                     | 0    |
+| EmployeePayslips                     | 0    |
+| EmployeePerformance                  | 0    |
+| EmployeePitPaymentScheduleEntries    | 0    |
+| EmployeePitPaymentScheduleSelections | 0    |
+| EmployeePitPaymentSchedules          | 0    |
+| EmployeeStatutoryEnrollments         | 0    |
+| EmployeeTaxClaims                    | 0    |
+| EmployeeTaxDeclarationSelections     | 0    |
+| EmployeeTaxDeclarations              | 0    |
+| EmployeeTaxOpeningBalances           | 0    |
+| EmployeeTaxProfiles                  | 0    |
+| Employees                            | 1    |
+| EmploymentRecords                    | 1    |
+| EmploymentStatuses                   | 9    |
+| EmploymentTypes                      | 6    |
+| Genders                              | 4    |
+| HiringSources                        | 10   |
+| LeaveTypes                           | 10   |
+| Locations                            | 5    |
+| MaritalStatuses                      | 6    |
+| Nationalities                        | 13   |
+| OrganizationProfiles                 | 0    |
+| PayTypes                             | 6    |
+| PayrollComponents                    | 17   |
+| PayrollPeriods                       | 0    |
+| PayrollRuleTargets                   | 0    |
+| PayrollRules                         | 0    |
+| PayrollSettings                      | 0    |
+| PerformanceRatings                   | 5    |
+| PitPolicyConfigurations              | 0    |
+| PitTaxBrackets                       | 0    |
+| SocialSecurityPolicyConfigurations   | 0    |
+| StatutoryPolicyVersions              | 0    |
+| StatutorySchemes                     | 0    |
+| TeacherProfiles                      | 0    |
 
 172 original master-data rows remain.
 
@@ -202,31 +202,31 @@ The baseline capture is read-only. It can capture the existing migrated baseline
 ## Complete changed-file list
 
 - [D7-REPORT.md](D7-REPORT.md)
-- [src/SIAMIS.Api/Controllers/OrganizationProfileController.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Api/Controllers/OrganizationProfileController.cs>)
-- [src/SIAMIS.Api/Controllers/PayrollOperationsController.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Api/Controllers/PayrollOperationsController.cs>)
-- [src/SIAMIS.Api/Program.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Api/Program.cs>)
-- [src/SIAMIS.Application/Payroll/EmployeePayrollContracts.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Application/Payroll/EmployeePayrollContracts.cs>)
-- [src/SIAMIS.Application/Payroll/PayrollOperationsContracts.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Application/Payroll/PayrollOperationsContracts.cs>)
-- [src/SIAMIS.Domain/Entities/OrganizationProfile.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Domain/Entities/OrganizationProfile.cs>)
-- [src/SIAMIS.Domain/Entities/Payroll/EmployeePayslip.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Domain/Entities/Payroll/EmployeePayslip.cs>)
-- [src/SIAMIS.Infrastructure/Configurations/PayrollOperationsConfigurations.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Infrastructure/Configurations/PayrollOperationsConfigurations.cs>)
-- [src/SIAMIS.Infrastructure/Data/SIAMISDbContext.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Infrastructure/Data/SIAMISDbContext.cs>)
-- [src/SIAMIS.Infrastructure/Migrations/20261003061140_AddPayrollOperationsAndPayslips.Designer.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Infrastructure/Migrations/20261003061140_AddPayrollOperationsAndPayslips.Designer.cs>)
-- [src/SIAMIS.Infrastructure/Migrations/20261003061140_AddPayrollOperationsAndPayslips.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Infrastructure/Migrations/20261003061140_AddPayrollOperationsAndPayslips.cs>)
-- [src/SIAMIS.Infrastructure/Migrations/SIAMISDbContextModelSnapshot.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Infrastructure/Migrations/SIAMISDbContextModelSnapshot.cs>)
-- [src/SIAMIS.Infrastructure/Services/EmployeePayrollService.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Infrastructure/Services/EmployeePayrollService.cs>)
-- [src/SIAMIS.Infrastructure/Services/OrganizationProfileService.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Infrastructure/Services/OrganizationProfileService.cs>)
-- [src/SIAMIS.Infrastructure/Services/PayrollGenerationService.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Infrastructure/Services/PayrollGenerationService.cs>)
-- [src/SIAMIS.Infrastructure/Services/PayrollOperationsService.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Infrastructure/Services/PayrollOperationsService.cs>)
-- [src/SIAMIS.Infrastructure/Services/PayrollPreviewService.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/src/SIAMIS.Infrastructure/Services/PayrollPreviewService.cs>)
-- [tests/SIAMIS.Payroll.RegressionTests/D7OperationsContractTests.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/tests/SIAMIS.Payroll.RegressionTests/D7OperationsContractTests.cs>)
-- [tests/SIAMIS.Payroll.RegressionTests/Program.cs](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/tests/SIAMIS.Payroll.RegressionTests/Program.cs>)
-- [tests/verify_d5a_live.py](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/tests/verify_d5a_live.py>)
-- [tests/verify_d5c_live.py](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/tests/verify_d5c_live.py>)
-- [tests/verify_d6b_live.py](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/tests/verify_d6b_live.py>)
-- [tests/verify_d6c_live.py](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/tests/verify_d6c_live.py>)
-- [tests/verify_d6d_live.py](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/tests/verify_d6d_live.py>)
-- [tests/verify_d6e_boundaries_live.py](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/tests/verify_d6e_boundaries_live.py>)
-- [tests/verify_d6e_live.py](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/tests/verify_d6e_live.py>)
-- [tests/verify_d7_live.py](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/tests/verify_d7_live.py>)
-- [tests/verify_d7_regressions.py](<C:/Users/USER/Documents/ChatGPT/SIAMIS School Management System/tests/verify_d7_regressions.py>)
+- [src/SIAMIS.Api/Controllers/OrganizationProfileController.cs](../../../src/SIAMIS.Api/Controllers/OrganizationProfileController.cs)
+- [src/SIAMIS.Api/Controllers/PayrollOperationsController.cs](../../../src/SIAMIS.Api/Controllers/PayrollOperationsController.cs)
+- [src/SIAMIS.Api/Program.cs](../../../src/SIAMIS.Api/Program.cs)
+- [src/SIAMIS.Application/Payroll/EmployeePayrollContracts.cs](../../../src/SIAMIS.Application/Payroll/EmployeePayrollContracts.cs)
+- [src/SIAMIS.Application/Payroll/PayrollOperationsContracts.cs](../../../src/SIAMIS.Application/Payroll/PayrollOperationsContracts.cs)
+- [src/SIAMIS.Domain/Entities/OrganizationProfile.cs](../../../src/SIAMIS.Domain/Entities/OrganizationProfile.cs)
+- [src/SIAMIS.Domain/Entities/Payroll/EmployeePayslip.cs](../../../src/SIAMIS.Domain/Entities/Payroll/EmployeePayslip.cs)
+- [src/SIAMIS.Infrastructure/Configurations/PayrollOperationsConfigurations.cs](../../../src/SIAMIS.Infrastructure/Configurations/PayrollOperationsConfigurations.cs)
+- [src/SIAMIS.Infrastructure/Data/SIAMISDbContext.cs](../../../src/SIAMIS.Infrastructure/Data/SIAMISDbContext.cs)
+- [src/SIAMIS.Infrastructure/Migrations/20261003061140_AddPayrollOperationsAndPayslips.Designer.cs](../../../src/SIAMIS.Infrastructure/Migrations/20261003061140_AddPayrollOperationsAndPayslips.Designer.cs)
+- [src/SIAMIS.Infrastructure/Migrations/20261003061140_AddPayrollOperationsAndPayslips.cs](../../../src/SIAMIS.Infrastructure/Migrations/20261003061140_AddPayrollOperationsAndPayslips.cs)
+- [src/SIAMIS.Infrastructure/Migrations/SIAMISDbContextModelSnapshot.cs](../../../src/SIAMIS.Infrastructure/Migrations/SIAMISDbContextModelSnapshot.cs)
+- [src/SIAMIS.Infrastructure/Services/EmployeePayrollService.cs](../../../src/SIAMIS.Infrastructure/Services/EmployeePayrollService.cs)
+- [src/SIAMIS.Infrastructure/Services/OrganizationProfileService.cs](../../../src/SIAMIS.Infrastructure/Services/OrganizationProfileService.cs)
+- [src/SIAMIS.Infrastructure/Services/PayrollGenerationService.cs](../../../src/SIAMIS.Infrastructure/Services/PayrollGenerationService.cs)
+- [src/SIAMIS.Infrastructure/Services/PayrollOperationsService.cs](../../../src/SIAMIS.Infrastructure/Services/PayrollOperationsService.cs)
+- [src/SIAMIS.Infrastructure/Services/PayrollPreviewService.cs](../../../src/SIAMIS.Infrastructure/Services/PayrollPreviewService.cs)
+- [tests/SIAMIS.Payroll.RegressionTests/D7OperationsContractTests.cs](../../../tests/SIAMIS.Payroll.RegressionTests/D7OperationsContractTests.cs)
+- [tests/SIAMIS.Payroll.RegressionTests/Program.cs](../../../tests/SIAMIS.Payroll.RegressionTests/Program.cs)
+- [tests/verify_d5a_live.py](../../../tests/verify_d5a_live.py)
+- [tests/verify_d5c_live.py](../../../tests/verify_d5c_live.py)
+- [tests/verify_d6b_live.py](../../../tests/verify_d6b_live.py)
+- [tests/verify_d6c_live.py](../../../tests/verify_d6c_live.py)
+- [tests/verify_d6d_live.py](../../../tests/verify_d6d_live.py)
+- [tests/verify_d6e_boundaries_live.py](../../../tests/verify_d6e_boundaries_live.py)
+- [tests/verify_d6e_live.py](../../../tests/verify_d6e_live.py)
+- [tests/verify_d7_live.py](../../../tests/verify_d7_live.py)
+- [tests/verify_d7_regressions.py](../../../tests/verify_d7_regressions.py)

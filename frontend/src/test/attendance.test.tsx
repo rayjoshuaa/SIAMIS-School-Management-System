@@ -1,5 +1,5 @@
 import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest';
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createMemoryRouter, RouterProvider } from 'react-router-dom';
 import { QueryClientProvider } from '@tanstack/react-query';
@@ -682,5 +682,19 @@ describe('F7 attendance administration', () => {
     expect(screen.getByLabelText(/^Reason/)).toBeDisabled();
     await userEvent.click(confirm);
     expect(calls.filter((call) => call.method === 'POST')).toHaveLength(1);
+  });
+});
+describe('Stage 1 attendance draft preservation', () => {
+  it('preserves unsaved correction evidence during session focus refresh', async () => {
+    setup(`/hr/attendance/${id}/${date}`);
+    await userEvent.click(await screen.findByRole('button', { name: 'Add correction evidence' }));
+    const reason = screen.getByLabelText(/^Reason/);
+    await userEvent.type(reason, 'Unsaved attendance correction');
+    await act(async () => {
+      fireEvent(window, new Event('focus'));
+    });
+    expect(screen.getByLabelText(/^Reason/)).toBe(reason);
+    expect(reason).toHaveValue('Unsaved attendance correction');
+    expect(calls.some((call) => call.method === 'POST')).toBe(false);
   });
 });

@@ -8,7 +8,11 @@ internal sealed class EmployeeConfiguration : IEntityTypeConfiguration<Employee>
 {
     public void Configure(EntityTypeBuilder<Employee> builder)
     {
-        builder.ToTable("Employees");
+        builder.ToTable("Employees", table =>
+        {
+            table.HasTrigger("TR_Employees_PermanentIdentity");
+            table.UseSqlOutputClause(false);
+        });
         builder.HasKey(employee => employee.EmployeeId);
         builder.Property(employee => employee.EmployeeNumber).HasMaxLength(30).IsRequired();
         builder.HasIndex(employee => employee.EmployeeNumber).IsUnique();
